@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #111111;
+  --paper: #fafaf9;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+}
