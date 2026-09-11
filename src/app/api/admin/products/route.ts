@@ -10,6 +10,8 @@ const viewSchema = z.object({
   zoneYPct: z.number().min(0).max(100),
   zoneWidthPct: z.number().min(1).max(100),
   zoneHeightPct: z.number().min(1).max(100),
+  maxWidthCm: z.number().min(1),
+  maxHeightCm: z.number().min(1),
 });
 
 const colorSchema = z.object({

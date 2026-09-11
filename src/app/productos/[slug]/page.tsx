@@ -39,6 +39,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               zoneYPct: v.zoneYPct,
               zoneWidthPct: v.zoneWidthPct,
               zoneHeightPct: v.zoneHeightPct,
+              maxWidthCm: v.maxWidthCm,
+              maxHeightCm: v.maxHeightCm,
             })),
           })),
         }}

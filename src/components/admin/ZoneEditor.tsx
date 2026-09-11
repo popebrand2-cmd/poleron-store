@@ -7,9 +7,18 @@ export type Zone = {
   zoneYPct: number;
   zoneWidthPct: number;
   zoneHeightPct: number;
+  maxWidthCm: number;
+  maxHeightCm: number;
 };
 
-const DEFAULT_ZONE: Zone = { zoneXPct: 30, zoneYPct: 25, zoneWidthPct: 40, zoneHeightPct: 40 };
+const DEFAULT_ZONE: Zone = {
+  zoneXPct: 30,
+  zoneYPct: 25,
+  zoneWidthPct: 40,
+  zoneHeightPct: 40,
+  maxWidthCm: 25,
+  maxHeightCm: 25,
+};
 
 export { DEFAULT_ZONE };
 
@@ -106,8 +115,31 @@ export default function ZoneEditor({
         </div>
       </div>
       <p className="text-xs text-neutral-500">
-        Arrastra el rectángulo para mover la zona de impresión; arrastra la esquina para cambiar su tamaño.
+        Arrastra el rectángulo para mover la zona de impresión; arrastra la esquina para cambiar su tamaño. Este es el
+        tamaño MÁXIMO — el cliente podrá achicarlo, nunca agrandarlo.
       </p>
+      <div className="flex items-center gap-3">
+        <label className="flex items-center gap-2 text-sm">
+          Ancho máx (cm)
+          <input
+            type="number"
+            min={1}
+            value={zone.maxWidthCm}
+            onChange={(e) => onChange({ ...zone, maxWidthCm: Number(e.target.value) })}
+            className="w-20 rounded-md border border-neutral-300 px-2 py-1"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          Alto máx (cm)
+          <input
+            type="number"
+            min={1}
+            value={zone.maxHeightCm}
+            onChange={(e) => onChange({ ...zone, maxHeightCm: Number(e.target.value) })}
+            className="w-20 rounded-md border border-neutral-300 px-2 py-1"
+          />
+        </label>
+      </div>
     </div>
   );
 }

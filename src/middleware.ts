@@ -4,7 +4,7 @@ import { ADMIN_COOKIE_NAME, adminAuthToken } from "@/lib/admin-auth";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname === "/admin/login") {
+  if (pathname === "/admin/login" || pathname === "/api/admin/login") {
     return NextResponse.next();
   }
 

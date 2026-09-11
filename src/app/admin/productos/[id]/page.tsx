@@ -42,6 +42,8 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
               zoneYPct: v.zoneYPct,
               zoneWidthPct: v.zoneWidthPct,
               zoneHeightPct: v.zoneHeightPct,
+              maxWidthCm: v.maxWidthCm,
+              maxHeightCm: v.maxHeightCm,
             })),
           })),
         }}

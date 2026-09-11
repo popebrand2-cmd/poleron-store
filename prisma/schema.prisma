@@ -46,12 +46,17 @@ model ProductView {
   imageUrl  String
   sortOrder Int    @default(0)
 
-  // Print zone: a rectangle (in % of image width/height, 0-100) where the
-  // customer's design can be placed, plus rotation allowance.
+  // Print zone: a rectangle (in % of image width/height, 0-100) marking the
+  // MAXIMUM area the customer's design can occupy, plus rotation allowance.
+  // The customer can shrink this zone (never enlarge it) on the product
+  // page; maxWidthCm/maxHeightCm are the real-world size of that zone at
+  // its full (100%) size, used to show live cm measurements while resizing.
   zoneXPct      Float
   zoneYPct      Float
   zoneWidthPct  Float
   zoneHeightPct Float
+  maxWidthCm    Float   @default(20)
+  maxHeightCm   Float   @default(20)
   allowRotate   Boolean @default(true)
 }
 

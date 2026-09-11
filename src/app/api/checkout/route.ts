@@ -9,6 +9,8 @@ const placementSchema = z.object({
   yPct: z.number(),
   widthPct: z.number(),
   rotationDeg: z.number(),
+  zoneWidthCm: z.number(),
+  zoneHeightCm: z.number(),
 });
 
 const itemSchema = z.object({

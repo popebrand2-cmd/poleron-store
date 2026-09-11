@@ -7,6 +7,8 @@ export type ViewPlacement = {
   yPct: number; // center Y within the zone, 0-100
   widthPct: number; // design width relative to zone width, e.g. 60 = 60% of zone width
   rotationDeg: number;
+  zoneWidthCm: number; // real-world print area size the customer chose (<= the admin-defined max)
+  zoneHeightCm: number;
 };
 
 // Keyed by the ProductView.label ("Frente", "Espalda", ...)
