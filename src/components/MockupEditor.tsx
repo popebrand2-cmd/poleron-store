@@ -6,7 +6,7 @@ import type { ViewPlacement } from "@/types";
 import { removeWhiteBackground } from "@/lib/remove-white-bg";
 
 export type MockupEditorHandle = {
-  getPlacement: () => ViewPlacement | null;
+  getPlacement: () => Promise<ViewPlacement | null>;
   getSnapshot: () => string | null;
 };
 
@@ -25,6 +25,16 @@ export type MockupView = {
 const CANVAS_MAX_WIDTH = 460;
 const MIN_ZONE_SCALE = 0.25;
 
+function makeZoneClipPath(rect: { left: number; top: number; width: number; height: number }) {
+  return new fabric.Rect({
+    left: rect.left,
+    top: rect.top,
+    width: rect.width,
+    height: rect.height,
+    absolutePositioned: true,
+  });
+}
+
 const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialPlacement?: ViewPlacement | null }>(
   function MockupEditor({ view, initialPlacement }, ref) {
     const canvasElRef = useRef<HTMLCanvasElement>(null);
@@ -32,9 +42,12 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
     // The admin-defined MAXIMUM zone, in canvas px — fixed for the life of this editor.
     const maxZoneRef = useRef({ left: 0, top: 0, width: 0, height: 0 });
     const designRef = useRef<fabric.FabricImage | null>(null);
+    const textRef = useRef<fabric.IText | null>(null);
     const zoneIndicatorRef = useRef<fabric.Rect | null>(null);
     const initialPlacementRef = useRef(initialPlacement);
     const [hasDesign, setHasDesign] = useState(Boolean(initialPlacement));
+    const [hasText, setHasText] = useState(false);
+    const [textColor, setTextColor] = useState("#111111");
     const [uploading, setUploading] = useState(false);
     const [removingBg, setRemovingBg] = useState(false);
     const [error, setError] = useState("");
@@ -56,16 +69,9 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
     }
 
     function updateClipPathToCurrentZone(canvas: fabric.Canvas) {
-      const design = designRef.current;
-      if (!design) return;
       const rect = currentZoneRect();
-      design.clipPath = new fabric.Rect({
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height,
-        absolutePositioned: true,
-      });
+      if (designRef.current) designRef.current.clipPath = makeZoneClipPath(rect);
+      if (textRef.current) textRef.current.clipPath = makeZoneClipPath(rect);
       canvas.renderAll();
     }
 
@@ -206,14 +212,6 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
         }
 
         const zone = currentZoneRect();
-        const clipPath = new fabric.Rect({
-          left: zone.left,
-          top: zone.top,
-          width: zone.width,
-          height: zone.height,
-          absolutePositioned: true,
-        });
-
         const naturalWidth = img.width ?? 1;
 
         let targetLeft = zone.left + zone.width / 2;
@@ -236,7 +234,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
           scaleX: targetScale,
           scaleY: targetScale,
           angle: targetAngle,
-          clipPath,
+          clipPath: makeZoneClipPath(zone),
           lockRotation: !view.allowRotate,
           cornerColor: "#d946ef",
           cornerStyle: "circle",
@@ -245,11 +243,59 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
         img.setControlsVisibility({ mtr: view.allowRotate });
 
         designRef.current = img;
+        // Keep the design below any text the customer already added: add it
+        // (goes on top), then move it back down to just above the
+        // background (index 0).
         canvas.add(img);
+        canvas.moveObjectTo(img, 1);
         canvas.setActiveObject(img);
         canvas.renderAll();
         setHasDesign(true);
       });
+    }
+
+    function handleAddText() {
+      const canvas = fabricCanvasRef.current;
+      if (!canvas || textRef.current) return;
+      const zone = currentZoneRect();
+
+      const text = new fabric.IText("Tu texto", {
+        left: zone.left + zone.width / 2,
+        top: zone.top + zone.height / 2,
+        originX: "center",
+        originY: "center",
+        fontFamily: "Arial, sans-serif",
+        fontSize: Math.max(14, Math.round(zone.height * 0.18)),
+        fill: textColor,
+        clipPath: makeZoneClipPath(zone),
+        cornerColor: "#d946ef",
+        cornerStyle: "circle",
+        transparentCorners: false,
+      });
+      textRef.current = text;
+      canvas.add(text);
+      canvas.setActiveObject(text);
+      canvas.renderAll();
+      setHasText(true);
+    }
+
+    function handleTextColorChange(color: string) {
+      setTextColor(color);
+      const canvas = fabricCanvasRef.current;
+      if (canvas && textRef.current) {
+        textRef.current.set({ fill: color });
+        canvas.renderAll();
+      }
+    }
+
+    function handleRemoveText() {
+      const canvas = fabricCanvasRef.current;
+      if (canvas && textRef.current) {
+        canvas.remove(textRef.current);
+        textRef.current = null;
+        canvas.renderAll();
+        setHasText(false);
+      }
     }
 
     async function handleUpload(file: File) {
@@ -311,6 +357,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
         newImg.setControlsVisibility({ mtr: view.allowRotate });
         designRef.current = newImg;
         canvas.add(newImg);
+        canvas.moveObjectTo(newImg, 1);
         canvas.setActiveObject(newImg);
         canvas.renderAll();
       } catch (e) {
@@ -331,20 +378,67 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
     }
 
     useImperativeHandle(ref, () => ({
-      getPlacement() {
+      async getPlacement() {
+        const canvas = fabricCanvasRef.current;
         const img = designRef.current;
+        const text = textRef.current;
         const zone = currentZoneRect();
-        if (!img || !zone.width || !zone.height) return null;
-        const left = img.left ?? 0;
-        const top = img.top ?? 0;
+        if (!canvas || (!img && !text) || !zone.width || !zone.height) return null;
+
+        const zoneWidthCm = (zone.width / maxZoneRef.current.width) * view.maxWidthCm;
+        const zoneHeightCm = (zone.height / maxZoneRef.current.height) * view.maxHeightCm;
+
+        // No text: keep the simple, exact transform of the uploaded image —
+        // no need to flatten anything into a new file.
+        if (!text && img) {
+          const left = img.left ?? 0;
+          const top = img.top ?? 0;
+          return {
+            designUrl: (img.getSrc && img.getSrc()) || "",
+            xPct: ((left - zone.left) / zone.width) * 100,
+            yPct: ((top - zone.top) / zone.height) * 100,
+            widthPct: (img.getScaledWidth() / zone.width) * 100,
+            rotationDeg: img.angle ?? 0,
+            zoneWidthCm,
+            zoneHeightCm,
+          };
+        }
+
+        // Text is involved (with or without an uploaded image): flatten
+        // whatever is inside the zone into one final PNG, so production
+        // gets exactly what the customer designed instead of separate
+        // layers our data model doesn't otherwise track.
+        const indicator = zoneIndicatorRef.current;
+        if (indicator) indicator.visible = false;
+        if (text?.isEditing) text.exitEditing();
+        canvas.discardActiveObject();
+        canvas.renderAll();
+        const dataUrl = canvas.toDataURL({
+          format: "png",
+          left: zone.left,
+          top: zone.top,
+          width: zone.width,
+          height: zone.height,
+          multiplier: 1,
+        });
+        if (indicator) indicator.visible = true;
+        canvas.renderAll();
+
+        const blob = await (await fetch(dataUrl)).blob();
+        const body = new FormData();
+        body.append("file", new File([blob], "diseno-con-texto.png", { type: "image/png" }));
+        const res = await fetch("/api/upload", { method: "POST", body });
+        const data = await res.json();
+        if (!res.ok) return null;
+
         return {
-          designUrl: (img.getSrc && img.getSrc()) || "",
-          xPct: ((left - zone.left) / zone.width) * 100,
-          yPct: ((top - zone.top) / zone.height) * 100,
-          widthPct: (img.getScaledWidth() / zone.width) * 100,
-          rotationDeg: img.angle ?? 0,
-          zoneWidthCm: (zone.width / maxZoneRef.current.width) * view.maxWidthCm,
-          zoneHeightCm: (zone.height / maxZoneRef.current.height) * view.maxHeightCm,
+          designUrl: data.url,
+          xPct: 50,
+          yPct: 50,
+          widthPct: 100,
+          rotationDeg: 0,
+          zoneWidthCm,
+          zoneHeightCm,
         };
       },
       getSnapshot() {
@@ -377,7 +471,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
             </span>
           )}
         </div>
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-3">
           <label className="cursor-pointer rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white">
             {uploading ? "Subiendo..." : hasDesign ? "Cambiar diseño" : "Subir tu diseño"}
             <input
@@ -410,10 +504,40 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
             </button>
           )}
         </div>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          {!hasText ? (
+            <button
+              type="button"
+              onClick={handleAddText}
+              className="text-sm font-medium text-fuchsia-600 hover:underline"
+            >
+              + Agregar texto
+            </button>
+          ) : (
+            <>
+              <label className="flex items-center gap-2 text-sm text-neutral-600">
+                Color del texto
+                <input
+                  type="color"
+                  value={textColor}
+                  onChange={(e) => handleTextColorChange(e.target.value)}
+                  className="h-7 w-10 rounded"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={handleRemoveText}
+                className="text-sm font-medium text-red-600 hover:underline"
+              >
+                Quitar texto
+              </button>
+            </>
+          )}
+        </div>
         {error && <p className="text-center text-sm text-red-600">{error}</p>}
         <p className="text-center text-xs text-neutral-500">
-          Arrastra tu diseño para moverlo, usa sus esquinas para escalar{view.allowRotate ? " y rotar" : ""}. Arrastra
-          la esquina del recuadro punteado para achicar el área de impresión a tu gusto.
+          Arrastra para mover, usa las esquinas para escalar{view.allowRotate ? " y rotar" : ""}. Doble clic sobre el
+          texto para editarlo. Arrastra la esquina del recuadro punteado para achicar el área de impresión.
         </p>
       </div>
     );

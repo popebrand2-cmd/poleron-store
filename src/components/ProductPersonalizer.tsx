@@ -44,12 +44,13 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
 
   async function handleAddToCart() {
     setFormError("");
+    setAdding(true);
     const placement: DesignPlacementMap = {};
     let previewImageUrl: string | null = null;
 
     for (const view of color.views) {
       const handle = editorRefs.current[view.label];
-      const p = handle?.getPlacement();
+      const p = await handle?.getPlacement();
       if (p) {
         placement[view.label] = p;
         if (!previewImageUrl || view.label === "Frente") {
@@ -59,11 +60,11 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     }
 
     if (Object.keys(placement).length === 0) {
+      setAdding(false);
       setFormError("Sube al menos un diseño (frente, espalda o manga) antes de agregar al carrito.");
       return;
     }
 
-    setAdding(true);
     addItem({
       id: uuidv4(),
       productId: product.id,
