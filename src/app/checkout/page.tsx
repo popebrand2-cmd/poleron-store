@@ -110,7 +110,7 @@ export default function CheckoutPage() {
           disabled={loading}
           className="w-full rounded-md bg-neutral-900 px-6 py-3 font-medium text-white disabled:opacity-50"
         >
-          {loading ? "Redirigiendo a pago..." : "Pagar con Flow"}
+          {loading ? "Redirigiendo a pago..." : "Pagar con Mercado Pago"}
         </button>
       </form>
     </main>

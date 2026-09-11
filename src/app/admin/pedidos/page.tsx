@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatCLP } from "@/lib/money";
+import DeleteOrderButton from "@/components/admin/DeleteOrderButton";
 
 export const dynamic = "force-dynamic";
 
@@ -50,9 +51,12 @@ export default async function AdminOrdersPage() {
                     {o.customerEmail} · {o.items.length} producto(s) · {formatCLP(o.totalAmount)}
                   </p>
                 </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_COLORS[o.status] ?? ""}`}>
-                  {STATUS_LABELS[o.status] ?? o.status}
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_COLORS[o.status] ?? ""}`}>
+                    {STATUS_LABELS[o.status] ?? o.status}
+                  </span>
+                  <DeleteOrderButton orderId={o.id} />
+                </div>
               </div>
             </div>
           ))}
