@@ -1,3 +1,5 @@
+import { cropToOpaqueBounds } from "./crop-transparent";
+
 // Makes near-white pixels transparent, entirely in the browser (no external
 // API, no cost). Works well for logos/designs exported on a plain white
 // background; a soft threshold band avoids a hard jagged edge on
@@ -39,9 +41,10 @@ export async function removeWhiteBackground(imageUrl: string): Promise<Blob> {
   }
 
   ctx.putImageData(imageData, 0, 0);
+  const cropped = cropToOpaqueBounds(canvas);
 
   return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => {
+    cropped.toBlob((blob) => {
       if (blob) resolve(blob);
       else reject(new Error("No se pudo generar la imagen procesada."));
     }, "image/png");

@@ -48,7 +48,7 @@ El cliente puede agregar texto encima de su diseño (o solo, sin subir imagen) c
 
 ## Quitar fondo del diseño
 
-Tres formas, las tres 100% en el navegador del cliente — nada se sube a ningún servicio externo, cero costo por uso:
+Tres formas, las tres 100% en el navegador del cliente — nada se sube a ningún servicio externo, cero costo por uso. Las tres recortan automáticamente el sobrante transparente al terminar (`src/lib/crop-transparent.ts`), así el archivo final queda ajustado al arte real — no al tamaño de la foto original — y las medidas en cm que ve el cliente reflejan el diseño real, no una caja con relleno invisible:
 
 - **"Quitar fondo blanco"** (`src/lib/remove-white-bg.ts`) — un clic, para el caso más común (diseño exportado con fondo blanco).
 - **"Elegir color de fondo"** (`src/lib/remove-color-bg.ts`) — para cualquier OTRO color de fondo plano (negro, un color de marca, etc.): el cliente hace clic sobre el color que quiere quitar, se toma esa muestra directamente del canvas y se hace transparente todo lo que esté cerca de ese color.

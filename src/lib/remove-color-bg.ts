@@ -1,3 +1,5 @@
+import { cropToOpaqueBounds } from "./crop-transparent";
+
 // Generalized version of remove-white-bg.ts's technique: makes pixels near
 // a given target color transparent, entirely in the browser. Works for any
 // solid background color (black, a brand color, etc.), not just white — the
@@ -45,9 +47,10 @@ export async function removeColorBackground(
   }
 
   ctx.putImageData(imageData, 0, 0);
+  const cropped = cropToOpaqueBounds(canvas);
 
   return new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((blob) => {
+    cropped.toBlob((blob) => {
       if (blob) resolve(blob);
       else reject(new Error("No se pudo generar la imagen procesada."));
     }, "image/png");

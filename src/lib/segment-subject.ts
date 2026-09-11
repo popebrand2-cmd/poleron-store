@@ -7,6 +7,7 @@
 // only fetched the first time this feature is used, then cached by the
 // browser.
 import * as ort from "onnxruntime-web";
+import { cropToOpaqueBounds } from "./crop-transparent";
 
 const MODEL_SIZE = 320;
 const MODEL_URL = "/models/u2netp.onnx";
@@ -122,9 +123,10 @@ export async function segmentSubject(imageUrl: string): Promise<Blob> {
     outImageData.data[i * 4 + 3] = upscaledMask[i * 4];
   }
   outCtx.putImageData(outImageData, 0, 0);
+  const cropped = cropToOpaqueBounds(outCanvas);
 
   return new Promise<Blob>((resolve, reject) => {
-    outCanvas.toBlob((blob) => {
+    cropped.toBlob((blob) => {
       if (blob) resolve(blob);
       else reject(new Error("No se pudo generar la imagen procesada."));
     }, "image/png");
