@@ -42,6 +42,14 @@ export default function ZoneEditor({
   const [drag, setDrag] = useState<null | { mode: "move" | "resize"; startX: number; startY: number; startZone: Zone }>(
     null,
   );
+  // zoneXPct/Y/Width/Height are percentages of this container's own box —
+  // MockupEditor (the customer-facing canvas) scales that same percentage
+  // against the photo's real aspect ratio, so this container has to match
+  // it exactly. It used to be forced to a 1:1 square regardless of the
+  // photo's actual shape, which meant a zone box dragged to "look right"
+  // here landed in the wrong place on the real product page for any photo
+  // that wasn't itself square.
+  const [aspectRatio, setAspectRatio] = useState<number | null>(null);
 
   function pctFromEvent(e: React.PointerEvent, base: DOMRect) {
     return {
@@ -112,12 +120,20 @@ export default function ZoneEditor({
       <div
         ref={containerRef}
         className="relative w-full select-none overflow-hidden rounded-lg border border-neutral-300 bg-neutral-100"
-        style={{ aspectRatio: "1 / 1" }}
+        style={{ aspectRatio: aspectRatio ?? "1 / 1" }}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={imageUrl} alt="" className="pointer-events-none absolute inset-0 h-full w-full object-contain" />
+        <img
+          src={imageUrl}
+          alt=""
+          className="pointer-events-none absolute inset-0 h-full w-full object-fill"
+          onLoad={(e) => {
+            const el = e.currentTarget;
+            if (el.naturalWidth && el.naturalHeight) setAspectRatio(el.naturalWidth / el.naturalHeight);
+          }}
+        />
         <div
           onPointerDown={handlePointerDown("move")}
           className="absolute cursor-move border-2 border-dashed border-fuchsia-500 bg-fuchsia-500/10"
