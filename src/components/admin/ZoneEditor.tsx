@@ -112,6 +112,9 @@ export default function ZoneEditor({
             onPointerDown={handlePointerDown("resize")}
             className="absolute -bottom-1.5 -right-1.5 h-4 w-4 cursor-nwse-resize rounded-full border-2 border-white bg-fuchsia-500"
           />
+          <span className="pointer-events-none absolute -bottom-6 right-0 whitespace-nowrap rounded bg-neutral-900/80 px-1.5 py-0.5 text-[10px] font-medium text-white">
+            {zone.maxWidthCm} x {zone.maxHeightCm} cm
+          </span>
         </div>
       </div>
       <p className="text-xs text-neutral-500">
