@@ -21,6 +21,12 @@ type ColorFormState = {
 type SizeFormState = {
   label: string;
   priceDelta: number;
+  // Real garment measurements (cm), from the supplier's size chart. Optional
+  // — leave blank until you have them. Used to auto-scale the print zone
+  // per talla (src/lib/size-scale.ts) relative to talla M.
+  chestCm?: number | null;
+  lengthCm?: number | null;
+  sleeveCm?: number | null;
 };
 
 type MaterialFormState = {
@@ -227,35 +233,91 @@ export default function ProductForm({ initial }: { initial?: ProductFormInitial 
             + Agregar talla
           </button>
         </div>
+        <p className="text-sm text-neutral-500">
+          Las medidas reales (ancho pecho, largo, manga) son opcionales — si las completas, el área de
+          impresión se ajusta automáticamente para cada talla en base a la talla M.
+        </p>
         {sizes.map((s, i) => (
-          <div key={i} className="flex items-center gap-3">
-            <input
-              value={s.label}
-              onChange={(e) =>
-                setSizes((prev) => prev.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))
-              }
-              placeholder="M"
-              className="w-24 rounded-md border border-neutral-300 px-3 py-2"
-            />
-            <input
-              type="number"
-              value={s.priceDelta}
-              onChange={(e) =>
-                setSizes((prev) =>
-                  prev.map((x, j) => (j === i ? { ...x, priceDelta: Number(e.target.value) } : x)),
-                )
-              }
-              placeholder="Recargo CLP"
-              className="w-40 rounded-md border border-neutral-300 px-3 py-2"
-            />
-            <span className="text-sm text-neutral-500">recargo sobre el precio base</span>
-            <button
-              type="button"
-              onClick={() => setSizes((prev) => prev.filter((_, j) => j !== i))}
-              className="ml-auto text-sm text-red-600 hover:underline"
-            >
-              Quitar
-            </button>
+          <div key={i} className="space-y-2 border-b border-neutral-100 pb-4 last:border-0 last:pb-0">
+            <div className="flex items-center gap-3">
+              <input
+                value={s.label}
+                onChange={(e) =>
+                  setSizes((prev) => prev.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))
+                }
+                placeholder="M"
+                className="w-24 rounded-md border border-neutral-300 px-3 py-2"
+              />
+              <input
+                type="number"
+                value={s.priceDelta}
+                onChange={(e) =>
+                  setSizes((prev) =>
+                    prev.map((x, j) => (j === i ? { ...x, priceDelta: Number(e.target.value) } : x)),
+                  )
+                }
+                placeholder="Recargo CLP"
+                className="w-40 rounded-md border border-neutral-300 px-3 py-2"
+              />
+              <span className="text-sm text-neutral-500">recargo sobre el precio base</span>
+              <button
+                type="button"
+                onClick={() => setSizes((prev) => prev.filter((_, j) => j !== i))}
+                className="ml-auto text-sm text-red-600 hover:underline"
+              >
+                Quitar
+              </button>
+            </div>
+            <div className="flex flex-wrap items-center gap-3 pl-1">
+              <label className="flex items-center gap-1.5 text-sm text-neutral-600">
+                Ancho pecho (cm)
+                <input
+                  type="number"
+                  step="0.5"
+                  value={s.chestCm ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.valueAsNumber;
+                    setSizes((prev) =>
+                      prev.map((x, j) => (j === i ? { ...x, chestCm: Number.isFinite(v) ? v : null } : x)),
+                    );
+                  }}
+                  placeholder="—"
+                  className="w-24 rounded-md border border-neutral-300 px-2 py-1"
+                />
+              </label>
+              <label className="flex items-center gap-1.5 text-sm text-neutral-600">
+                Largo total (cm)
+                <input
+                  type="number"
+                  step="0.5"
+                  value={s.lengthCm ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.valueAsNumber;
+                    setSizes((prev) =>
+                      prev.map((x, j) => (j === i ? { ...x, lengthCm: Number.isFinite(v) ? v : null } : x)),
+                    );
+                  }}
+                  placeholder="—"
+                  className="w-24 rounded-md border border-neutral-300 px-2 py-1"
+                />
+              </label>
+              <label className="flex items-center gap-1.5 text-sm text-neutral-600">
+                Largo manga (cm)
+                <input
+                  type="number"
+                  step="0.5"
+                  value={s.sleeveCm ?? ""}
+                  onChange={(e) => {
+                    const v = e.target.valueAsNumber;
+                    setSizes((prev) =>
+                      prev.map((x, j) => (j === i ? { ...x, sleeveCm: Number.isFinite(v) ? v : null } : x)),
+                    );
+                  }}
+                  placeholder="—"
+                  className="w-24 rounded-md border border-neutral-300 px-2 py-1"
+                />
+              </label>
+            </div>
           </div>
         ))}
       </section>

@@ -69,6 +69,16 @@ model ProductSize {
   label      String // "S" | "M" | "L" | "XL"
   sortOrder  Int    @default(0)
   priceDelta Int    @default(0) // CLP added on top of basePrice
+
+  // Real garment measurements (cm) for this size, from the supplier's size
+  // chart. Optional — when missing, the print zone just uses the view's
+  // maxWidthCm/maxHeightCm as-is with no scaling. When present, the print
+  // zone auto-scales relative to the "M" size (see lib/size-scale.ts),
+  // since maxWidthCm/maxHeightCm on ProductView are set against a size-M
+  // garment.
+  chestCm  Float?
+  lengthCm Float?
+  sleeveCm Float?
 }
 
 // Print technique offered for a product, e.g. "DTF", "Bordado", "Vinilo".

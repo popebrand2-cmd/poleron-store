@@ -4,6 +4,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import * as fabric from "fabric";
 import type { ViewPlacement } from "@/types";
 import { removeWhiteBackground } from "@/lib/remove-white-bg";
+import { zoneScaleFactor, type SizeMeasurements } from "@/lib/size-scale";
 
 export type MockupEditorHandle = {
   getPlacement: () => Promise<ViewPlacement | null>;
@@ -23,7 +24,23 @@ export type MockupView = {
 };
 
 const CANVAS_MAX_WIDTH = 460;
-const MIN_ZONE_SCALE = 0.25;
+
+// Loaded via Google Fonts <link> in src/app/layout.tsx.
+const FONT_OPTIONS = [
+  { label: "Arial", value: "Arial, sans-serif" },
+  { label: "Poppins", value: '"Poppins", sans-serif' },
+  { label: "Montserrat", value: '"Montserrat", sans-serif' },
+  { label: "Oswald", value: '"Oswald", sans-serif' },
+  { label: "Bebas Neue", value: '"Bebas Neue", sans-serif' },
+  { label: "Anton", value: '"Anton", sans-serif' },
+  { label: "Archivo Black", value: '"Archivo Black", sans-serif' },
+  { label: "Playfair Display", value: '"Playfair Display", serif' },
+  { label: "Pacifico", value: '"Pacifico", cursive' },
+  { label: "Dancing Script", value: '"Dancing Script", cursive' },
+  { label: "Permanent Marker", value: '"Permanent Marker", cursive' },
+  { label: "Lobster", value: '"Lobster", cursive' },
+  { label: "Roboto Mono", value: '"Roboto Mono", monospace' },
+];
 
 function makeZoneClipPath(rect: { left: number; top: number; width: number; height: number }) {
   return new fabric.Rect({
@@ -35,8 +52,15 @@ function makeZoneClipPath(rect: { left: number; top: number; width: number; heig
   });
 }
 
-const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialPlacement?: ViewPlacement | null }>(
-  function MockupEditor({ view, initialPlacement }, ref) {
+type MockupEditorProps = {
+  view: MockupView;
+  initialPlacement?: ViewPlacement | null;
+  sizes?: SizeMeasurements[];
+  selectedSizeLabel?: string;
+};
+
+const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
+  function MockupEditor({ view, initialPlacement, sizes = [], selectedSizeLabel = "" }, ref) {
     const canvasElRef = useRef<HTMLCanvasElement>(null);
     const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
     // The admin-defined MAXIMUM zone, in canvas px — fixed for the life of this editor.
@@ -45,9 +69,14 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
     const textRef = useRef<fabric.IText | null>(null);
     const zoneIndicatorRef = useRef<fabric.Rect | null>(null);
     const initialPlacementRef = useRef(initialPlacement);
+    const sizesRef = useRef(sizes);
+    const selectedSizeLabelRef = useRef(selectedSizeLabel);
+    sizesRef.current = sizes;
+    selectedSizeLabelRef.current = selectedSizeLabel;
     const [hasDesign, setHasDesign] = useState(Boolean(initialPlacement));
     const [hasText, setHasText] = useState(false);
     const [textColor, setTextColor] = useState("#111111");
+    const [fontFamily, setFontFamily] = useState(FONT_OPTIONS[0].value);
     const [uploading, setUploading] = useState(false);
     const [removingBg, setRemovingBg] = useState(false);
     const [error, setError] = useState("");
@@ -124,70 +153,34 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
         const zoneHeight = (view.zoneHeightPct / 100) * displayHeight;
         maxZoneRef.current = { left: zoneLeft, top: zoneTop, width: zoneWidth, height: zoneHeight };
 
-        // Restore the customer's previously chosen zone size, if any.
+        // The print zone is no longer resizable by hand — it's a fixed
+        // rectangle sized from the real garment measurements for the
+        // currently chosen talla (see the sizeScaleRef effect below), and
+        // just falls back to the admin's max (scale 1) until that data is
+        // available.
         const placement = initialPlacementRef.current;
-        let initialScaleX = 1;
-        let initialScaleY = 1;
-        if (placement?.zoneWidthCm && placement?.zoneHeightCm) {
-          initialScaleX = Math.min(1, Math.max(MIN_ZONE_SCALE, placement.zoneWidthCm / view.maxWidthCm));
-          initialScaleY = Math.min(1, Math.max(MIN_ZONE_SCALE, placement.zoneHeightCm / view.maxHeightCm));
-        }
+        const initialScale = zoneScaleFactor(sizesRef.current, selectedSizeLabelRef.current, view.label);
 
         const zoneIndicator = new fabric.Rect({
           left: zoneLeft,
           top: zoneTop,
           width: zoneWidth,
           height: zoneHeight,
-          scaleX: initialScaleX,
-          scaleY: initialScaleY,
+          scaleX: initialScale,
+          scaleY: initialScale,
           fill: "transparent",
           stroke: "#d946ef",
           strokeWidth: 1.5,
           strokeDashArray: [6, 4],
           originX: "left",
           originY: "top",
-          selectable: true,
-          evented: true,
-          lockMovementX: true,
-          lockMovementY: true,
-          lockRotation: true,
+          selectable: false,
+          evented: false,
+          hasControls: false,
           hasBorders: false,
-          cornerColor: "#d946ef",
-          cornerStyle: "circle",
-          transparentCorners: false,
-          cornerSize: 14,
-          minScaleLimit: MIN_ZONE_SCALE,
-        });
-        zoneIndicator.setControlsVisibility({
-          mt: false,
-          mb: false,
-          ml: false,
-          mr: false,
-          tl: false,
-          tr: false,
-          bl: false,
-          mtr: false,
-          br: true,
         });
         zoneIndicatorRef.current = zoneIndicator;
         canvas.add(zoneIndicator);
-        // Select it immediately so the resize handle is visible from the
-        // start — otherwise fabric only renders/hit-tests control handles
-        // on the active object, and the customer would have to click the
-        // zone once (as a no-op) before they could even see the handle.
-        canvas.setActiveObject(zoneIndicator);
-
-        canvas.on("object:scaling", (e) => {
-          if (e.target !== zoneIndicator) return;
-          // The lower bound is enforced natively via minScaleLimit (fabric
-          // recomputes scale from the drag anchor each frame, so it never
-          // drifts). There's no native upper-bound equivalent, so only the
-          // "can't exceed the admin's max zone" side needs a manual clamp.
-          if ((zoneIndicator.scaleX ?? 1) > 1) zoneIndicator.set({ scaleX: 1 });
-          if ((zoneIndicator.scaleY ?? 1) > 1) zoneIndicator.set({ scaleY: 1 });
-          updateClipPathToCurrentZone(canvas);
-          updateZoneBadge();
-        });
 
         if (placement) {
           loadDesign(canvas, placement.designUrl, placement);
@@ -204,6 +197,20 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [view.imageUrl]);
+
+    // Re-scale the fixed print zone whenever the customer picks a different
+    // talla — chestCm/sleeveCm drive the scale (src/lib/size-scale.ts).
+    useEffect(() => {
+      const canvas = fabricCanvasRef.current;
+      const zone = zoneIndicatorRef.current;
+      if (!canvas || !zone) return;
+      const scale = zoneScaleFactor(sizes, selectedSizeLabel, view.label);
+      zone.set({ scaleX: scale, scaleY: scale });
+      updateClipPathToCurrentZone(canvas);
+      updateZoneBadge();
+      canvas.renderAll();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedSizeLabel, JSON.stringify(sizes), view.label]);
 
     function loadDesign(canvas: fabric.Canvas, url: string, placement?: ViewPlacement) {
       fabric.FabricImage.fromURL(url, { crossOrigin: "anonymous" }).then((img) => {
@@ -264,7 +271,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
         top: zone.top + zone.height / 2,
         originX: "center",
         originY: "center",
-        fontFamily: "Arial, sans-serif",
+        fontFamily,
         fontSize: Math.max(14, Math.round(zone.height * 0.18)),
         fill: textColor,
         clipPath: makeZoneClipPath(zone),
@@ -286,6 +293,23 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
         textRef.current.set({ fill: color });
         canvas.renderAll();
       }
+    }
+
+    async function handleFontChange(family: string) {
+      setFontFamily(family);
+      const canvas = fabricCanvasRef.current;
+      if (!canvas || !textRef.current) return;
+      textRef.current.set({ fontFamily: family });
+      // The face may not be downloaded yet the first time it's picked —
+      // wait for it, otherwise the canvas keeps drawing with the fallback
+      // font until something else triggers a re-render.
+      const primaryName = family.split(",")[0].replace(/"/g, "").trim();
+      try {
+        await document.fonts.load(`16px "${primaryName}"`);
+      } catch {
+        // ignore — font will still show once the browser finishes loading it
+      }
+      canvas.renderAll();
     }
 
     function handleRemoveText() {
@@ -516,6 +540,20 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
           ) : (
             <>
               <label className="flex items-center gap-2 text-sm text-neutral-600">
+                Tipografía
+                <select
+                  value={fontFamily}
+                  onChange={(e) => handleFontChange(e.target.value)}
+                  className="rounded border border-neutral-300 px-2 py-1 text-sm"
+                >
+                  {FONT_OPTIONS.map((f) => (
+                    <option key={f.label} value={f.value} style={{ fontFamily: f.value }}>
+                      {f.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex items-center gap-2 text-sm text-neutral-600">
                 Color del texto
                 <input
                   type="color"
@@ -537,7 +575,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
         {error && <p className="text-center text-sm text-red-600">{error}</p>}
         <p className="text-center text-xs text-neutral-500">
           Arrastra para mover, usa las esquinas para escalar{view.allowRotate ? " y rotar" : ""}. Doble clic sobre el
-          texto para editarlo. Arrastra la esquina del recuadro punteado para achicar el área de impresión.
+          texto para editarlo. El recuadro punteado muestra el área máxima de impresión para tu talla.
         </p>
       </div>
     );

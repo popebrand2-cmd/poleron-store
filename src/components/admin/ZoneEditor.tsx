@@ -126,8 +126,9 @@ export default function ZoneEditor({
         </div>
       </div>
       <p className="text-xs text-neutral-500">
-        Arrastra el rectángulo para mover la zona de impresión; arrastra la esquina para cambiar su tamaño. Este es el
-        tamaño MÁXIMO — el cliente podrá achicarlo, nunca agrandarlo.
+        Arrastra el rectángulo para mover la zona de impresión; arrastra la esquina para cambiar su tamaño. Estas
+        medidas son para la talla M — si cargaste las medidas reales en la sección Tallas, el tamaño se ajusta solo
+        para las demás tallas.
       </p>
       <div className="flex items-center gap-3">
         <label className="flex items-center gap-2 text-sm">

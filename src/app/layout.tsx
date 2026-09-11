@@ -14,6 +14,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
+      <head>
+        {/* Fonts customers can pick for their design text (src/components/MockupEditor.tsx FONT_OPTIONS) */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Montserrat:wght@400;700&family=Oswald:wght@400;700&family=Bebas+Neue&family=Anton&family=Playfair+Display:wght@400;700&family=Pacifico&family=Dancing+Script:wght@700&family=Permanent+Marker&family=Lobster&family=Roboto+Mono:wght@400;700&family=Archivo+Black&display=swap"
+        />
+      </head>
       <body className="min-h-screen antialiased">
         <Header />
         {children}

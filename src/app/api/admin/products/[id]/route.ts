@@ -23,6 +23,9 @@ const colorSchema = z.object({
 const sizeSchema = z.object({
   label: z.string().min(1),
   priceDelta: z.number(),
+  chestCm: z.number().positive().nullable().optional(),
+  lengthCm: z.number().positive().nullable().optional(),
+  sleeveCm: z.number().positive().nullable().optional(),
 });
 
 const materialSchema = z.object({
@@ -73,7 +76,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         basePrice: data.basePrice,
         active: data.active,
         sizes: {
-          create: data.sizes.map((s, i) => ({ label: s.label, priceDelta: s.priceDelta, sortOrder: i })),
+          create: data.sizes.map((s, i) => ({
+            label: s.label,
+            priceDelta: s.priceDelta,
+            chestCm: s.chestCm ?? null,
+            lengthCm: s.lengthCm ?? null,
+            sleeveCm: s.sleeveCm ?? null,
+            sortOrder: i,
+          })),
         },
         materials: {
           create: data.materials.map((m, i) => ({ label: m.label, priceDelta: m.priceDelta, sortOrder: i })),

@@ -13,7 +13,13 @@ export type PersonalizerProduct = {
   slug: string;
   name: string;
   basePrice: number;
-  sizes: { label: string; priceDelta: number }[];
+  sizes: {
+    label: string;
+    priceDelta: number;
+    chestCm?: number | null;
+    lengthCm?: number | null;
+    sleeveCm?: number | null;
+  }[];
   materials: { label: string; priceDelta: number }[];
   colors: { name: string; hex: string; views: MockupView[] }[];
 };
@@ -106,6 +112,8 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
             <div key={v.label} style={{ display: activeViewLabel === v.label ? "block" : "none" }}>
               <MockupEditor
                 view={v}
+                sizes={product.sizes}
+                selectedSizeLabel={size?.label ?? ""}
                 ref={(handle) => {
                   editorRefs.current[v.label] = handle;
                 }}

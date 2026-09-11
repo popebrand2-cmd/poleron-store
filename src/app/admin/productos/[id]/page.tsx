@@ -31,7 +31,13 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           description: product.description,
           basePrice: product.basePrice,
           active: product.active,
-          sizes: product.sizes.map((s) => ({ label: s.label, priceDelta: s.priceDelta })),
+          sizes: product.sizes.map((s) => ({
+            label: s.label,
+            priceDelta: s.priceDelta,
+            chestCm: s.chestCm,
+            lengthCm: s.lengthCm,
+            sleeveCm: s.sleeveCm,
+          })),
           materials: product.materials.map((m) => ({ label: m.label, priceDelta: m.priceDelta })),
           colors: product.colors.map((c) => ({
             name: c.name,
