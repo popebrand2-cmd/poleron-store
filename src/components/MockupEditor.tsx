@@ -96,9 +96,16 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       if (!zone.width || !zone.height) return;
       const w = obj.getScaledWidth();
       const h = obj.getScaledHeight();
-      const factor = Math.min(1, zone.width / w, zone.height / h);
-      if (factor < 1) {
-        obj.set({ scaleX: (obj.scaleX ?? 1) * factor, scaleY: (obj.scaleY ?? 1) * factor });
+      // Clamp each axis independently — NOT a single shared factor. A
+      // shared factor coupled width and height together, so widening past
+      // the width cap (e.g. dragging a side handle) also shrank the
+      // height back down every frame, fighting the drag and making it
+      // feel stuck even when that axis still had room to grow.
+      const patch: Partial<fabric.FabricObject> = {};
+      if (w > zone.width) patch.scaleX = (obj.scaleX ?? 1) * (zone.width / w);
+      if (h > zone.height) patch.scaleY = (obj.scaleY ?? 1) * (zone.height / h);
+      if (Object.keys(patch).length > 0) {
+        obj.set(patch);
         obj.setCoords();
       }
     }
