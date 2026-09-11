@@ -31,9 +31,14 @@ export default async function AdminOrdersPage() {
     <main className="mx-auto max-w-5xl p-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Pedidos</h1>
-        <Link href="/admin" className="text-sm font-medium text-neutral-700 hover:underline">
-          ← Productos
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/admin/envios" className="text-sm font-medium text-neutral-700 hover:underline">
+            Envíos
+          </Link>
+          <Link href="/admin" className="text-sm font-medium text-neutral-700 hover:underline">
+            ← Productos
+          </Link>
+        </div>
       </div>
 
       {orders.length === 0 ? (
@@ -49,6 +54,15 @@ export default async function AdminOrdersPage() {
                   </p>
                   <p className="text-sm text-neutral-500">
                     {o.customerEmail} · {o.items.length} producto(s) · {formatCLP(o.totalAmount)}
+                  </p>
+                  <p className="text-sm text-neutral-500">
+                    {o.shippingMethod === "PICKUP" ? (
+                      "Retiro en tienda"
+                    ) : (
+                      <>
+                        Envío a {o.shippingComuna || "—"} ({formatCLP(o.shippingCost)}) · {o.shippingAddr}
+                      </>
+                    )}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">

@@ -23,6 +23,15 @@ Abre http://localhost:3000. El panel de administración está en `/admin` (contr
 4. Ajusta el rectángulo de la zona de impresión sobre cada foto (arrastra para mover, la esquina para redimensionar). Estas medidas son la referencia para la **talla M** — el cliente ya no puede arrastrar este recuadro; el sitio lo escala solo según la talla que elija (ver más abajo).
 5. Publica el producto.
 
+## Envíos y retiro en tienda
+
+Configúralo en `/admin/envios`:
+
+- **Retiro en tienda**: gratis, una sola dirección/local. Actívalo/desactívalo y edita dirección/horario ahí — se muestra tal cual al cliente en el checkout.
+- **Envío a domicilio**: precio **por comuna** (346 comunas de Chile, agrupadas por región para que sea manejable — usa "Aplicar a toda la región" para llenar varias de una vez y después ajustas comuna por comuna si hace falta). Una comuna sin precio puesto **no aparece** como opción en el checkout — no hay envío "gratis por accidente" a una comuna que no le pusiste precio.
+
+El precio de envío que paga el cliente siempre se recalcula en el servidor a partir de la comuna elegida (`ShippingComunaRate` en `prisma/schema.prisma`) — igual que el precio de los productos, nunca se confía en lo que mande el navegador. La lista de comunas/regiones vive en `src/lib/chile-comunas.ts` (datos fijos de la división administrativa de Chile, no editables desde el admin — lo único editable es el precio por comuna).
+
 ## Zona de impresión según la talla
 
 El cliente ya no ve ningún recuadro delimitador — el área máxima de impresión es invisible y se calcula así (`src/lib/size-scale.ts`):

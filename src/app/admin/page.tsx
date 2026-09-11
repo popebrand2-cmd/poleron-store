@@ -19,6 +19,9 @@ export default async function AdminDashboard() {
           <Link href="/admin/pedidos" className="text-sm font-medium text-neutral-700 hover:underline">
             Pedidos ({pendingOrders})
           </Link>
+          <Link href="/admin/envios" className="text-sm font-medium text-neutral-700 hover:underline">
+            Envíos
+          </Link>
           <Link
             href="/admin/productos/nuevo"
             className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white"

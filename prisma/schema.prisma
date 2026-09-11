@@ -101,11 +101,37 @@ model Order {
   customerEmail String
   customerPhone String   @default("")
   shippingAddr  String   @default("")
-  totalAmount   Int // CLP
+  // "PICKUP" | "DELIVERY"
+  shippingMethod String  @default("DELIVERY")
+  // Chile comuna name, only set for DELIVERY — see ShippingComunaRate.
+  shippingComuna String  @default("")
+  shippingCost   Int     @default(0) // CLP, snapshot of the rate at purchase time
+  totalAmount   Int // CLP, items + shippingCost
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   items OrderItem[]
+}
+
+// Admin-editable delivery price per Chilean comuna (346 of them — comuna
+// names are unique across Chile, no region-scoping needed for lookup).
+// Pickup is handled separately (see StoreSettings) since it's a single
+// fixed location, not priced per comuna.
+model ShippingComunaRate {
+  id        String @id @default(cuid())
+  region    String // for grouping/display in the admin UI
+  comuna    String @unique
+  priceCLP  Int    @default(0)
+  sortOrder Int    @default(0)
+}
+
+// Single-row settings table (always id "singleton") for store-wide config
+// that isn't tied to a specific product — currently just pickup info.
+model StoreSettings {
+  id             String  @id @default("singleton")
+  pickupEnabled  Boolean @default(true)
+  pickupAddress  String  @default("")
+  pickupHours    String  @default("")
 }
 
 model OrderItem {

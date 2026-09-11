@@ -27,13 +27,20 @@ const itemSchema = z.object({
   designPlacement: z.record(z.string(), placementSchema),
 });
 
-const checkoutSchema = z.object({
-  customerName: z.string().min(1),
-  customerEmail: z.string().email(),
-  customerPhone: z.string().default(""),
-  shippingAddr: z.string().min(1),
-  items: z.array(itemSchema).min(1),
-});
+const checkoutSchema = z
+  .object({
+    customerName: z.string().min(1),
+    customerEmail: z.string().email(),
+    customerPhone: z.string().default(""),
+    shippingAddr: z.string().min(1),
+    shippingMethod: z.enum(["PICKUP", "DELIVERY"]).default("DELIVERY"),
+    shippingComuna: z.string().default(""),
+    items: z.array(itemSchema).min(1),
+  })
+  .refine((data) => data.shippingMethod !== "DELIVERY" || data.shippingComuna.length > 0, {
+    message: "Elige una comuna para el envío.",
+    path: ["shippingComuna"],
+  });
 
 export async function POST(request: Request) {
   const json = await request.json();
@@ -83,7 +90,24 @@ export async function POST(request: Request) {
     });
   }
 
-  const totalAmount = orderItemsData.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
+  // Shipping cost is always looked up server-side — never trust a
+  // client-sent amount here either.
+  let shippingCost = 0;
+  if (data.shippingMethod === "DELIVERY") {
+    const rate = await prisma.shippingComunaRate.findUnique({ where: { comuna: data.shippingComuna } });
+    if (!rate) {
+      return NextResponse.json({ error: "Esa comuna no tiene envío configurado." }, { status: 409 });
+    }
+    shippingCost = rate.priceCLP;
+  } else {
+    const settings = await prisma.storeSettings.findUnique({ where: { id: "singleton" } });
+    if (!settings?.pickupEnabled) {
+      return NextResponse.json({ error: "El retiro en tienda no está disponible." }, { status: 409 });
+    }
+  }
+
+  const itemsTotal = orderItemsData.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
+  const totalAmount = itemsTotal + shippingCost;
 
   const order = await prisma.order.create({
     data: {
@@ -91,6 +115,9 @@ export async function POST(request: Request) {
       customerEmail: data.customerEmail,
       customerPhone: data.customerPhone,
       shippingAddr: data.shippingAddr,
+      shippingMethod: data.shippingMethod,
+      shippingComuna: data.shippingComuna,
+      shippingCost,
       totalAmount,
       items: { create: orderItemsData },
     },
