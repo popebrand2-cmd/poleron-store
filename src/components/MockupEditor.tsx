@@ -86,6 +86,9 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
     const [pickingBgColor, setPickingBgColor] = useState(false);
     const pickingBgColorRef = useRef(false);
     pickingBgColorRef.current = pickingBgColor;
+    const [cropping, setCropping] = useState(false);
+    const [applyingCrop, setApplyingCrop] = useState(false);
+    const cropRectRef = useRef<fabric.Rect | null>(null);
     const [error, setError] = useState("");
     // Live cm readout shown on the design/text's own selection box while
     // it's selected or being dragged/scaled — replaces the old fixed
@@ -279,10 +282,15 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
 
         const zone = currentZoneRect();
         const naturalWidth = img.width ?? 1;
+        const naturalHeight = img.height ?? 1;
 
         let targetLeft = zone.left + zone.width / 2;
         let targetTop = zone.top + zone.height / 2;
-        let targetScale = (zone.width * 0.7) / naturalWidth;
+        // Fit within 70% of the zone on BOTH axes, not just width — a tall
+        // image (e.g. a portrait logo) sized off width alone could blow
+        // way past the real print-area height (seen live: a square upload
+        // rendered at 67x105cm on a 27x46cm max).
+        let targetScale = Math.min((zone.width * 0.7) / naturalWidth, (zone.height * 0.7) / naturalHeight);
         let targetAngle = 0;
 
         if (placement) {
@@ -308,6 +316,8 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         img.setControlsVisibility({ mtr: view.allowRotate });
 
         designRef.current = img;
+        clampObjectToMaxSize(img);
+        img.setCoords();
         // Keep the design below any text the customer already added: add it
         // (goes on top), then move it back down to just above the
         // background (index 0).
@@ -383,6 +393,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
     }
 
     async function handleUpload(file: File) {
+      if (cropping) handleCancelCrop();
       setUploading(true);
       setError("");
       try {
@@ -474,6 +485,140 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         setError(e instanceof Error ? e.message : "Error al aislar el sujeto. Intenta con otra foto.");
       } finally {
         setSegmentingSubject(false);
+      }
+    }
+
+    // Manual crop — independent of background removal, works on any
+    // uploaded image (photo or logo). The customer drags a rectangle over
+    // the part of their image they want to keep.
+    function handleStartCrop() {
+      const canvas = fabricCanvasRef.current;
+      const design = designRef.current;
+      if (!canvas || !design) return;
+      setError("");
+      // Cropping math below assumes an axis-aligned bounding box — reset
+      // rotation first (customer can re-rotate the cropped result after).
+      design.set({ angle: 0 });
+      design.setCoords();
+      const bounds = design.getBoundingRect();
+      const rect = new fabric.Rect({
+        left: bounds.left,
+        top: bounds.top,
+        width: bounds.width,
+        height: bounds.height,
+        fill: "rgba(217,70,239,0.15)",
+        stroke: "#d946ef",
+        strokeWidth: 1.5,
+        strokeDashArray: [6, 4],
+        cornerColor: "#d946ef",
+        cornerStyle: "circle",
+        transparentCorners: false,
+        lockRotation: true,
+      });
+      rect.setControlsVisibility({ mtr: false });
+      cropRectRef.current = rect;
+      canvas.add(rect);
+      canvas.setActiveObject(rect);
+      canvas.renderAll();
+      setCropping(true);
+    }
+
+    function handleCancelCrop() {
+      const canvas = fabricCanvasRef.current;
+      if (canvas && cropRectRef.current) {
+        canvas.remove(cropRectRef.current);
+        cropRectRef.current = null;
+        canvas.renderAll();
+      }
+      setCropping(false);
+    }
+
+    async function handleApplyCrop() {
+      const canvas = fabricCanvasRef.current;
+      const design = designRef.current;
+      const rect = cropRectRef.current;
+      if (!canvas || !design || !rect) return;
+
+      setApplyingCrop(true);
+      setError("");
+      try {
+        const designBounds = design.getBoundingRect();
+        const naturalWidth = design.width ?? 1;
+        const naturalHeight = design.height ?? 1;
+        const pxPerUnitX = designBounds.width / naturalWidth;
+        const pxPerUnitY = designBounds.height / naturalHeight;
+
+        const cropBounds = rect.getBoundingRect();
+        const srcX = Math.max(0, (cropBounds.left - designBounds.left) / pxPerUnitX);
+        const srcY = Math.max(0, (cropBounds.top - designBounds.top) / pxPerUnitY);
+        const srcW = Math.min(naturalWidth - srcX, cropBounds.width / pxPerUnitX);
+        const srcH = Math.min(naturalHeight - srcY, cropBounds.height / pxPerUnitY);
+
+        if (srcW < 2 || srcH < 2) {
+          setError("El recorte es muy pequeño.");
+          return;
+        }
+
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error("No se pudo procesar la imagen."));
+          img.src = design.getSrc();
+        });
+
+        const outCanvas = document.createElement("canvas");
+        outCanvas.width = Math.round(srcW);
+        outCanvas.height = Math.round(srcH);
+        const outCtx = outCanvas.getContext("2d");
+        if (!outCtx) throw new Error("No se pudo procesar la imagen.");
+        outCtx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, outCanvas.width, outCanvas.height);
+
+        const blob = await new Promise<Blob>((resolve, reject) => {
+          outCanvas.toBlob(
+            (b) => (b ? resolve(b) : reject(new Error("No se pudo generar la imagen recortada."))),
+            "image/png",
+          );
+        });
+
+        const body = new FormData();
+        body.append("file", new File([blob], "diseno-recortado.png", { type: "image/png" }));
+        const res = await fetch("/api/upload", { method: "POST", body });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "Error al recortar la imagen.");
+
+        canvas.remove(rect);
+        cropRectRef.current = null;
+
+        const newImg = await fabric.FabricImage.fromURL(data.url, { crossOrigin: "anonymous" });
+        canvas.remove(design);
+        newImg.set({
+          left: cropBounds.left + cropBounds.width / 2,
+          top: cropBounds.top + cropBounds.height / 2,
+          originX: "center",
+          originY: "center",
+          scaleX: cropBounds.width / (newImg.width ?? 1),
+          scaleY: cropBounds.height / (newImg.height ?? 1),
+          angle: 0,
+          lockRotation: !view.allowRotate,
+          cornerColor: "#d946ef",
+          cornerStyle: "circle",
+          transparentCorners: false,
+        });
+        newImg.setControlsVisibility({ mtr: view.allowRotate });
+        designRef.current = newImg;
+        clampObjectToMaxSize(newImg);
+        newImg.setCoords();
+        canvas.add(newImg);
+        canvas.moveObjectTo(newImg, 1);
+        canvas.setActiveObject(newImg);
+        updateDesignBadge(newImg);
+        canvas.renderAll();
+        setCropping(false);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Error al recortar la imagen.");
+      } finally {
+        setApplyingCrop(false);
       }
     }
 
@@ -646,7 +791,31 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
               }}
             />
           </label>
-          {hasDesign && !pickingBgColor && (
+          {hasDesign && !pickingBgColor && !cropping && (
+            <button
+              type="button"
+              onClick={handleStartCrop}
+              className="text-sm font-medium text-fuchsia-600 hover:underline"
+            >
+              Recortar imagen
+            </button>
+          )}
+          {cropping && (
+            <>
+              <button
+                type="button"
+                onClick={handleApplyCrop}
+                disabled={applyingCrop}
+                className="text-sm font-medium text-fuchsia-600 hover:underline disabled:opacity-50"
+              >
+                {applyingCrop ? "Recortando..." : "Aplicar recorte"}
+              </button>
+              <button type="button" onClick={handleCancelCrop} className="text-sm font-medium text-red-600 hover:underline">
+                Cancelar
+              </button>
+            </>
+          )}
+          {hasDesign && !pickingBgColor && !cropping && (
             <button
               type="button"
               onClick={handleRemoveWhiteBg}
@@ -656,7 +825,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
               {removingBg ? "Quitando fondo..." : "Quitar fondo blanco"}
             </button>
           )}
-          {hasDesign && !pickingBgColor && (
+          {hasDesign && !pickingBgColor && !cropping && (
             <button
               type="button"
               onClick={handleStartPickBgColor}
@@ -671,7 +840,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
               Cancelar selección
             </button>
           )}
-          {hasDesign && !pickingBgColor && (
+          {hasDesign && !pickingBgColor && !cropping && (
             <button
               type="button"
               onClick={handleSegmentSubject}
@@ -681,7 +850,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
               {segmentingSubject ? "Aislando (puede tardar)..." : "Aislar sujeto (IA)"}
             </button>
           )}
-          {hasDesign && !pickingBgColor && (
+          {hasDesign && !pickingBgColor && !cropping && (
             <button
               type="button"
               onClick={handleRemoveDesign}
@@ -691,6 +860,11 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
             </button>
           )}
         </div>
+        {cropping && (
+          <p className="text-center text-sm font-medium text-fuchsia-600">
+            Ajusta el recuadro a la parte de la imagen que quieres conservar y presiona &quot;Aplicar recorte&quot;.
+          </p>
+        )}
         {pickingBgColor && (
           <p className="text-center text-sm font-medium text-fuchsia-600">
             Haz clic sobre el color de fondo de tu diseño que quieres quitar (funciona con cualquier color, no solo
@@ -698,7 +872,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           </p>
         )}
         <div className="flex flex-wrap items-center justify-center gap-3">
-          {!hasText ? (
+          {!hasText && !cropping && !pickingBgColor ? (
             <button
               type="button"
               onClick={handleAddText}
@@ -706,7 +880,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
             >
               + Agregar texto
             </button>
-          ) : (
+          ) : hasText ? (
             <>
               <label className="flex items-center gap-2 text-sm text-neutral-600">
                 Tipografía
@@ -739,7 +913,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
                 Quitar texto
               </button>
             </>
-          )}
+          ) : null}
         </div>
         {error && <p className="text-center text-sm text-red-600">{error}</p>}
         <p className="text-center text-xs text-neutral-500">

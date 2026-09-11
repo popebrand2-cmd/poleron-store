@@ -46,6 +46,10 @@ El cliente puede mover su diseño o texto a **cualquier parte de la prenda** (no
 
 El cliente puede agregar texto encima de su diseño (o solo, sin subir imagen) con "+ Agregar texto": elige entre 13 tipografías y cualquier color. Al agregar al carrito, si hay texto se aplana todo (diseño + texto) en una sola imagen PNG — así el archivo final que ves en Pedidos ya viene listo para imprimir tal cual se ve en el mockup.
 
+## Recortar imagen
+
+Botón "Recortar imagen" (junto a los de quitar fondo) — independiente de esas herramientas, sirve para CUALQUIER imagen subida, tenga o no que ver con transparencia: el cliente arrastra un recuadro sobre la parte que quiere conservar (mover y redimensionar por las esquinas) y presiona "Aplicar recorte". Útil, por ejemplo, para recortar una foto rectangular a solo la parte que quiere imprimir, sin depender de quitar ningún color de fondo.
+
 ## Quitar fondo del diseño
 
 Tres formas, las tres 100% en el navegador del cliente — nada se sube a ningún servicio externo, cero costo por uso. Las tres recortan automáticamente el sobrante transparente al terminar (`src/lib/crop-transparent.ts`), así el archivo final queda ajustado al arte real — no al tamaño de la foto original — y las medidas en cm que ve el cliente reflejan el diseño real, no una caja con relleno invisible:
