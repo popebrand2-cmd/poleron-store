@@ -47,6 +47,25 @@ const productSchema = z.object({
   colors: z.array(colorSchema).min(1),
 });
 
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const product = await prisma.product.findUnique({
+    where: { id },
+    include: {
+      sizes: { orderBy: { sortOrder: "asc" } },
+      materials: { orderBy: { sortOrder: "asc" } },
+      colors: {
+        orderBy: { sortOrder: "asc" },
+        include: { views: { orderBy: { sortOrder: "asc" } } },
+      },
+    },
+  });
+  if (!product) {
+    return NextResponse.json({ error: "Producto no encontrado." }, { status: 404 });
+  }
+  return NextResponse.json(product);
+}
+
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const json = await request.json();
