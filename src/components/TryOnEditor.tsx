@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import * as fabric from "fabric";
 import { removeWhiteBackground } from "@/lib/remove-white-bg";
+import { detectBodyKeypoints, preloadPoseDetector } from "@/lib/pose-detect";
+import { fitGarmentToBody } from "@/lib/garment-fit";
 
 const CANVAS_MAX_WIDTH = 460;
 
@@ -18,14 +20,25 @@ export default function TryOnEditor({
   const garmentRef = useRef<fabric.FabricImage | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingLabel, setLoadingLabel] = useState("Procesando...");
   const [error, setError] = useState("");
+  // null = not attempted yet, true = warped onto detected body, false = fell
+  // back to a flat overlay (no pose detected with enough confidence).
+  const [fitted, setFitted] = useState<boolean | null>(null);
+
+  // Warm up the pose-detection model while the customer picks a photo.
+  useEffect(() => {
+    preloadPoseDetector();
+  }, []);
 
   // Dispose the canvas whenever the photo changes (new background = fresh canvas).
   useEffect(() => {
     if (!photoUrl) return;
     let disposed = false;
     setLoading(true);
+    setLoadingLabel("Procesando...");
     setError("");
+    setFitted(null);
 
     fabric.FabricImage.fromURL(photoUrl).then(async (photoImg) => {
       if (disposed || !canvasElRef.current) return;
@@ -50,26 +63,59 @@ export default function TryOnEditor({
       try {
         const cleanBlob = await removeWhiteBackground(garmentSnapshotUrl);
         const cleanUrl = URL.createObjectURL(cleanBlob);
-        const garmentImg = await fabric.FabricImage.fromURL(cleanUrl);
+        const garmentFabricImg = await fabric.FabricImage.fromURL(cleanUrl);
         if (disposed) return;
 
-        const garmentNaturalWidth = garmentImg.width ?? 1;
-        const targetScale = (displayWidth * 0.6) / garmentNaturalWidth;
-        garmentImg.set({
-          left: displayWidth / 2,
-          top: displayHeight / 2,
-          originX: "center",
-          originY: "center",
-          scaleX: targetScale,
-          scaleY: targetScale,
-          cornerColor: "#d946ef",
-          cornerStyle: "circle",
-          transparentCorners: false,
-        });
-        garmentRef.current = garmentImg;
-        canvas.add(garmentImg);
-        canvas.setActiveObject(garmentImg);
-        canvas.renderAll();
+        let placed = false;
+        try {
+          setLoadingLabel("Ajustando a tu cuerpo...");
+          const photoEl = photoImg.getElement();
+          const keypoints = await detectBodyKeypoints(photoEl as HTMLImageElement);
+          if (keypoints && !disposed) {
+            const garmentEl = garmentFabricImg.getElement();
+            const warpedCanvas = fitGarmentToBody(garmentEl, keypoints, naturalWidth, naturalHeight);
+            if (warpedCanvas) {
+              const warpedImg = new fabric.FabricImage(warpedCanvas, {
+                left: 0,
+                top: 0,
+                scaleX: scale,
+                scaleY: scale,
+                cornerColor: "#d946ef",
+                cornerStyle: "circle",
+                transparentCorners: false,
+              });
+              garmentRef.current = warpedImg;
+              canvas.add(warpedImg);
+              canvas.setActiveObject(warpedImg);
+              canvas.renderAll();
+              placed = true;
+              setFitted(true);
+            }
+          }
+        } catch {
+          // Pose detection unavailable/failed for this photo — fall back below.
+        }
+
+        if (!placed && !disposed) {
+          setFitted(false);
+          const garmentNaturalWidth = garmentFabricImg.width ?? 1;
+          const targetScale = (displayWidth * 0.6) / garmentNaturalWidth;
+          garmentFabricImg.set({
+            left: displayWidth / 2,
+            top: displayHeight / 2,
+            originX: "center",
+            originY: "center",
+            scaleX: targetScale,
+            scaleY: targetScale,
+            cornerColor: "#d946ef",
+            cornerStyle: "circle",
+            transparentCorners: false,
+          });
+          garmentRef.current = garmentFabricImg;
+          canvas.add(garmentFabricImg);
+          canvas.setActiveObject(garmentFabricImg);
+          canvas.renderAll();
+        }
       } catch {
         setError("No se pudo procesar el diseño. Intenta con otra foto.");
       } finally {
@@ -135,11 +181,22 @@ export default function TryOnEditor({
             <canvas ref={canvasElRef} />
             {loading && (
               <div className="absolute inset-0 flex items-center justify-center bg-white/70 text-sm font-medium text-neutral-600">
-                Procesando...
+                {loadingLabel}
               </div>
             )}
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
+          {!loading && fitted === true && (
+            <p className="text-center text-xs text-emerald-600">
+              Ajustamos el diseño a tu postura automáticamente — puedes moverlo o rotarlo si quieres afinarlo.
+            </p>
+          )}
+          {!loading && fitted === false && (
+            <p className="text-center text-xs text-amber-600">
+              No pudimos detectar bien tu cuerpo en esta foto (prueba una de frente, con buena luz, de medio cuerpo
+              o más) — quedó como una superposición simple que puedes ajustar a mano.
+            </p>
+          )}
           <p className="text-center text-xs text-neutral-500">
             Arrastra para mover, usa las esquinas para ajustar el tamaño y rotar.
           </p>

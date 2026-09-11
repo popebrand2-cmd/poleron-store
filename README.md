@@ -62,7 +62,14 @@ Se descartó `@imgly/background-removal` (mejor calidad, misma idea) porque su l
 
 ## "¿Cómo se vería puesto?"
 
-Botón junto a "Agregar al carrito" (`src/components/TryOnEditor.tsx`). El cliente sube una foto suya, le quitamos el fondo a la captura del mockup (reutilizando `remove-white-bg.ts`) y la deja como una capa que puede mover/escalar/rotar sobre su foto para verse "con la prenda puesta". Todo pasa en el navegador del cliente — la foto que sube nunca se envía al servidor ni se guarda en ningún lado, solo se puede descargar como PNG desde su propio dispositivo. No hay ajuste de pose ni de cuerpo real (no es un probador con IA) — es una superposición simple, igual de espíritu que el resto del editor de mockup.
+Botón junto a "Agregar al carrito" (`src/components/TryOnEditor.tsx`). El cliente sube una foto suya, le quitamos el fondo a la captura del mockup (reutilizando `remove-white-bg.ts`) y la ajustamos automáticamente a su cuerpo — no queda pegada como una foto plana encima de otra, sino que se dobla para seguir el ancho de hombros y el largo del torso detectados en la foto. Igual que las demás herramientas de IA de esta tienda, corre 100% en el navegador del cliente, gratis:
+
+1. **Detección de pose** (`src/lib/pose-detect.ts`) — un modelo MoveNet (Apache-2.0) vía `@tensorflow-models/pose-detection`/TensorFlow.js ubica hombros y caderas en la foto. Si la foto es de medio cuerpo (sin caderas visibles), estima un largo de torso razonable en base al ancho de hombros.
+2. **Deformación de malla** (`src/lib/mesh-warp.ts` + `src/lib/garment-fit.ts`) — la imagen del mockup (ya sin fondo) se divide en una grilla de 3x3 (línea de hombros / cintura / basta) y cada celda se deforma con una transformación afín para que esa grilla caiga exactamente sobre los hombros y caderas detectados. Así el poleron/polera se "acopla" al cuerpo en vez de quedar como una calcomanía rectangular.
+
+Si no se detecta un cuerpo con suficiente confianza en la foto (mala luz, foto de perfil, etc.), se avisa al cliente y se cae de vuelta a superponer el mockup como una capa simple que puede mover/escalar/rotar a mano — igual que el comportamiento anterior. En ambos casos sigue pudiendo ajustar la capa manualmente después. La foto que sube el cliente nunca se envía al servidor ni se guarda en ningún lado, solo se puede descargar el resultado como PNG desde su propio dispositivo.
+
+No es una simulación real de tela (no genera pliegues ni sigue curvas finas del cuerpo, solo sigue hombros/torso) — para eso se necesitaría un modelo de "virtual try-on" tipo VITON corriendo en un servidor con GPU, que no es viable gratis. Se eligió este enfoque más simple (gratis, en el navegador) por el mismo criterio que el resto de las herramientas de IA de la tienda: mientras no haya tráfico pagado, mejor no generar costo por uso.
 
 ## Pagos con Mercado Pago
 
