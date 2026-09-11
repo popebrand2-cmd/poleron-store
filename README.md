@@ -18,9 +18,24 @@ Abre http://localhost:3000. El panel de administración está en `/admin` (contr
 ## Agregar productos
 
 1. Entra a `/admin`, crea el producto: nombre, precio, tallas.
-2. Por cada color, sube una foto por vista (Frente, Espalda, Manga izquierda/derecha) — deben ser fotos reales de la prenda **en blanco**, sin diseño.
-3. Ajusta el rectángulo de la zona de impresión sobre cada foto (arrastra para mover, la esquina para redimensionar). Esa es el área donde el cliente podrá poner su diseño.
-4. Publica el producto.
+2. Por cada talla, si tienes la tabla de medidas real del proveedor, completa ancho de pecho / largo total / largo de manga (cm). Son opcionales, pero si las cargas el área de impresión se ajusta sola por talla (ver más abajo) — si las dejas vacías, el área de impresión queda fija para todas las tallas.
+3. Por cada color, sube una foto por vista (Frente, Espalda, Manga izquierda/derecha) — deben ser fotos reales de la prenda **en blanco**, sin diseño.
+4. Ajusta el rectángulo de la zona de impresión sobre cada foto (arrastra para mover, la esquina para redimensionar). Estas medidas son la referencia para la **talla M** — el cliente ya no puede arrastrar este recuadro; el sitio lo escala solo según la talla que elija (ver más abajo).
+5. Publica el producto.
+
+## Zona de impresión según la talla
+
+El recuadro de impresión que ve el cliente ya no es ajustable a mano — es fijo y se calcula así (`src/lib/size-scale.ts`):
+
+- El tamaño que defines en el editor de zonas (paso 4 arriba) es el tamaño para una prenda talla **M**.
+- Si cargaste las medidas reales por talla (paso 2), el tamaño final = tamaño M × (medida de la talla elegida / medida de la talla M). Para vistas de Frente/Espalda se usa el ancho de pecho; para vistas de Manga se usa el largo de manga.
+- Si no cargaste medidas para una talla (o para ninguna), el área de impresión se queda tal cual la definiste, sin escalar.
+
+El cliente sigue pudiendo mover/escalar/rotar su diseño o texto libremente **dentro** de esa área — lo que cambió es que ya no puede agrandar o achicar el área misma.
+
+## Texto sobre el diseño
+
+El cliente puede agregar texto encima de su diseño (o solo, sin subir imagen) con "+ Agregar texto": elige entre 13 tipografías y cualquier color. Al agregar al carrito, si hay texto se aplana todo (diseño + texto) en una sola imagen PNG — así el archivo final que ves en Pedidos ya viene listo para imprimir tal cual se ve en el mockup.
 
 ## Pagos con Mercado Pago
 
