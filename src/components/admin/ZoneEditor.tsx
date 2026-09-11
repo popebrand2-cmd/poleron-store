@@ -80,20 +80,14 @@ export default function ZoneEditor({
       const newY = clamp(drag.startZone.zoneYPct + dy, 0, 100 - drag.startZone.zoneHeightPct);
       onChange({ ...drag.startZone, zoneXPct: newX, zoneYPct: newY });
     } else {
+      // Dragging only resizes the visual guide (in % of the photo) — it
+      // never touches maxWidthCm/maxHeightCm. Auto-scaling cm with the drag
+      // was tried and turned out to be a footgun: one careless drag after
+      // typing a value silently overwrote it with a nonsense number. Type
+      // the real-world size directly in the fields below instead.
       const newWidth = clamp(drag.startZone.zoneWidthPct + dx, 5, 100 - drag.startZone.zoneXPct);
       const newHeight = clamp(drag.startZone.zoneHeightPct + dy, 5, 100 - drag.startZone.zoneYPct);
-      // Scale the cm values proportionally to how much the box just grew or
-      // shrank, using the cm-per-% ratio from the start of this drag as the
-      // reference — so the badge tracks the resize instead of staying fixed.
-      const widthCmPerPct = drag.startZone.maxWidthCm / drag.startZone.zoneWidthPct;
-      const heightCmPerPct = drag.startZone.maxHeightCm / drag.startZone.zoneHeightPct;
-      onChange({
-        ...drag.startZone,
-        zoneWidthPct: newWidth,
-        zoneHeightPct: newHeight,
-        maxWidthCm: Math.round(newWidth * widthCmPerPct * 10) / 10,
-        maxHeightCm: Math.round(newHeight * heightCmPerPct * 10) / 10,
-      });
+      onChange({ ...drag.startZone, zoneWidthPct: newWidth, zoneHeightPct: newHeight });
     }
   }
 
