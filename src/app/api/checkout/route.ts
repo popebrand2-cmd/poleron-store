@@ -17,6 +17,7 @@ const itemSchema = z.object({
   productId: z.string(),
   colorName: z.string(),
   sizeLabel: z.string(),
+  materialLabel: z.string(),
   quantity: z.number().int().min(1),
   previewImageUrl: z.string(),
   designPlacement: z.record(z.string(), placementSchema),
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
     productId: string;
     colorName: string;
     sizeLabel: string;
+    materialLabel: string;
     quantity: number;
     unitPrice: number;
     designPlacement: string;
@@ -52,7 +54,7 @@ export async function POST(request: Request) {
   for (const item of data.items) {
     const product = await prisma.product.findUnique({
       where: { id: item.productId },
-      include: { sizes: true },
+      include: { sizes: true, materials: true },
     });
     if (!product || !product.active) {
       return NextResponse.json({ error: "Un producto del carrito ya no está disponible." }, { status: 409 });
@@ -61,12 +63,17 @@ export async function POST(request: Request) {
     if (!size) {
       return NextResponse.json({ error: "Talla inválida." }, { status: 409 });
     }
+    const material = product.materials.find((m) => m.label === item.materialLabel);
+    if (!material) {
+      return NextResponse.json({ error: "Material inválido." }, { status: 409 });
+    }
     orderItemsData.push({
       productId: product.id,
       colorName: item.colorName,
       sizeLabel: item.sizeLabel,
+      materialLabel: item.materialLabel,
       quantity: item.quantity,
-      unitPrice: product.basePrice + size.priceDelta,
+      unitPrice: product.basePrice + size.priceDelta + material.priceDelta,
       designPlacement: JSON.stringify(item.designPlacement),
       previewImageUrl: item.previewImageUrl,
     });

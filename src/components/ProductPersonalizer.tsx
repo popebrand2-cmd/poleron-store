@@ -14,6 +14,7 @@ export type PersonalizerProduct = {
   name: string;
   basePrice: number;
   sizes: { label: string; priceDelta: number }[];
+  materials: { label: string; priceDelta: number }[];
   colors: { name: string; hex: string; views: MockupView[] }[];
 };
 
@@ -23,6 +24,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
 
   const [colorIndex, setColorIndex] = useState(0);
   const [sizeIndex, setSizeIndex] = useState(0);
+  const [materialIndex, setMaterialIndex] = useState(0);
   const color = product.colors[colorIndex];
   const [activeViewLabel, setActiveViewLabel] = useState(color.views[0]?.label ?? "");
 
@@ -31,7 +33,8 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
   const [formError, setFormError] = useState("");
 
   const size = product.sizes[sizeIndex];
-  const unitPrice = product.basePrice + (size?.priceDelta ?? 0);
+  const material = product.materials[materialIndex];
+  const unitPrice = product.basePrice + (size?.priceDelta ?? 0) + (material?.priceDelta ?? 0);
 
   function handleColorChange(index: number) {
     setColorIndex(index);
@@ -69,6 +72,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
       colorName: color.name,
       colorHex: color.hex,
       sizeLabel: size?.label ?? "",
+      materialLabel: material?.label ?? "",
       unitPrice,
       quantity: 1,
       previewImageUrl: previewImageUrl ?? "",
@@ -128,6 +132,24 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
                 style={{ backgroundColor: c.hex }}
                 title={c.name}
               />
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <p className="mb-2 text-sm font-medium">Material</p>
+          <div className="flex flex-wrap gap-2">
+            {product.materials.map((m, i) => (
+              <button
+                key={m.label}
+                type="button"
+                onClick={() => setMaterialIndex(i)}
+                className={`rounded-md border px-4 py-2 text-sm font-medium ${
+                  i === materialIndex ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-300"
+                }`}
+              >
+                {m.label}
+              </button>
             ))}
           </div>
         </div>

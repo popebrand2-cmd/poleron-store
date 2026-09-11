@@ -58,6 +58,14 @@ export default async function AdminOrdersPage() {
                   <DeleteOrderButton orderId={o.id} />
                 </div>
               </div>
+              <ul className="mt-2 space-y-0.5 text-xs text-neutral-500">
+                {o.items.map((it) => (
+                  <li key={it.id}>
+                    {it.quantity}x {it.colorName} · Talla {it.sizeLabel}
+                    {it.materialLabel && ` · ${it.materialLabel}`}
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>

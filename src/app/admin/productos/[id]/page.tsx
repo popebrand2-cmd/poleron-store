@@ -10,6 +10,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     where: { id },
     include: {
       sizes: { orderBy: { sortOrder: "asc" } },
+      materials: { orderBy: { sortOrder: "asc" } },
       colors: {
         orderBy: { sortOrder: "asc" },
         include: { views: { orderBy: { sortOrder: "asc" } } },
@@ -31,6 +32,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           basePrice: product.basePrice,
           active: product.active,
           sizes: product.sizes.map((s) => ({ label: s.label, priceDelta: s.priceDelta })),
+          materials: product.materials.map((m) => ({ label: m.label, priceDelta: m.priceDelta })),
           colors: product.colors.map((c) => ({
             name: c.name,
             hex: c.hex,

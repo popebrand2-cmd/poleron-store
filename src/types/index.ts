@@ -22,6 +22,7 @@ export type CartItem = {
   colorName: string;
   colorHex: string;
   sizeLabel: string;
+  materialLabel: string;
   unitPrice: number; // CLP
   quantity: number;
   previewImageUrl: string; // data URL snapshot of the primary (first) view

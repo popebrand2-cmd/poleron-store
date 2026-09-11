@@ -25,6 +25,11 @@ const sizeSchema = z.object({
   priceDelta: z.number(),
 });
 
+const materialSchema = z.object({
+  label: z.string().min(1),
+  priceDelta: z.number(),
+});
+
 const productSchema = z.object({
   name: z.string().min(1),
   slug: z
@@ -35,6 +40,7 @@ const productSchema = z.object({
   basePrice: z.number().int().min(0),
   active: z.boolean(),
   sizes: z.array(sizeSchema).min(1),
+  materials: z.array(materialSchema).min(1),
   colors: z.array(colorSchema).min(1),
 });
 
@@ -57,6 +63,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   await prisma.$transaction([
     prisma.productColor.deleteMany({ where: { productId: id } }),
     prisma.productSize.deleteMany({ where: { productId: id } }),
+    prisma.productMaterial.deleteMany({ where: { productId: id } }),
     prisma.product.update({
       where: { id },
       data: {
@@ -67,6 +74,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         active: data.active,
         sizes: {
           create: data.sizes.map((s, i) => ({ label: s.label, priceDelta: s.priceDelta, sortOrder: i })),
+        },
+        materials: {
+          create: data.materials.map((m, i) => ({ label: m.label, priceDelta: m.priceDelta, sortOrder: i })),
         },
         colors: {
           create: data.colors.map((c, i) => ({

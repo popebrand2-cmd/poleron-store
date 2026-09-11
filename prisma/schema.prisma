@@ -18,8 +18,9 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  colors   ProductColor[]
-  sizes    ProductSize[]
+  colors    ProductColor[]
+  sizes     ProductSize[]
+  materials ProductMaterial[]
   orderItems OrderItem[]
 }
 
@@ -70,6 +71,17 @@ model ProductSize {
   priceDelta Int    @default(0) // CLP added on top of basePrice
 }
 
+// Print technique offered for a product, e.g. "DTF", "Bordado", "Vinilo".
+model ProductMaterial {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  label      String // "DTF"
+  sortOrder  Int    @default(0)
+  priceDelta Int    @default(0) // CLP added on top of basePrice
+}
+
 // SQLite has no native enum type, so status is a plain string constrained
 // in application code to: PENDING_PAYMENT | PAID | IN_PRODUCTION | SHIPPED | CANCELLED
 model Order {
@@ -93,9 +105,10 @@ model OrderItem {
   productId String
   product   Product @relation(fields: [productId], references: [id])
 
-  colorName  String
-  sizeLabel  String
-  quantity   Int    @default(1)
+  colorName    String
+  sizeLabel    String
+  materialLabel String @default("")
+  quantity     Int    @default(1)
   unitPrice  Int // CLP, snapshot at purchase time
 
   // Per-view design placement snapshot, e.g.

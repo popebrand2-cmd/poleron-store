@@ -23,6 +23,11 @@ type SizeFormState = {
   priceDelta: number;
 };
 
+type MaterialFormState = {
+  label: string;
+  priceDelta: number;
+};
+
 export type ProductFormInitial = {
   id: string;
   slug: string;
@@ -31,6 +36,7 @@ export type ProductFormInitial = {
   basePrice: number;
   active: boolean;
   sizes: SizeFormState[];
+  materials: MaterialFormState[];
   colors: ColorFormState[];
 };
 
@@ -68,6 +74,9 @@ export default function ProductForm({ initial }: { initial?: ProductFormInitial 
       { label: "L", priceDelta: 0 },
       { label: "XL", priceDelta: 2000 },
     ],
+  );
+  const [materials, setMaterials] = useState<MaterialFormState[]>(
+    initial?.materials ?? [{ label: "DTF", priceDelta: 0 }],
   );
   const [colors, setColors] = useState<ColorFormState[]>(initial?.colors ?? [newColor()]);
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
@@ -129,7 +138,7 @@ export default function ProductForm({ initial }: { initial?: ProductFormInitial 
     }
 
     setSaving(true);
-    const payload = { name, slug, description, basePrice, active, sizes, colors };
+    const payload = { name, slug, description, basePrice, active, sizes, materials, colors };
     const res = await fetch(isEdit ? `/api/admin/products/${initial!.id}` : "/api/admin/products", {
       method: isEdit ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
@@ -243,6 +252,50 @@ export default function ProductForm({ initial }: { initial?: ProductFormInitial 
             <button
               type="button"
               onClick={() => setSizes((prev) => prev.filter((_, j) => j !== i))}
+              className="ml-auto text-sm text-red-600 hover:underline"
+            >
+              Quitar
+            </button>
+          </div>
+        ))}
+      </section>
+
+      <section className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Materiales / técnica de impresión</h2>
+          <button
+            type="button"
+            onClick={() => setMaterials((m) => [...m, { label: "", priceDelta: 0 }])}
+            className="text-sm font-medium text-fuchsia-600 hover:underline"
+          >
+            + Agregar material
+          </button>
+        </div>
+        {materials.map((m, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <input
+              value={m.label}
+              onChange={(e) =>
+                setMaterials((prev) => prev.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))
+              }
+              placeholder="DTF"
+              className="w-32 rounded-md border border-neutral-300 px-3 py-2"
+            />
+            <input
+              type="number"
+              value={m.priceDelta}
+              onChange={(e) =>
+                setMaterials((prev) =>
+                  prev.map((x, j) => (j === i ? { ...x, priceDelta: Number(e.target.value) } : x)),
+                )
+              }
+              placeholder="Recargo CLP"
+              className="w-40 rounded-md border border-neutral-300 px-3 py-2"
+            />
+            <span className="text-sm text-neutral-500">recargo sobre el precio base</span>
+            <button
+              type="button"
+              onClick={() => setMaterials((prev) => prev.filter((_, j) => j !== i))}
               className="ml-auto text-sm text-red-600 hover:underline"
             >
               Quitar

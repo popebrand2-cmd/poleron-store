@@ -43,6 +43,7 @@ export default function CartPage() {
               <p className="font-medium">{item.productName}</p>
               <p className="text-sm text-neutral-500">
                 Color {item.colorName} · Talla {item.sizeLabel}
+                {item.materialLabel && ` · ${item.materialLabel}`}
               </p>
               <p className="text-sm text-neutral-500">{Object.keys(item.designPlacement).join(", ")}</p>
               <div className="mt-2 flex items-center gap-3">
