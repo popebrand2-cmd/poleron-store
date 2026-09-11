@@ -3,6 +3,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import * as fabric from "fabric";
 import type { ViewPlacement } from "@/types";
+import { removeWhiteBackground } from "@/lib/remove-white-bg";
 
 export type MockupEditorHandle = {
   getPlacement: () => ViewPlacement | null;
@@ -35,6 +36,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
     const initialPlacementRef = useRef(initialPlacement);
     const [hasDesign, setHasDesign] = useState(Boolean(initialPlacement));
     const [uploading, setUploading] = useState(false);
+    const [removingBg, setRemovingBg] = useState(false);
     const [error, setError] = useState("");
     const [zoneBadge, setZoneBadge] = useState<{
       left: number;
@@ -268,6 +270,56 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
       }
     }
 
+    async function handleRemoveWhiteBg() {
+      const canvas = fabricCanvasRef.current;
+      const design = designRef.current;
+      if (!canvas || !design) return;
+
+      setRemovingBg(true);
+      setError("");
+      try {
+        const currentSrc = design.getSrc();
+        const blob = await removeWhiteBackground(currentSrc);
+
+        const body = new FormData();
+        body.append("file", new File([blob], "diseno-sin-fondo.png", { type: "image/png" }));
+        const res = await fetch("/api/upload", { method: "POST", body });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "Error al quitar el fondo.");
+
+        // Keep the exact same on-canvas position/size/rotation — just swap
+        // which image is drawn.
+        const transform = {
+          left: design.left,
+          top: design.top,
+          scaleX: design.scaleX,
+          scaleY: design.scaleY,
+          angle: design.angle,
+        };
+        const newImg = await fabric.FabricImage.fromURL(data.url, { crossOrigin: "anonymous" });
+        canvas.remove(design);
+        newImg.set({
+          ...transform,
+          originX: "center",
+          originY: "center",
+          clipPath: design.clipPath,
+          lockRotation: !view.allowRotate,
+          cornerColor: "#d946ef",
+          cornerStyle: "circle",
+          transparentCorners: false,
+        });
+        newImg.setControlsVisibility({ mtr: view.allowRotate });
+        designRef.current = newImg;
+        canvas.add(newImg);
+        canvas.setActiveObject(newImg);
+        canvas.renderAll();
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Error al quitar el fondo.");
+      } finally {
+        setRemovingBg(false);
+      }
+    }
+
     function handleRemoveDesign() {
       const canvas = fabricCanvasRef.current;
       if (canvas && designRef.current) {
@@ -338,6 +390,16 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
               }}
             />
           </label>
+          {hasDesign && (
+            <button
+              type="button"
+              onClick={handleRemoveWhiteBg}
+              disabled={removingBg}
+              className="text-sm font-medium text-fuchsia-600 hover:underline disabled:opacity-50"
+            >
+              {removingBg ? "Quitando fondo..." : "Quitar fondo blanco"}
+            </button>
+          )}
           {hasDesign && (
             <button
               type="button"
