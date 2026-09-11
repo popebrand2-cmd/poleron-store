@@ -43,23 +43,30 @@ export function fitGarmentToBody(
     hipWidth = shoulderWidth * 0.9;
   }
 
-  // A body that's turned/angled toward the camera (not a flat frontal pose)
-  // projects a foreshortened shoulder-to-shoulder distance while the
-  // vertical shoulder-to-hip distance stays roughly normal — without this,
-  // that mismatch stretches the garment into a tall, narrow strip instead
-  // of a torso shape. Clamping the torso height to a plausible multiple of
-  // the (reliable) shoulder width keeps the fit looking like a garment even
-  // when the photo isn't a clean front-on shot.
-  const torsoHeight = Math.min(shoulderWidth * 1.5, Math.max(shoulderWidth * 0.8, hipMidY - shoulderMidY));
-  hipMidY = shoulderMidY + torsoHeight;
-
   const neckY = shoulderMidY - shoulderWidth * 0.15;
-  const waistY = shoulderMidY + (hipMidY - shoulderMidY) * 0.5;
-  const hemY = hipMidY + (hipMidY - shoulderMidY) * 0.35;
+  let waistY = shoulderMidY + (hipMidY - shoulderMidY) * 0.5;
+  let hemY = hipMidY + (hipMidY - shoulderMidY) * 0.35;
 
   const shoulderHalf = shoulderWidth / 2;
   const hipHalf = Math.max(hipWidth, shoulderWidth * 0.85) / 2;
   const waistHalf = (shoulderHalf + hipHalf) / 2;
+
+  // A body that's turned/angled toward the camera (not a flat frontal pose)
+  // projects a foreshortened shoulder-to-shoulder distance while the
+  // vertical shoulder-to-hip distance stays roughly normal — without this,
+  // that mismatch stretches the garment into a tall, narrow strip instead
+  // of a torso shape. Bounding how tall the destination shape is allowed to
+  // get relative to its own width keeps the fit looking like a worn garment
+  // even when the photo isn't a clean front-on shot, by compressing the
+  // waist/hem lines back toward the neckline proportionally.
+  const totalWidth = Math.max(shoulderHalf * 1.25, waistHalf * 1.3, hipHalf * 1.35) * 2;
+  const totalHeight = hemY - neckY;
+  const maxHeight = totalWidth * 1.3;
+  if (totalHeight > maxHeight) {
+    const scale = maxHeight / totalHeight;
+    waistY = neckY + (waistY - neckY) * scale;
+    hemY = neckY + (hemY - neckY) * scale;
+  }
 
   // Source control points: where the shoulder/waist/hem lines sit on the
   // flat garment photo, with a small margin since product photos rarely
