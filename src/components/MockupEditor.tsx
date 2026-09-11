@@ -58,6 +58,11 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
     // The admin-defined MAXIMUM zone, in canvas px — fixed for the life of this editor.
     const maxZoneRef = useRef({ left: 0, top: 0, width: 0, height: 0 });
     const designRef = useRef<fabric.FabricImage | null>(null);
+    // The customer's raw uploaded file, before any processing (bg removal,
+    // crop, flattening with text). Only set by handleUpload — the bg-removal
+    // handlers swap designRef's image but deliberately leave this alone, so
+    // admin can always download exactly what the customer submitted.
+    const originalDesignUrlRef = useRef<string | null>(null);
     const textRef = useRef<fabric.IText | null>(null);
     const zoneIndicatorRef = useRef<fabric.Rect | null>(null);
     const initialPlacementRef = useRef(initialPlacement);
@@ -239,6 +244,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         });
 
         if (placement) {
+          originalDesignUrlRef.current = placement.originalDesignUrl ?? placement.designUrl;
           loadDesign(canvas, placement.designUrl, placement);
         }
 
@@ -385,6 +391,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         const res = await fetch("/api/upload", { method: "POST", body });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? "Error al subir el diseño.");
+        originalDesignUrlRef.current = data.url;
         const canvas = fabricCanvasRef.current;
         if (canvas) loadDesign(canvas, data.url);
       } catch (e) {
@@ -522,6 +529,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       if (canvas && designRef.current) {
         canvas.remove(designRef.current);
         designRef.current = null;
+        originalDesignUrlRef.current = null;
         updateDesignBadge(null);
         canvas.renderAll();
         setHasDesign(false);
@@ -546,6 +554,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           const top = img.top ?? 0;
           return {
             designUrl: (img.getSrc && img.getSrc()) || "",
+            originalDesignUrl: originalDesignUrlRef.current ?? undefined,
             xPct: ((left - zone.left) / zone.width) * 100,
             yPct: ((top - zone.top) / zone.height) * 100,
             widthPct: (img.getScaledWidth() / zone.width) * 100,
@@ -591,6 +600,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
 
         return {
           designUrl: data.url,
+          originalDesignUrl: originalDesignUrlRef.current ?? undefined,
           xPct: 50,
           yPct: 50,
           widthPct: 100,

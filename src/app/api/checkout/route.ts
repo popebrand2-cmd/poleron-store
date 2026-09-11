@@ -5,6 +5,10 @@ import { createMercadoPagoPreference, isMercadoPagoConfigured } from "@/lib/merc
 
 const placementSchema = z.object({
   designUrl: z.string(),
+  // The customer's raw uploaded file, before any bg-removal/crop/flatten
+  // processing — so admin can always download exactly what they submitted.
+  // Optional: text-only views, or carts saved before this field existed.
+  originalDesignUrl: z.string().optional(),
   xPct: z.number(),
   yPct: z.number(),
   widthPct: z.number(),

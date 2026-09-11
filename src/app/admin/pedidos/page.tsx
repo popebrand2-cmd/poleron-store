@@ -72,13 +72,40 @@ export default async function AdminOrdersPage() {
                   <DeleteOrderButton orderId={o.id} />
                 </div>
               </div>
-              <ul className="mt-2 space-y-0.5 text-xs text-neutral-500">
-                {o.items.map((it) => (
-                  <li key={it.id}>
-                    {it.quantity}x {it.colorName} · Talla {it.sizeLabel}
-                    {it.materialLabel && ` · ${it.materialLabel}`}
-                  </li>
-                ))}
+              <ul className="mt-2 space-y-1.5 text-xs text-neutral-500">
+                {o.items.map((it) => {
+                  let placement: Record<string, { designUrl?: string; originalDesignUrl?: string }> = {};
+                  try {
+                    placement = JSON.parse(it.designPlacement);
+                  } catch {
+                    // malformed/legacy data — just skip the download links below
+                  }
+                  return (
+                    <li key={it.id}>
+                      <p>
+                        {it.quantity}x {it.colorName} · Talla {it.sizeLabel}
+                        {it.materialLabel && ` · ${it.materialLabel}`}
+                      </p>
+                      <div className="mt-0.5 flex flex-wrap gap-3">
+                        {Object.entries(placement).map(([viewLabel, p]) => {
+                          const url = p.originalDesignUrl ?? p.designUrl;
+                          if (!url) return null;
+                          return (
+                            <a
+                              key={viewLabel}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium text-fuchsia-600 hover:underline"
+                            >
+                              Descargar imagen subida ({viewLabel})
+                            </a>
+                          );
+                        })}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}

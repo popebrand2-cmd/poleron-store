@@ -3,6 +3,12 @@
 // full image, so they stay valid regardless of the photo's pixel size.
 export type ViewPlacement = {
   designUrl: string;
+  // The raw file the customer uploaded for this view, before any
+  // processing (background removal, crop, or flattening with text) —
+  // kept so admin can always download exactly what the customer
+  // submitted, regardless of what the on-canvas working copy became.
+  // Undefined when the view has no uploaded image (text-only).
+  originalDesignUrl?: string;
   xPct: number; // center X within the zone, 0-100
   yPct: number; // center Y within the zone, 0-100
   widthPct: number; // design width relative to zone width, e.g. 60 = 60% of zone width

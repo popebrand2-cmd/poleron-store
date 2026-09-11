@@ -90,6 +90,10 @@ Por defecto la tienda corre en "modo de prueba": los pedidos se guardan pero no 
 - El `tar` crítico que reporta `npm audit` es una dependencia de instalación (usada por `sharp`/Prisma al compilar), no corre en la tienda en producción — no es explotable desde el sitio web.
 - `onnxruntime-web` (motor de IA para "Aislar sujeto") no agregó vulnerabilidades nuevas al `npm audit` — las 5 reportadas ya existían antes por fabric/postcss/tar (ver arriba).
 
+## Descargar el archivo original que subió el cliente
+
+En `/admin/pedidos`, cada producto de cada pedido tiene un link **"Descargar imagen subida"** por cada vista (Frente/Espalda/Manga) — es el archivo tal cual lo subió el cliente, ANTES de cualquier procesamiento (quitar fondo, recorte, agregar texto). Si el cliente usó texto, el mockup que ves en el pedido es la imagen aplanada con el texto encima, pero este link sigue apuntando al archivo original sin texto — para producción normalmente vas a querer el archivo aplanado (es lo que se ve en el mockup), pero si necesitas el arte original en alta resolución para volver a trabajarlo, está acá. Pedidos de antes de esta función no tienen el original guardado por separado — el link cae de vuelta al archivo que sí se guardó en ese momento.
+
 ## Estructura
 
 - `/admin` — panel de administración (productos, pedidos), protegido por contraseña.
