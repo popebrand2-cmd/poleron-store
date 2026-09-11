@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type Zone = {
   zoneXPct: number;
@@ -50,6 +50,16 @@ export default function ZoneEditor({
   // here landed in the wrong place on the real product page for any photo
   // that wasn't itself square.
   const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Cached images can finish loading before React attaches the onLoad
+  // listener below, so it never fires — check on mount too.
+  useEffect(() => {
+    const el = imgRef.current;
+    if (el?.complete && el.naturalWidth && el.naturalHeight) {
+      setAspectRatio(el.naturalWidth / el.naturalHeight);
+    }
+  }, [imageUrl]);
 
   function pctFromEvent(e: React.PointerEvent, base: DOMRect) {
     return {
@@ -126,6 +136,7 @@ export default function ZoneEditor({
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
+          ref={imgRef}
           src={imageUrl}
           alt=""
           className="pointer-events-none absolute inset-0 h-full w-full object-fill"
