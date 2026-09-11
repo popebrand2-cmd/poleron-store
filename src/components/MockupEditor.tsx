@@ -52,9 +52,17 @@ const MockupEditor = forwardRef<MockupEditorHandle, { view: MockupView; initialP
         });
         fabricCanvasRef.current = canvas;
 
-        bgImg.scale(scale);
-        bgImg.set({ selectable: false, evented: false });
-        canvas.backgroundImage = bgImg;
+        bgImg.set({
+          left: 0,
+          top: 0,
+          scaleX: scale,
+          scaleY: scale,
+          selectable: false,
+          evented: false,
+        });
+        // Add as a regular object rather than canvas.backgroundImage — the
+        // latter has had scaling/rendering bugs in fabric v6/v7.
+        canvas.add(bgImg);
 
         const zoneLeft = (view.zoneXPct / 100) * displayWidth;
         const zoneTop = (view.zoneYPct / 100) * displayHeight;
