@@ -8,10 +8,11 @@ export const dynamic = "force-dynamic";
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ orderId?: string }>;
+  searchParams: Promise<{ orderId?: string; external_reference?: string }>;
 }) {
-  const { orderId } = await searchParams;
-  const order = orderId ? await prisma.order.findUnique({ where: { id: orderId } }) : null;
+  const { orderId, external_reference } = await searchParams;
+  const id = orderId ?? external_reference;
+  const order = id ? await prisma.order.findUnique({ where: { id } }) : null;
 
   return (
     <main className="mx-auto max-w-xl px-6 py-16 text-center">

@@ -75,8 +75,6 @@ model Order {
   customerPhone String   @default("")
   shippingAddr  String   @default("")
   totalAmount   Int // CLP
-  flowToken     String?
-  flowOrder     String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 

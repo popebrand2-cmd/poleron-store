@@ -1,6 +1,8 @@
 # Poleron Store
 
-Tienda de ropa personalizada: subes tus prendas base (frente/espalda/manga), el cliente sube su diseño y lo ubica dentro de la zona de impresión que definiste, y compra con pago real vía Flow.cl.
+Tienda de ropa personalizada: subes tus prendas base (frente/espalda/manga), el cliente sube su diseño y lo ubica dentro de la zona de impresión que definiste, y compra con pago real vía Mercado Pago.
+
+**En producción:** https://poleron-store-production.up.railway.app (desplegado en Railway, conectado a este repositorio — cada push a `main` se publica solo).
 
 ## Correr en desarrollo
 
@@ -11,7 +13,7 @@ npm run dev
 
 Abre http://localhost:3000. El panel de administración está en `/admin` (contraseña definida en `.env`, cámbiala antes de usar la tienda en serio).
 
-> Nota Windows: si `npm run dev` falla con un error `EXDEV` al escribir en `AppData\Roaming`, es porque esa carpeta está en un disco distinto al de OneDrive/roaming en este equipo. Ya quedó resuelto apuntando `APPDATA` a `.localappdata` dentro del proyecto (ver `.claude/launch.json` / cómo se lanzó el server). Si lo corres manualmente, agrega antes: `set APPDATA=%cd%\.localappdata`.
+> Nota Windows: si `npm run dev` falla con un error `EXDEV` al escribir en `AppData\Roaming`, es porque esa carpeta está en un disco distinto al de OneDrive/roaming en este equipo. Soluciónalo apuntando `APPDATA` a una carpeta local antes de correrlo: `set APPDATA=%cd%\.localappdata`.
 
 ## Agregar productos
 
@@ -20,25 +22,31 @@ Abre http://localhost:3000. El panel de administración está en `/admin` (contr
 3. Ajusta el rectángulo de la zona de impresión sobre cada foto (arrastra para mover, la esquina para redimensionar). Esa es el área donde el cliente podrá poner su diseño.
 4. Publica el producto.
 
-## Pagos con Flow.cl
+## Pagos con Mercado Pago
 
 Por defecto la tienda corre en "modo de prueba": los pedidos se guardan pero no se cobra nada real. Para activar cobros:
 
-1. Crea una cuenta en [flow.cl](https://www.flow.cl) y obtén tu `apiKey` y `secretKey` (usa el sandbox primero: https://sandbox.flow.cl).
-2. Completa en `.env`:
+1. En tu cuenta de Mercado Pago, ve a [mercadopago.cl/developers/panel/app](https://www.mercadopago.cl/developers/panel/app) y crea una aplicación.
+2. Copia tu **Access Token** (usa primero el de prueba — "Credenciales de prueba" — antes de pasar a producción).
+3. Agrega la variable de entorno:
    ```
-   FLOW_API_KEY="..."
-   FLOW_SECRET_KEY="..."
-   FLOW_API_URL="https://sandbox.flow.cl/api"   # cambia a https://www.flow.cl/api en producción
-   NEXT_PUBLIC_BASE_URL="https://tu-dominio.cl" # debe ser accesible públicamente para que Flow confirme el pago
+   MERCADOPAGO_ACCESS_TOKEN="..."
+   NEXT_PUBLIC_BASE_URL="https://tu-dominio-o-el-de-railway"
    ```
-3. Flow necesita poder llamar a `NEXT_PUBLIC_BASE_URL/api/flow/confirm` desde internet — no funciona en `localhost`, solo una vez desplegada la tienda.
+   En Railway: pestaña **Variables** del servicio → **+ New Variable** → Deploy.
+4. Mercado Pago necesita poder llamar a `NEXT_PUBLIC_BASE_URL/api/mercadopago/webhook` desde internet — no funciona en `localhost`, solo una vez desplegada la tienda.
 
-## Antes de publicar la tienda
+## Hosting (Railway)
 
-- **Cambia `ADMIN_PASSWORD`** en `.env`.
-- **Elige dónde hospedar con cuidado**: las fotos de producto y los diseños de clientes se guardan en disco (`public/uploads`), no en un servicio externo. Esto funciona bien en un VPS o en Railway/Render con un volumen persistente (barato, ~US$5-7/mes), pero **no funciona en Vercel** (su sistema de archivos es efímero: las imágenes subidas se perderían). Si más adelante creces mucho, migrar esas subidas a un bucket S3-compatible (Cloudflare R2, Backblaze B2) es el siguiente paso natural.
-- La base de datos es SQLite (`prisma/dev.db`), sin costo. Haz respaldos periódicos de ese archivo (o de todo el volumen persistente). Si el catálogo/pedidos crecen mucho, migrar a Postgres (Neon/Supabase tienen plan gratuito) es sencillo con Prisma.
+- **Servicio**: `poleron-store`, desplegado desde este repo de GitHub (auto-deploy activado en `main`).
+- **Disco persistente**: un volumen (`poleron-store-volume`) montado en `/data`, donde viven la base de datos (`DATABASE_URL=file:/data/dev.db`) y las imágenes subidas (`UPLOADS_DIR=/data/uploads`). Sin este volumen se perdería todo en cada redeploy — no lo elimines.
+- **Dominio**: Railway genera uno gratis (`*.up.railway.app`); se puede reemplazar por uno propio desde Settings → Networking → Custom Domain cuando compres uno.
+- **Costo**: plan Hobby (~US$5/mes) + centavos de disco. Sin mensualidad de plataforma tipo Shopify.
+
+## Antes de vender en serio
+
+- **Cambia `ADMIN_PASSWORD`** en las variables de Railway (no lo dejes en el valor por defecto).
+- La base de datos es SQLite en el volumen persistente. Railway tiene backups de volumen en planes pagos — revisa esa opción o exporta el archivo periódicamente si el catálogo/pedidos crecen mucho. Migrar a Postgres (Neon/Supabase tienen plan gratuito) es sencillo con Prisma si hace falta más adelante.
 - Queda una vulnerabilidad de severidad media/alta reportada por `npm audit` en una dependencia interna de Next.js (`postcss`), cuyo único fix disponible hoy es saltar a Next 16 (cambio mayor). No es explotable en el uso normal de la tienda; considera migrar cuando tengas tiempo para probar el upgrade con calma.
 
 ## Estructura

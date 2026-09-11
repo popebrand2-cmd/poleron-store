@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { createFlowPayment, isFlowConfigured } from "@/lib/flow";
+import { createMercadoPagoPreference, isMercadoPagoConfigured } from "@/lib/mercadopago";
 
 const placementSchema = z.object({
   designUrl: z.string(),
@@ -83,26 +83,21 @@ export async function POST(request: Request) {
     },
   });
 
-  if (!isFlowConfigured()) {
+  if (!isMercadoPagoConfigured()) {
     return NextResponse.json({
       redirectUrl: `/checkout/modo-prueba?orderId=${order.id}`,
     });
   }
 
   try {
-    const payment = await createFlowPayment({
-      commerceOrder: order.id,
-      subject: `Pedido Poleron Store #${order.id.slice(0, 8)}`,
+    const { initPoint } = await createMercadoPagoPreference({
+      orderId: order.id,
+      title: `Pedido Poleron Store #${order.id.slice(0, 8)}`,
       amountCLP: totalAmount,
       email: data.customerEmail,
     });
 
-    await prisma.order.update({
-      where: { id: order.id },
-      data: { flowToken: payment.token, flowOrder: payment.flowOrder },
-    });
-
-    return NextResponse.json({ redirectUrl: `${payment.url}?token=${payment.token}` });
+    return NextResponse.json({ redirectUrl: initPoint });
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "No se pudo iniciar el pago." },
