@@ -123,7 +123,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
                 type="button"
                 onClick={() => handleColorChange(i)}
                 className={`h-9 w-9 rounded-full border-2 ${
-                  i === colorIndex ? "border-fuchsia-500" : "border-transparent"
+                  i === colorIndex ? "border-fuchsia-500" : "border-neutral-300"
                 }`}
                 style={{ backgroundColor: c.hex }}
                 title={c.name}
