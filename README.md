@@ -31,7 +31,7 @@ El cliente ya no ve ningún recuadro delimitador — el área máxima de impresi
 - Si cargaste las medidas reales por talla (paso 2), el tamaño final = tamaño M × (medida de la talla elegida / medida de la talla M). Para vistas de Frente/Espalda se usa el ancho de pecho; para vistas de Manga se usa el largo de manga.
 - Si no cargaste medidas para una talla (o para ninguna), el área de impresión se queda tal cual la definiste, sin escalar.
 
-El cliente mueve/escala/rota su diseño o texto libremente, y mientras lo hace ve el tamaño real en cm pegado al propio recuadro de selección de su diseño (los controles de esquina que ya aparecen al seleccionarlo) — no hay un recuadro aparte marcando el límite. Si intenta agrandarlo más allá del área máxima permitida para su talla, el diseño simplemente se recorta (clip) al llegar a ese borde invisible.
+El cliente puede mover su diseño o texto a **cualquier parte de la prenda** (no solo un lugar fijo) — lo único que se limita es el TAMAÑO: mientras escala, si supera el máximo real permitido para su talla, se ajusta solo de vuelta a ese máximo (manteniendo la proporción). El tamaño real en cm siempre se ve pegado al propio recuadro de selección del diseño (los controles de esquina que ya aparecen al seleccionarlo).
 
 ## Texto sobre el diseño
 

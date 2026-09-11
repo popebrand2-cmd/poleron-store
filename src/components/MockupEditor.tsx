@@ -42,16 +42,6 @@ const FONT_OPTIONS = [
   { label: "Roboto Mono", value: '"Roboto Mono", monospace' },
 ];
 
-function makeZoneClipPath(rect: { left: number; top: number; width: number; height: number }) {
-  return new fabric.Rect({
-    left: rect.left,
-    top: rect.top,
-    width: rect.width,
-    height: rect.height,
-    absolutePositioned: true,
-  });
-}
-
 type MockupEditorProps = {
   view: MockupView;
   initialPlacement?: ViewPlacement | null;
@@ -96,17 +86,27 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       return { left: max.left, top: max.top, width: max.width * scaleX, height: max.height * scaleY };
     }
 
-    function updateClipPathToCurrentZone(canvas: fabric.Canvas) {
-      const rect = currentZoneRect();
-      if (designRef.current) designRef.current.clipPath = makeZoneClipPath(rect);
-      if (textRef.current) textRef.current.clipPath = makeZoneClipPath(rect);
-      canvas.renderAll();
+    // The customer can place their design/text anywhere on the garment —
+    // only its SIZE is capped, to the same real-world max the old fixed
+    // zone represented (now invisible; currentZoneRect() still tracks it,
+    // scaled per talla). Keeps aspect ratio: shrinks both axes by whichever
+    // one is over the limit.
+    function clampObjectToMaxSize(obj: fabric.FabricObject) {
+      const zone = currentZoneRect();
+      if (!zone.width || !zone.height) return;
+      const w = obj.getScaledWidth();
+      const h = obj.getScaledHeight();
+      const factor = Math.min(1, zone.width / w, zone.height / h);
+      if (factor < 1) {
+        obj.set({ scaleX: (obj.scaleX ?? 1) * factor, scaleY: (obj.scaleY ?? 1) * factor });
+        obj.setCoords();
+      }
     }
 
     // The talla-based scale factor grows the (invisible) max-print-area
-    // clip boundary and the real cm it represents by the same ratio, so
-    // canvas-px-to-cm cancels it out — this ratio only depends on the
-    // admin's base (talla M) zone, not on which talla is selected.
+    // and the real cm it represents by the same ratio, so canvas-px-to-cm
+    // cancels it out — this ratio only depends on the admin's base (talla
+    // M) zone, not on which talla is selected.
     function updateDesignBadge(obj: fabric.FabricObject | null) {
       if (!obj) {
         setDesignBadge(null);
@@ -186,7 +186,9 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         zoneIndicatorRef.current = zoneIndicator;
 
         canvas.on("object:scaling", (e) => {
-          if (e.target === designRef.current || e.target === textRef.current) updateDesignBadge(e.target);
+          if (e.target !== designRef.current && e.target !== textRef.current) return;
+          clampObjectToMaxSize(e.target);
+          updateDesignBadge(e.target);
         });
         canvas.on("object:moving", (e) => {
           if (e.target === designRef.current || e.target === textRef.current) updateDesignBadge(e.target);
@@ -224,7 +226,6 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       if (!canvas || !zone) return;
       const scale = zoneScaleFactor(sizes, selectedSizeLabel, view.label);
       zone.set({ scaleX: scale, scaleY: scale });
-      updateClipPathToCurrentZone(canvas);
       canvas.renderAll();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedSizeLabel, JSON.stringify(sizes), view.label]);
@@ -258,7 +259,6 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           scaleX: targetScale,
           scaleY: targetScale,
           angle: targetAngle,
-          clipPath: makeZoneClipPath(zone),
           lockRotation: !view.allowRotate,
           cornerColor: "#d946ef",
           cornerStyle: "circle",
@@ -292,7 +292,6 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         fontFamily,
         fontSize: Math.max(14, Math.round(zone.height * 0.18)),
         fill: textColor,
-        clipPath: makeZoneClipPath(zone),
         cornerColor: "#d946ef",
         cornerStyle: "circle",
         transparentCorners: false,
@@ -392,7 +391,6 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           ...transform,
           originX: "center",
           originY: "center",
-          clipPath: design.clipPath,
           lockRotation: !view.allowRotate,
           cornerColor: "#d946ef",
           cornerStyle: "circle",
@@ -431,11 +429,11 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         const zone = currentZoneRect();
         if (!canvas || (!img && !text) || !zone.width || !zone.height) return null;
 
-        const zoneWidthCm = (zone.width / maxZoneRef.current.width) * view.maxWidthCm;
-        const zoneHeightCm = (zone.height / maxZoneRef.current.height) * view.maxHeightCm;
-
         // No text: keep the simple, exact transform of the uploaded image —
-        // no need to flatten anything into a new file.
+        // no need to flatten anything into a new file. xPct/yPct/widthPct
+        // are just an internal reference frame (relative to the invisible
+        // max-size box) for restoring the transform later; the design can
+        // sit anywhere on the garment now, so these aren't bounded to 0-100.
         if (!text && img) {
           const left = img.left ?? 0;
           const top = img.top ?? 0;
@@ -445,24 +443,34 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
             yPct: ((top - zone.top) / zone.height) * 100,
             widthPct: (img.getScaledWidth() / zone.width) * 100,
             rotationDeg: img.angle ?? 0,
-            zoneWidthCm,
-            zoneHeightCm,
+            zoneWidthCm: img.getScaledWidth() * (view.maxWidthCm / maxZoneRef.current.width),
+            zoneHeightCm: img.getScaledHeight() * (view.maxHeightCm / maxZoneRef.current.height),
           };
         }
 
         // Text is involved (with or without an uploaded image): flatten
-        // whatever is inside the zone into one final PNG, so production
-        // gets exactly what the customer designed instead of separate
-        // layers our data model doesn't otherwise track.
+        // whatever the customer placed into one final PNG, so production
+        // gets exactly what they designed instead of separate layers our
+        // data model doesn't otherwise track. Crop to the actual combined
+        // bounding box of the content — it can be placed anywhere on the
+        // garment now, not just inside the old fixed zone.
         if (text?.isEditing) text.exitEditing();
         canvas.discardActiveObject();
         canvas.renderAll();
+        const contentObjects: fabric.FabricObject[] = [];
+        if (img) contentObjects.push(img);
+        if (text) contentObjects.push(text);
+        const rects = contentObjects.map((o) => o.getBoundingRect());
+        const cropLeft = Math.min(...rects.map((r) => r.left));
+        const cropTop = Math.min(...rects.map((r) => r.top));
+        const cropWidth = Math.max(...rects.map((r) => r.left + r.width)) - cropLeft;
+        const cropHeight = Math.max(...rects.map((r) => r.top + r.height)) - cropTop;
         const dataUrl = canvas.toDataURL({
           format: "png",
-          left: zone.left,
-          top: zone.top,
-          width: zone.width,
-          height: zone.height,
+          left: cropLeft,
+          top: cropTop,
+          width: cropWidth,
+          height: cropHeight,
           multiplier: 1,
         });
         canvas.renderAll();
@@ -480,8 +488,8 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           yPct: 50,
           widthPct: 100,
           rotationDeg: 0,
-          zoneWidthCm,
-          zoneHeightCm,
+          zoneWidthCm: cropWidth * (view.maxWidthCm / maxZoneRef.current.width),
+          zoneHeightCm: cropHeight * (view.maxHeightCm / maxZoneRef.current.height),
         };
       },
       getSnapshot() {
