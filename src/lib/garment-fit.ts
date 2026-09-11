@@ -43,6 +43,16 @@ export function fitGarmentToBody(
     hipWidth = shoulderWidth * 0.9;
   }
 
+  // A body that's turned/angled toward the camera (not a flat frontal pose)
+  // projects a foreshortened shoulder-to-shoulder distance while the
+  // vertical shoulder-to-hip distance stays roughly normal — without this,
+  // that mismatch stretches the garment into a tall, narrow strip instead
+  // of a torso shape. Clamping the torso height to a plausible multiple of
+  // the (reliable) shoulder width keeps the fit looking like a garment even
+  // when the photo isn't a clean front-on shot.
+  const torsoHeight = Math.min(shoulderWidth * 1.5, Math.max(shoulderWidth * 0.8, hipMidY - shoulderMidY));
+  hipMidY = shoulderMidY + torsoHeight;
+
   const neckY = shoulderMidY - shoulderWidth * 0.15;
   const waistY = shoulderMidY + (hipMidY - shoulderMidY) * 0.5;
   const hemY = hipMidY + (hipMidY - shoulderMidY) * 0.35;
