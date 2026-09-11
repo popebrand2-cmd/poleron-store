@@ -20,8 +20,10 @@ Abre http://localhost:3000. El panel de administración está en `/admin` (contr
 1. Entra a `/admin`, crea el producto: nombre, precio, tallas.
 2. Por cada talla, si tienes la tabla de medidas real del proveedor, completa ancho de pecho / largo total / largo de manga (cm). Son opcionales, pero si las cargas el área de impresión se ajusta sola por talla (ver más abajo) — si las dejas vacías, el área de impresión queda fija para todas las tallas.
 3. Por cada color, sube una foto por vista (Frente, Espalda, Manga izquierda/derecha) — deben ser fotos reales de la prenda **en blanco**, sin diseño.
-4. Ajusta el rectángulo de la zona de impresión sobre cada foto (arrastra para mover, la esquina para redimensionar). Estas medidas son la referencia para la **talla M** — el cliente ya no puede arrastrar este recuadro; el sitio lo escala solo según la talla que elija (ver más abajo).
+4. Ajusta el rectángulo de la zona de impresión sobre cada foto (arrastra para mover, la esquina para redimensionar) y escribe el ancho/alto real en cm de esa zona. Estas medidas son la referencia para la **talla M** — el cliente ya no puede arrastrar este recuadro; el sitio lo escala solo según la talla que elija (ver más abajo). Importante: si la proporción del recuadro (ancho:alto en la foto) no coincide con la proporción de los cm que escribiste, un diseño cuadrado del cliente se verá reportado con un cm ancho ≠ cm alto aunque en pantalla se vea cuadrado — mantén ambas proporciones parecidas para que la medida en cm sea fiel a lo que se ve.
 5. Publica el producto.
+
+**Hoodie Oversize y Tee Oversize ya vienen calibrados** (28x34cm frente, 34x42cm espalda, sobre el área del pecho/espalda evitando el bolsillo y las mangas) — son valores estimados a partir de las medidas reales de talla M cargadas en Tallas; ajústalos en `/admin` si tu área de impresión real (tamaño de plancha DTF, etc.) es distinta.
 
 ## Envíos y retiro en tienda
 
