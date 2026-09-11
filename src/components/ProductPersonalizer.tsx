@@ -36,6 +36,11 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
   const [activeViewLabel, setActiveViewLabel] = useState(color.views[0]?.label ?? "");
 
   const editorRefs = useRef<Record<string, MockupEditorHandle | null>>({});
+  // Guards against a rapid double-click adding the item twice: `adding`
+  // (React state) only disables the button after a re-render, which is too
+  // late for two clicks fired in the same tick — this ref blocks re-entry
+  // synchronously, before React even sees the second click.
+  const addingRef = useRef(false);
   const [adding, setAdding] = useState(false);
   const [formError, setFormError] = useState("");
   const [tryOnSnapshot, setTryOnSnapshot] = useState<string | null>(null);
@@ -57,44 +62,49 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
   }
 
   async function handleAddToCart() {
+    if (addingRef.current) return;
+    addingRef.current = true;
     setFormError("");
     setAdding(true);
-    const placement: DesignPlacementMap = {};
-    let previewImageUrl: string | null = null;
+    try {
+      const placement: DesignPlacementMap = {};
+      let previewImageUrl: string | null = null;
 
-    for (const view of color.views) {
-      const handle = editorRefs.current[view.label];
-      const p = await handle?.getPlacement();
-      if (p) {
-        placement[view.label] = p;
-        if (!previewImageUrl || view.label === "Frente") {
-          previewImageUrl = handle!.getSnapshot();
+      for (const view of color.views) {
+        const handle = editorRefs.current[view.label];
+        const p = await handle?.getPlacement();
+        if (p) {
+          placement[view.label] = p;
+          if (!previewImageUrl || view.label === "Frente") {
+            previewImageUrl = handle!.getSnapshot();
+          }
         }
       }
-    }
 
-    if (Object.keys(placement).length === 0) {
+      if (Object.keys(placement).length === 0) {
+        setFormError("Sube al menos un diseño (frente, espalda o manga) antes de agregar al carrito.");
+        return;
+      }
+
+      addItem({
+        id: uuidv4(),
+        productId: product.id,
+        productSlug: product.slug,
+        productName: product.name,
+        colorName: color.name,
+        colorHex: color.hex,
+        sizeLabel: size?.label ?? "",
+        materialLabel: material?.label ?? "",
+        unitPrice,
+        quantity: 1,
+        previewImageUrl: previewImageUrl ?? "",
+        designPlacement: placement,
+      });
+      router.push("/carrito");
+    } finally {
+      addingRef.current = false;
       setAdding(false);
-      setFormError("Sube al menos un diseño (frente, espalda o manga) antes de agregar al carrito.");
-      return;
     }
-
-    addItem({
-      id: uuidv4(),
-      productId: product.id,
-      productSlug: product.slug,
-      productName: product.name,
-      colorName: color.name,
-      colorHex: color.hex,
-      sizeLabel: size?.label ?? "",
-      materialLabel: material?.label ?? "",
-      unitPrice,
-      quantity: 1,
-      previewImageUrl: previewImageUrl ?? "",
-      designPlacement: placement,
-    });
-    setAdding(false);
-    router.push("/carrito");
   }
 
   return (
