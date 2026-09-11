@@ -48,6 +48,8 @@ Por defecto la tienda corre en "modo de prueba": los pedidos se guardan pero no 
 - **Cambia `ADMIN_PASSWORD`** en las variables de Railway (no lo dejes en el valor por defecto).
 - La base de datos es SQLite en el volumen persistente. Railway tiene backups de volumen en planes pagos — revisa esa opción o exporta el archivo periódicamente si el catálogo/pedidos crecen mucho. Migrar a Postgres (Neon/Supabase tienen plan gratuito) es sencillo con Prisma si hace falta más adelante.
 - Queda una vulnerabilidad de severidad media/alta reportada por `npm audit` en una dependencia interna de Next.js (`postcss`), cuyo único fix disponible hoy es saltar a Next 16 (cambio mayor). No es explotable en el uso normal de la tienda; considera migrar cuando tengas tiempo para probar el upgrade con calma.
+- `fabric` está fijado en `6.5.4` a propósito: la `7.4.0` tiene un bug real que dibuja las imágenes a la mitad de su tamaño (rompe el editor de mockup por completo). La `6.5.4` tiene una vulnerabilidad de XSS reportada, pero solo afecta a quien use su función de exportar a SVG — esta tienda nunca la usa, así que no es explotable aquí. No actualices `fabric` sin probar a fondo que el mockup se siga viendo bien.
+- El `tar` crítico que reporta `npm audit` es una dependencia de instalación (usada por `sharp`/Prisma al compilar), no corre en la tienda en producción — no es explotable desde el sitio web.
 
 ## Estructura
 
