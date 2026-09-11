@@ -72,41 +72,57 @@ export default async function AdminOrdersPage() {
                   <DeleteOrderButton orderId={o.id} />
                 </div>
               </div>
-              <ul className="mt-2 space-y-1.5 text-xs text-neutral-500">
+              <div className="mt-2 space-y-3">
                 {o.items.map((it) => {
                   let placement: Record<string, { designUrl?: string; originalDesignUrl?: string }> = {};
                   try {
                     placement = JSON.parse(it.designPlacement);
                   } catch {
-                    // malformed/legacy data — just skip the download links below
+                    // malformed/legacy data — just skip the images below
                   }
+                  const originals = Object.entries(placement)
+                    .map(([viewLabel, p]) => ({ viewLabel, url: p.originalDesignUrl ?? p.designUrl }))
+                    .filter((v): v is { viewLabel: string; url: string } => Boolean(v.url));
+
                   return (
-                    <li key={it.id}>
-                      <p>
+                    <div key={it.id} className="rounded-lg border border-neutral-100 bg-neutral-50 p-3">
+                      <p className="text-xs text-neutral-500">
                         {it.quantity}x {it.colorName} · Talla {it.sizeLabel}
                         {it.materialLabel && ` · ${it.materialLabel}`}
                       </p>
-                      <div className="mt-0.5 flex flex-wrap gap-3">
-                        {Object.entries(placement).map(([viewLabel, p]) => {
-                          const url = p.originalDesignUrl ?? p.designUrl;
-                          if (!url) return null;
-                          return (
-                            <a
-                              key={viewLabel}
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="font-medium text-fuchsia-600 hover:underline"
-                            >
-                              Descargar imagen subida ({viewLabel})
-                            </a>
-                          );
-                        })}
-                      </div>
-                    </li>
+                      {originals.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-600">
+                            Imagen original (sin editar)
+                          </p>
+                          <div className="mt-1.5 flex flex-wrap gap-3">
+                            {originals.map(({ viewLabel, url }) => (
+                              <a
+                                key={viewLabel}
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group block w-24 text-center"
+                                title={`Descargar imagen original (${viewLabel})`}
+                              >
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={url}
+                                  alt={`Imagen original subida por el cliente — ${viewLabel}`}
+                                  className="h-24 w-24 rounded-md border border-neutral-200 bg-white object-contain group-hover:border-fuchsia-400"
+                                />
+                                <span className="mt-1 block text-xs font-medium text-fuchsia-600 group-hover:underline">
+                                  {viewLabel} — Descargar
+                                </span>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
-              </ul>
+              </div>
             </div>
           ))}
         </div>
