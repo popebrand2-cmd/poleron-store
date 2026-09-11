@@ -5,6 +5,7 @@ import * as fabric from "fabric";
 import type { ViewPlacement } from "@/types";
 import { removeWhiteBackground } from "@/lib/remove-white-bg";
 import { removeColorBackground } from "@/lib/remove-color-bg";
+import { segmentSubject, preloadSubjectSegmenter } from "@/lib/segment-subject";
 import { zoneScaleFactor, type SizeMeasurements } from "@/lib/size-scale";
 
 export type MockupEditorHandle = {
@@ -65,11 +66,18 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
     sizesRef.current = sizes;
     selectedSizeLabelRef.current = selectedSizeLabel;
     const [hasDesign, setHasDesign] = useState(Boolean(initialPlacement));
+    // Start fetching the AI model/runtime in the background as soon as
+    // there's a design to run it on, so it's likely ready by the time the
+    // customer clicks "Aislar sujeto (IA)".
+    useEffect(() => {
+      if (hasDesign) preloadSubjectSegmenter();
+    }, [hasDesign]);
     const [hasText, setHasText] = useState(false);
     const [textColor, setTextColor] = useState("#111111");
     const [fontFamily, setFontFamily] = useState(FONT_OPTIONS[0].value);
     const [uploading, setUploading] = useState(false);
     const [removingBg, setRemovingBg] = useState(false);
+    const [segmentingSubject, setSegmentingSubject] = useState(false);
     const [pickingBgColor, setPickingBgColor] = useState(false);
     const pickingBgColorRef = useRef(false);
     pickingBgColorRef.current = pickingBgColor;
@@ -441,6 +449,27 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       }
     }
 
+    async function handleSegmentSubject() {
+      const design = designRef.current;
+      if (!design) return;
+
+      setSegmentingSubject(true);
+      setError("");
+      try {
+        const blob = await segmentSubject(design.getSrc());
+        const body = new FormData();
+        body.append("file", new File([blob], "diseno-aislado.png", { type: "image/png" }));
+        const res = await fetch("/api/upload", { method: "POST", body });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "Error al aislar el sujeto.");
+        await swapDesignImage(data.url);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Error al aislar el sujeto. Intenta con otra foto.");
+      } finally {
+        setSegmentingSubject(false);
+      }
+    }
+
     function handleStartPickBgColor() {
       const canvas = fabricCanvasRef.current;
       if (!canvas || !designRef.current) return;
@@ -630,6 +659,16 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           {pickingBgColor && (
             <button type="button" onClick={handleCancelPickBgColor} className="text-sm font-medium text-red-600 hover:underline">
               Cancelar selección
+            </button>
+          )}
+          {hasDesign && !pickingBgColor && (
+            <button
+              type="button"
+              onClick={handleSegmentSubject}
+              disabled={segmentingSubject}
+              className="text-sm font-medium text-fuchsia-600 hover:underline disabled:opacity-50"
+            >
+              {segmentingSubject ? "Aislando (puede tardar)..." : "Aislar sujeto (IA)"}
             </button>
           )}
           {hasDesign && !pickingBgColor && (

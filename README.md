@@ -39,12 +39,13 @@ El cliente puede agregar texto encima de su diseño (o solo, sin subir imagen) c
 
 ## Quitar fondo del diseño
 
-Dos formas, ambas 100% en el navegador del cliente (cero costo, no llaman a ninguna API):
+Tres formas, las tres 100% en el navegador del cliente — nada se sube a ningún servicio externo, cero costo por uso:
 
 - **"Quitar fondo blanco"** (`src/lib/remove-white-bg.ts`) — un clic, para el caso más común (diseño exportado con fondo blanco).
-- **"Elegir color de fondo"** (`src/lib/remove-color-bg.ts`) — para cualquier OTRO color de fondo (negro, un color de marca, etc.): el cliente hace clic sobre el color que quiere quitar, se toma esa muestra directamente del canvas y se hace transparente todo lo que esté cerca de ese color.
+- **"Elegir color de fondo"** (`src/lib/remove-color-bg.ts`) — para cualquier OTRO color de fondo plano (negro, un color de marca, etc.): el cliente hace clic sobre el color que quiere quitar, se toma esa muestra directamente del canvas y se hace transparente todo lo que esté cerca de ese color.
+- **"Aislar sujeto (IA)"** (`src/lib/segment-subject.ts`) — para una FOTO real con fondo complejo (una persona, mascota u objeto sobre un fondo que no es un color plano). Corre un modelo de IA (U2Net-portable / "u2netp", pesos con licencia Apache-2.0) vía `onnxruntime-web` (MIT) enteramente en el navegador del cliente — nunca se sube la foto a ningún servidor. El modelo (~4.5MB) y el runtime WASM (~11MB) están en `public/models/` y `public/ort/` (se descargan una sola vez, el navegador los cachea después). Es gratis pero más lento (unos segundos) y de menor calidad que un servicio pago tipo remove.bg — se eligió así a propósito para no generar costo por imagen mientras el sitio no tiene tráfico; si más adelante conviene mejor calidad, cambiar a una API paga es un reemplazo acotado a este archivo.
 
-Ninguna de las dos sirve para aislar una persona/mascota/objeto de una FOTO real con fondo complejo (eso es segmentación, no color) — para ese caso hace falta un modelo de IA, que no se implementó todavía por costo/licencia (ver conversación con el dueño del sitio).
+Se descartó `@imgly/background-removal` (mejor calidad, misma idea) porque su licencia es AGPL — usarla habría obligado legalmente a publicar todo el código de la tienda como open source salvo que se pague una licencia comercial a IMG.LY.
 
 ## "¿Cómo se vería puesto?"
 
@@ -78,6 +79,7 @@ Por defecto la tienda corre en "modo de prueba": los pedidos se guardan pero no 
 - Queda una vulnerabilidad de severidad media/alta reportada por `npm audit` en una dependencia interna de Next.js (`postcss`), cuyo único fix disponible hoy es saltar a Next 16 (cambio mayor). No es explotable en el uso normal de la tienda; considera migrar cuando tengas tiempo para probar el upgrade con calma.
 - `fabric` está fijado en `6.5.4` a propósito: la `7.4.0` tiene un bug real que dibuja las imágenes a la mitad de su tamaño (rompe el editor de mockup por completo). La `6.5.4` tiene una vulnerabilidad de XSS reportada, pero solo afecta a quien use su función de exportar a SVG — esta tienda nunca la usa, así que no es explotable aquí. No actualices `fabric` sin probar a fondo que el mockup se siga viendo bien.
 - El `tar` crítico que reporta `npm audit` es una dependencia de instalación (usada por `sharp`/Prisma al compilar), no corre en la tienda en producción — no es explotable desde el sitio web.
+- `onnxruntime-web` (motor de IA para "Aislar sujeto") no agregó vulnerabilidades nuevas al `npm audit` — las 5 reportadas ya existían antes por fabric/postcss/tar (ver arriba).
 
 ## Estructura
 
