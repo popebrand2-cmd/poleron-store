@@ -80,14 +80,26 @@ export default function ZoneEditor({
       const newY = clamp(drag.startZone.zoneYPct + dy, 0, 100 - drag.startZone.zoneHeightPct);
       onChange({ ...drag.startZone, zoneXPct: newX, zoneYPct: newY });
     } else {
-      // Dragging only resizes the visual guide (in % of the photo) — it
-      // never touches maxWidthCm/maxHeightCm. Auto-scaling cm with the drag
-      // was tried and turned out to be a footgun: one careless drag after
-      // typing a value silently overwrote it with a nonsense number. Type
-      // the real-world size directly in the fields below instead.
+      // Resizing scales maxWidthCm/maxHeightCm proportionally with the box,
+      // so the badge always reflects the real size. Every pointermove
+      // recomputes from the SAME fixed `drag.startZone` snapshot taken at
+      // pointerDown — never from the previous onChange's result — which is
+      // what makes this safe: an earlier version derived the new cm from
+      // whatever the last onChange had already produced, so tiny per-frame
+      // rounding/drift compounded across a single drag gesture into a
+      // wildly wrong number. Anchoring every frame to the same start state
+      // makes the math exact regardless of how many pointermove events fire.
       const newWidth = clamp(drag.startZone.zoneWidthPct + dx, 5, 100 - drag.startZone.zoneXPct);
       const newHeight = clamp(drag.startZone.zoneHeightPct + dy, 5, 100 - drag.startZone.zoneYPct);
-      onChange({ ...drag.startZone, zoneWidthPct: newWidth, zoneHeightPct: newHeight });
+      const widthRatio = newWidth / drag.startZone.zoneWidthPct;
+      const heightRatio = newHeight / drag.startZone.zoneHeightPct;
+      onChange({
+        ...drag.startZone,
+        zoneWidthPct: newWidth,
+        zoneHeightPct: newHeight,
+        maxWidthCm: Math.round(drag.startZone.maxWidthCm * widthRatio * 10) / 10,
+        maxHeightCm: Math.round(drag.startZone.maxHeightCm * heightRatio * 10) / 10,
+      });
     }
   }
 
@@ -126,9 +138,9 @@ export default function ZoneEditor({
         </div>
       </div>
       <p className="text-xs text-neutral-500">
-        Arrastra el rectángulo para mover la zona de impresión; arrastra la esquina para cambiar su tamaño. Estas
-        medidas son para la talla M — si cargaste las medidas reales en la sección Tallas, el tamaño se ajusta solo
-        para las demás tallas.
+        Arrastra el rectángulo para mover la zona de impresión; arrastra la esquina para cambiar su tamaño — los cm
+        se actualizan solos con el arrastre, o escríbelos directamente abajo. Estas medidas son para la talla M — si
+        cargaste las medidas reales en la sección Tallas, el tamaño se ajusta solo para las demás tallas.
       </p>
       <div className="flex items-center gap-3">
         <label className="flex items-center gap-2 text-sm">
