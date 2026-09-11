@@ -9,8 +9,9 @@ const placementSchema = z.object({
   yPct: z.number(),
   widthPct: z.number(),
   rotationDeg: z.number(),
-  zoneWidthCm: z.number(),
-  zoneHeightCm: z.number(),
+  // Optional: carts saved before this field existed won't have it.
+  zoneWidthCm: z.number().optional().default(0),
+  zoneHeightCm: z.number().optional().default(0),
 });
 
 const itemSchema = z.object({
