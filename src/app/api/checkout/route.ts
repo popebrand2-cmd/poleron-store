@@ -17,7 +17,10 @@ const itemSchema = z.object({
   productId: z.string(),
   colorName: z.string(),
   sizeLabel: z.string(),
-  materialLabel: z.string(),
+  // Optional/defaulted: carts created before the material field existed
+  // (already sitting in a customer's browser at deploy time) won't have
+  // this — fall back to the product's first material rather than hard-fail.
+  materialLabel: z.string().optional().default(""),
   quantity: z.number().int().min(1),
   previewImageUrl: z.string(),
   designPlacement: z.record(z.string(), placementSchema),
@@ -63,15 +66,15 @@ export async function POST(request: Request) {
     if (!size) {
       return NextResponse.json({ error: "Talla inválida." }, { status: 409 });
     }
-    const material = product.materials.find((m) => m.label === item.materialLabel);
+    const material = product.materials.find((m) => m.label === item.materialLabel) ?? product.materials[0];
     if (!material) {
-      return NextResponse.json({ error: "Material inválido." }, { status: 409 });
+      return NextResponse.json({ error: "Este producto no tiene materiales configurados." }, { status: 409 });
     }
     orderItemsData.push({
       productId: product.id,
       colorName: item.colorName,
       sizeLabel: item.sizeLabel,
-      materialLabel: item.materialLabel,
+      materialLabel: material.label,
       quantity: item.quantity,
       unitPrice: product.basePrice + size.priceDelta + material.priceDelta,
       designPlacement: JSON.stringify(item.designPlacement),
