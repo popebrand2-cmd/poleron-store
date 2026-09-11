@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import MockupEditor, { type MockupEditorHandle, type MockupView } from "./MockupEditor";
+import TryOnEditor from "./TryOnEditor";
 import { useCartStore } from "@/lib/cart-store";
 import { formatCLP } from "@/lib/money";
 import type { DesignPlacementMap } from "@/types";
@@ -37,6 +38,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
   const editorRefs = useRef<Record<string, MockupEditorHandle | null>>({});
   const [adding, setAdding] = useState(false);
   const [formError, setFormError] = useState("");
+  const [tryOnSnapshot, setTryOnSnapshot] = useState<string | null>(null);
 
   const size = product.sizes[sizeIndex];
   const material = product.materials[materialIndex];
@@ -46,6 +48,12 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     setColorIndex(index);
     editorRefs.current = {};
     setActiveViewLabel(product.colors[index].views[0]?.label ?? "");
+    setTryOnSnapshot(null);
+  }
+
+  function handleTryOn() {
+    const snapshot = editorRefs.current[activeViewLabel]?.getSnapshot();
+    if (snapshot) setTryOnSnapshot(snapshot);
   }
 
   async function handleAddToCart() {
@@ -191,7 +199,21 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
         >
           {adding ? "Agregando..." : "Agregar al carrito"}
         </button>
+
+        <button
+          type="button"
+          onClick={handleTryOn}
+          className="mt-3 w-full rounded-md border border-neutral-300 px-6 py-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+        >
+          ¿Cómo se vería puesto?
+        </button>
       </div>
+
+      {tryOnSnapshot && (
+        <div className="lg:col-span-2">
+          <TryOnEditor garmentSnapshotUrl={tryOnSnapshot} onClose={() => setTryOnSnapshot(null)} />
+        </div>
+      )}
     </div>
   );
 }

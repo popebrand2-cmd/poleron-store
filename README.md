@@ -37,6 +37,10 @@ El cliente sigue pudiendo mover/escalar/rotar su diseño o texto libremente **de
 
 El cliente puede agregar texto encima de su diseño (o solo, sin subir imagen) con "+ Agregar texto": elige entre 13 tipografías y cualquier color. Al agregar al carrito, si hay texto se aplana todo (diseño + texto) en una sola imagen PNG — así el archivo final que ves en Pedidos ya viene listo para imprimir tal cual se ve en el mockup.
 
+## "¿Cómo se vería puesto?"
+
+Botón junto a "Agregar al carrito" (`src/components/TryOnEditor.tsx`). El cliente sube una foto suya, le quitamos el fondo a la captura del mockup (reutilizando `remove-white-bg.ts`) y la deja como una capa que puede mover/escalar/rotar sobre su foto para verse "con la prenda puesta". Todo pasa en el navegador del cliente — la foto que sube nunca se envía al servidor ni se guarda en ningún lado, solo se puede descargar como PNG desde su propio dispositivo. No hay ajuste de pose ni de cuerpo real (no es un probador con IA) — es una superposición simple, igual de espíritu que el resto del editor de mockup.
+
 ## Pagos con Mercado Pago
 
 Por defecto la tienda corre en "modo de prueba": los pedidos se guardan pero no se cobra nada real. Para activar cobros:
