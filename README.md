@@ -25,13 +25,13 @@ Abre http://localhost:3000. El panel de administración está en `/admin` (contr
 
 ## Zona de impresión según la talla
 
-El recuadro de impresión que ve el cliente ya no es ajustable a mano — es fijo y se calcula así (`src/lib/size-scale.ts`):
+El cliente ya no ve ningún recuadro delimitador — el área máxima de impresión es invisible y se calcula así (`src/lib/size-scale.ts`):
 
 - El tamaño que defines en el editor de zonas (paso 4 arriba) es el tamaño para una prenda talla **M**.
 - Si cargaste las medidas reales por talla (paso 2), el tamaño final = tamaño M × (medida de la talla elegida / medida de la talla M). Para vistas de Frente/Espalda se usa el ancho de pecho; para vistas de Manga se usa el largo de manga.
 - Si no cargaste medidas para una talla (o para ninguna), el área de impresión se queda tal cual la definiste, sin escalar.
 
-El cliente sigue pudiendo mover/escalar/rotar su diseño o texto libremente **dentro** de esa área — lo que cambió es que ya no puede agrandar o achicar el área misma.
+El cliente mueve/escala/rota su diseño o texto libremente, y mientras lo hace ve el tamaño real en cm pegado al propio recuadro de selección de su diseño (los controles de esquina que ya aparecen al seleccionarlo) — no hay un recuadro aparte marcando el límite. Si intenta agrandarlo más allá del área máxima permitida para su talla, el diseño simplemente se recorta (clip) al llegar a ese borde invisible.
 
 ## Texto sobre el diseño
 

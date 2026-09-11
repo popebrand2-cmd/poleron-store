@@ -80,14 +80,13 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
     const [uploading, setUploading] = useState(false);
     const [removingBg, setRemovingBg] = useState(false);
     const [error, setError] = useState("");
-    const [zoneBadge, setZoneBadge] = useState<{
-      left: number;
-      top: number;
-      width: number;
-      height: number;
-      widthCm: number;
-      heightCm: number;
-    } | null>(null);
+    // Live cm readout shown on the design/text's own selection box while
+    // it's selected or being dragged/scaled — replaces the old fixed
+    // dashed-rectangle guide. cm-per-canvas-px is constant for a view
+    // (independent of talla — see the comment on updateDesignBadge below).
+    const [designBadge, setDesignBadge] = useState<{ left: number; top: number; widthCm: number; heightCm: number } | null>(
+      null,
+    );
 
     function currentZoneRect() {
       const max = maxZoneRef.current;
@@ -104,15 +103,26 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       canvas.renderAll();
     }
 
-    function updateZoneBadge() {
-      const rect = currentZoneRect();
-      setZoneBadge({
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height,
-        widthCm: Math.round((rect.width / maxZoneRef.current.width) * view.maxWidthCm * 10) / 10,
-        heightCm: Math.round((rect.height / maxZoneRef.current.height) * view.maxHeightCm * 10) / 10,
+    // The talla-based scale factor grows the (invisible) max-print-area
+    // clip boundary and the real cm it represents by the same ratio, so
+    // canvas-px-to-cm cancels it out — this ratio only depends on the
+    // admin's base (talla M) zone, not on which talla is selected.
+    function updateDesignBadge(obj: fabric.FabricObject | null) {
+      if (!obj) {
+        setDesignBadge(null);
+        return;
+      }
+      const cmPerPxX = view.maxWidthCm / maxZoneRef.current.width;
+      const cmPerPxY = view.maxHeightCm / maxZoneRef.current.height;
+      const w = obj.getScaledWidth();
+      const h = obj.getScaledHeight();
+      const centerLeft = obj.left ?? 0;
+      const centerTop = obj.top ?? 0;
+      setDesignBadge({
+        left: centerLeft + w / 2,
+        top: centerTop + h / 2,
+        widthCm: Math.round(w * cmPerPxX * 10) / 10,
+        heightCm: Math.round(h * cmPerPxY * 10) / 10,
       });
     }
 
@@ -161,6 +171,8 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         const placement = initialPlacementRef.current;
         const initialScale = zoneScaleFactor(sizesRef.current, selectedSizeLabelRef.current, view.label);
 
+        // Purely a data holder for the max-print-area math (clip boundary +
+        // cm conversion) — never added to the canvas, so nothing is drawn.
         const zoneIndicator = new fabric.Rect({
           left: zoneLeft,
           top: zoneTop,
@@ -168,25 +180,31 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           height: zoneHeight,
           scaleX: initialScale,
           scaleY: initialScale,
-          fill: "transparent",
-          stroke: "#d946ef",
-          strokeWidth: 1.5,
-          strokeDashArray: [6, 4],
           originX: "left",
           originY: "top",
-          selectable: false,
-          evented: false,
-          hasControls: false,
-          hasBorders: false,
         });
         zoneIndicatorRef.current = zoneIndicator;
-        canvas.add(zoneIndicator);
+
+        canvas.on("object:scaling", (e) => {
+          if (e.target === designRef.current || e.target === textRef.current) updateDesignBadge(e.target);
+        });
+        canvas.on("object:moving", (e) => {
+          if (e.target === designRef.current || e.target === textRef.current) updateDesignBadge(e.target);
+        });
+        canvas.on("selection:created", (e) => {
+          const obj = e.selected?.[0] ?? null;
+          updateDesignBadge(obj === designRef.current || obj === textRef.current ? obj : null);
+        });
+        canvas.on("selection:updated", (e) => {
+          const obj = e.selected?.[0] ?? null;
+          updateDesignBadge(obj === designRef.current || obj === textRef.current ? obj : null);
+        });
+        canvas.on("selection:cleared", () => updateDesignBadge(null));
 
         if (placement) {
           loadDesign(canvas, placement.designUrl, placement);
         }
 
-        updateZoneBadge();
         canvas.renderAll();
       });
 
@@ -207,7 +225,6 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       const scale = zoneScaleFactor(sizes, selectedSizeLabel, view.label);
       zone.set({ scaleX: scale, scaleY: scale });
       updateClipPathToCurrentZone(canvas);
-      updateZoneBadge();
       canvas.renderAll();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedSizeLabel, JSON.stringify(sizes), view.label]);
@@ -256,6 +273,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         canvas.add(img);
         canvas.moveObjectTo(img, 1);
         canvas.setActiveObject(img);
+        updateDesignBadge(img);
         canvas.renderAll();
         setHasDesign(true);
       });
@@ -282,6 +300,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       textRef.current = text;
       canvas.add(text);
       canvas.setActiveObject(text);
+      updateDesignBadge(text);
       canvas.renderAll();
       setHasText(true);
     }
@@ -317,6 +336,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       if (canvas && textRef.current) {
         canvas.remove(textRef.current);
         textRef.current = null;
+        updateDesignBadge(null);
         canvas.renderAll();
         setHasText(false);
       }
@@ -383,6 +403,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         canvas.add(newImg);
         canvas.moveObjectTo(newImg, 1);
         canvas.setActiveObject(newImg);
+        updateDesignBadge(newImg);
         canvas.renderAll();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al quitar el fondo.");
@@ -396,6 +417,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       if (canvas && designRef.current) {
         canvas.remove(designRef.current);
         designRef.current = null;
+        updateDesignBadge(null);
         canvas.renderAll();
         setHasDesign(false);
       }
@@ -432,8 +454,6 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         // whatever is inside the zone into one final PNG, so production
         // gets exactly what the customer designed instead of separate
         // layers our data model doesn't otherwise track.
-        const indicator = zoneIndicatorRef.current;
-        if (indicator) indicator.visible = false;
         if (text?.isEditing) text.exitEditing();
         canvas.discardActiveObject();
         canvas.renderAll();
@@ -445,7 +465,6 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           height: zone.height,
           multiplier: 1,
         });
-        if (indicator) indicator.visible = true;
         canvas.renderAll();
 
         const blob = await (await fetch(dataUrl)).blob();
@@ -467,14 +486,8 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       },
       getSnapshot() {
         const canvas = fabricCanvasRef.current;
-        const indicator = zoneIndicatorRef.current;
         if (!canvas) return null;
-        if (indicator) indicator.visible = false;
-        canvas.renderAll();
-        const dataUrl = canvas.toDataURL({ format: "png", multiplier: 1 });
-        if (indicator) indicator.visible = true;
-        canvas.renderAll();
-        return dataUrl;
+        return canvas.toDataURL({ format: "png", multiplier: 1 });
       },
     }));
 
@@ -482,16 +495,16 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       <div className="space-y-3">
         <div className="relative mx-auto w-fit overflow-hidden rounded-lg border border-neutral-200">
           <canvas ref={canvasElRef} />
-          {zoneBadge && (
+          {designBadge && (
             <span
               className="pointer-events-none absolute rounded bg-neutral-900/80 px-1.5 py-0.5 text-[10px] font-medium text-white"
               style={{
-                left: zoneBadge.left + zoneBadge.width - 4,
-                top: zoneBadge.top + zoneBadge.height + 4,
+                left: designBadge.left - 4,
+                top: designBadge.top + 4,
                 transform: "translateX(-100%)",
               }}
             >
-              {zoneBadge.widthCm} x {zoneBadge.heightCm} cm
+              {designBadge.widthCm} x {designBadge.heightCm} cm
             </span>
           )}
         </div>
@@ -575,7 +588,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         {error && <p className="text-center text-sm text-red-600">{error}</p>}
         <p className="text-center text-xs text-neutral-500">
           Arrastra para mover, usa las esquinas para escalar{view.allowRotate ? " y rotar" : ""}. Doble clic sobre el
-          texto para editarlo. El recuadro punteado muestra el área máxima de impresión para tu talla.
+          texto para editarlo. El tamaño en cm que ves junto a tu diseño es real, según la talla elegida.
         </p>
       </div>
     );
