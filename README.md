@@ -37,6 +37,15 @@ El cliente puede mover su diseño o texto a **cualquier parte de la prenda** (no
 
 El cliente puede agregar texto encima de su diseño (o solo, sin subir imagen) con "+ Agregar texto": elige entre 13 tipografías y cualquier color. Al agregar al carrito, si hay texto se aplana todo (diseño + texto) en una sola imagen PNG — así el archivo final que ves en Pedidos ya viene listo para imprimir tal cual se ve en el mockup.
 
+## Quitar fondo del diseño
+
+Dos formas, ambas 100% en el navegador del cliente (cero costo, no llaman a ninguna API):
+
+- **"Quitar fondo blanco"** (`src/lib/remove-white-bg.ts`) — un clic, para el caso más común (diseño exportado con fondo blanco).
+- **"Elegir color de fondo"** (`src/lib/remove-color-bg.ts`) — para cualquier OTRO color de fondo (negro, un color de marca, etc.): el cliente hace clic sobre el color que quiere quitar, se toma esa muestra directamente del canvas y se hace transparente todo lo que esté cerca de ese color.
+
+Ninguna de las dos sirve para aislar una persona/mascota/objeto de una FOTO real con fondo complejo (eso es segmentación, no color) — para ese caso hace falta un modelo de IA, que no se implementó todavía por costo/licencia (ver conversación con el dueño del sitio).
+
 ## "¿Cómo se vería puesto?"
 
 Botón junto a "Agregar al carrito" (`src/components/TryOnEditor.tsx`). El cliente sube una foto suya, le quitamos el fondo a la captura del mockup (reutilizando `remove-white-bg.ts`) y la deja como una capa que puede mover/escalar/rotar sobre su foto para verse "con la prenda puesta". Todo pasa en el navegador del cliente — la foto que sube nunca se envía al servidor ni se guarda en ningún lado, solo se puede descargar como PNG desde su propio dispositivo. No hay ajuste de pose ni de cuerpo real (no es un probador con IA) — es una superposición simple, igual de espíritu que el resto del editor de mockup.

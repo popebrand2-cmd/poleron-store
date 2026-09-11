@@ -4,6 +4,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import * as fabric from "fabric";
 import type { ViewPlacement } from "@/types";
 import { removeWhiteBackground } from "@/lib/remove-white-bg";
+import { removeColorBackground } from "@/lib/remove-color-bg";
 import { zoneScaleFactor, type SizeMeasurements } from "@/lib/size-scale";
 
 export type MockupEditorHandle = {
@@ -69,6 +70,9 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
     const [fontFamily, setFontFamily] = useState(FONT_OPTIONS[0].value);
     const [uploading, setUploading] = useState(false);
     const [removingBg, setRemovingBg] = useState(false);
+    const [pickingBgColor, setPickingBgColor] = useState(false);
+    const pickingBgColorRef = useRef(false);
+    pickingBgColorRef.current = pickingBgColor;
     const [error, setError] = useState("");
     // Live cm readout shown on the design/text's own selection box while
     // it's selected or being dragged/scaled — replaces the old fixed
@@ -209,6 +213,22 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           updateDesignBadge(obj === designRef.current || obj === textRef.current ? obj : null);
         });
         canvas.on("selection:cleared", () => updateDesignBadge(null));
+
+        // "Elegir color de fondo": while active, a click samples the pixel
+        // color at that spot straight off the rendered canvas and removes
+        // every pixel close to it — works for any flat background color,
+        // not just white.
+        canvas.on("mouse:down", (opt) => {
+          if (!pickingBgColorRef.current) return;
+          const pointer = canvas.getPointer(opt.e);
+          const ctx = canvas.lowerCanvasEl.getContext("2d");
+          if (!ctx) return;
+          const scale = canvas.getRetinaScaling ? canvas.getRetinaScaling() : 1;
+          const x = Math.round(pointer.x * scale);
+          const y = Math.round(pointer.y * scale);
+          const pixel = ctx.getImageData(x, y, 1, 1).data;
+          handlePickedBgColor({ r: pixel[0], g: pixel[1], b: pixel[2] });
+        });
 
         if (placement) {
           loadDesign(canvas, placement.designUrl, placement);
@@ -366,52 +386,103 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       }
     }
 
-    async function handleRemoveWhiteBg() {
+    // Keeps the exact same on-canvas position/size/rotation — just swaps
+    // which image is drawn. Shared by both background-removal flows below.
+    async function swapDesignImage(url: string) {
       const canvas = fabricCanvasRef.current;
       const design = designRef.current;
       if (!canvas || !design) return;
 
+      const transform = {
+        left: design.left,
+        top: design.top,
+        scaleX: design.scaleX,
+        scaleY: design.scaleY,
+        angle: design.angle,
+      };
+      const newImg = await fabric.FabricImage.fromURL(url, { crossOrigin: "anonymous" });
+      canvas.remove(design);
+      newImg.set({
+        ...transform,
+        originX: "center",
+        originY: "center",
+        lockRotation: !view.allowRotate,
+        cornerColor: "#d946ef",
+        cornerStyle: "circle",
+        transparentCorners: false,
+      });
+      newImg.setControlsVisibility({ mtr: view.allowRotate });
+      designRef.current = newImg;
+      canvas.add(newImg);
+      canvas.moveObjectTo(newImg, 1);
+      canvas.setActiveObject(newImg);
+      updateDesignBadge(newImg);
+      canvas.renderAll();
+    }
+
+    async function handleRemoveWhiteBg() {
+      const design = designRef.current;
+      if (!design) return;
+
       setRemovingBg(true);
       setError("");
       try {
-        const currentSrc = design.getSrc();
-        const blob = await removeWhiteBackground(currentSrc);
-
+        const blob = await removeWhiteBackground(design.getSrc());
         const body = new FormData();
         body.append("file", new File([blob], "diseno-sin-fondo.png", { type: "image/png" }));
         const res = await fetch("/api/upload", { method: "POST", body });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? "Error al quitar el fondo.");
-
-        // Keep the exact same on-canvas position/size/rotation — just swap
-        // which image is drawn.
-        const transform = {
-          left: design.left,
-          top: design.top,
-          scaleX: design.scaleX,
-          scaleY: design.scaleY,
-          angle: design.angle,
-        };
-        const newImg = await fabric.FabricImage.fromURL(data.url, { crossOrigin: "anonymous" });
-        canvas.remove(design);
-        newImg.set({
-          ...transform,
-          originX: "center",
-          originY: "center",
-          lockRotation: !view.allowRotate,
-          cornerColor: "#d946ef",
-          cornerStyle: "circle",
-          transparentCorners: false,
-        });
-        newImg.setControlsVisibility({ mtr: view.allowRotate });
-        designRef.current = newImg;
-        canvas.add(newImg);
-        canvas.moveObjectTo(newImg, 1);
-        canvas.setActiveObject(newImg);
-        updateDesignBadge(newImg);
-        canvas.renderAll();
+        await swapDesignImage(data.url);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al quitar el fondo.");
+      } finally {
+        setRemovingBg(false);
+      }
+    }
+
+    function handleStartPickBgColor() {
+      const canvas = fabricCanvasRef.current;
+      if (!canvas || !designRef.current) return;
+      setError("");
+      canvas.discardActiveObject();
+      canvas.skipTargetFind = true;
+      canvas.defaultCursor = "crosshair";
+      canvas.renderAll();
+      setPickingBgColor(true);
+    }
+
+    function handleCancelPickBgColor() {
+      const canvas = fabricCanvasRef.current;
+      if (canvas) {
+        canvas.skipTargetFind = false;
+        canvas.defaultCursor = "default";
+      }
+      setPickingBgColor(false);
+    }
+
+    async function handlePickedBgColor(color: { r: number; g: number; b: number }) {
+      const canvas = fabricCanvasRef.current;
+      const design = designRef.current;
+      if (canvas) {
+        canvas.skipTargetFind = false;
+        canvas.defaultCursor = "default";
+      }
+      setPickingBgColor(false);
+      if (!design) return;
+
+      setRemovingBg(true);
+      setError("");
+      try {
+        const blob = await removeColorBackground(design.getSrc(), color);
+        const body = new FormData();
+        body.append("file", new File([blob], "diseno-sin-fondo.png", { type: "image/png" }));
+        const res = await fetch("/api/upload", { method: "POST", body });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error ?? "Error al quitar el fondo.");
+        await swapDesignImage(data.url);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Error al procesar el fondo.");
       } finally {
         setRemovingBg(false);
       }
@@ -536,7 +607,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
               }}
             />
           </label>
-          {hasDesign && (
+          {hasDesign && !pickingBgColor && (
             <button
               type="button"
               onClick={handleRemoveWhiteBg}
@@ -546,7 +617,22 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
               {removingBg ? "Quitando fondo..." : "Quitar fondo blanco"}
             </button>
           )}
-          {hasDesign && (
+          {hasDesign && !pickingBgColor && (
+            <button
+              type="button"
+              onClick={handleStartPickBgColor}
+              disabled={removingBg}
+              className="text-sm font-medium text-fuchsia-600 hover:underline disabled:opacity-50"
+            >
+              Elegir color de fondo
+            </button>
+          )}
+          {pickingBgColor && (
+            <button type="button" onClick={handleCancelPickBgColor} className="text-sm font-medium text-red-600 hover:underline">
+              Cancelar selección
+            </button>
+          )}
+          {hasDesign && !pickingBgColor && (
             <button
               type="button"
               onClick={handleRemoveDesign}
@@ -556,6 +642,12 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
             </button>
           )}
         </div>
+        {pickingBgColor && (
+          <p className="text-center text-sm font-medium text-fuchsia-600">
+            Haz clic sobre el color de fondo de tu diseño que quieres quitar (funciona con cualquier color, no solo
+            blanco).
+          </p>
+        )}
         <div className="flex flex-wrap items-center justify-center gap-3">
           {!hasText ? (
             <button
