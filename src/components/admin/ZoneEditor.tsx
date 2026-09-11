@@ -142,7 +142,10 @@ export default function ZoneEditor({
             type="number"
             min={1}
             value={zone.maxWidthCm}
-            onChange={(e) => onChange({ ...zone, maxWidthCm: Number(e.target.value) })}
+            onChange={(e) => {
+              const v = e.target.valueAsNumber;
+              onChange({ ...zone, maxWidthCm: Number.isFinite(v) && v > 0 ? v : zone.maxWidthCm });
+            }}
             className="w-20 rounded-md border border-neutral-300 px-2 py-1"
           />
         </label>
@@ -152,7 +155,10 @@ export default function ZoneEditor({
             type="number"
             min={1}
             value={zone.maxHeightCm}
-            onChange={(e) => onChange({ ...zone, maxHeightCm: Number(e.target.value) })}
+            onChange={(e) => {
+              const v = e.target.valueAsNumber;
+              onChange({ ...zone, maxHeightCm: Number.isFinite(v) && v > 0 ? v : zone.maxHeightCm });
+            }}
             className="w-20 rounded-md border border-neutral-300 px-2 py-1"
           />
         </label>
