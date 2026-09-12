@@ -34,6 +34,15 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
   const [materialIndex, setMaterialIndex] = useState(0);
   const color = product.colors[colorIndex];
   const [activeViewLabel, setActiveViewLabel] = useState(color.views[0]?.label ?? "");
+  // A view's MockupEditor only mounts once its tab has actually been shown.
+  // Mounting it eagerly while hidden (display:none) meant its canvas
+  // measured a container width of 0 and fell back to a fixed pixel width —
+  // fine on desktop, but on a narrow phone that fixed width overflowed its
+  // (overflow-hidden) container the moment the tab became visible, showing
+  // only a cropped slice of the garment instead of the whole photo.
+  const [activatedViews, setActivatedViews] = useState<Set<string>>(
+    () => new Set(color.views[0] ? [color.views[0].label] : []),
+  );
 
   const editorRefs = useRef<Record<string, MockupEditorHandle | null>>({});
   // Guards against a rapid double-click adding the item twice: `adding`
@@ -52,8 +61,15 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
   function handleColorChange(index: number) {
     setColorIndex(index);
     editorRefs.current = {};
-    setActiveViewLabel(product.colors[index].views[0]?.label ?? "");
+    const firstLabel = product.colors[index].views[0]?.label ?? "";
+    setActiveViewLabel(firstLabel);
+    setActivatedViews(new Set(firstLabel ? [firstLabel] : []));
     setTryOnSnapshot(null);
+  }
+
+  function handleViewChange(label: string) {
+    setActiveViewLabel(label);
+    setActivatedViews((prev) => (prev.has(label) ? prev : new Set(prev).add(label)));
   }
 
   function handleTryOn() {
@@ -115,7 +131,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
             <button
               key={v.label}
               type="button"
-              onClick={() => setActiveViewLabel(v.label)}
+              onClick={() => handleViewChange(v.label)}
               className={`rounded-md px-3 py-1.5 text-sm font-medium ${
                 activeViewLabel === v.label ? "bg-white shadow" : "text-neutral-500"
               }`}
@@ -128,14 +144,16 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
         <div key={color.name} className="relative">
           {color.views.map((v) => (
             <div key={v.label} style={{ display: activeViewLabel === v.label ? "block" : "none" }}>
-              <MockupEditor
-                view={v}
-                sizes={product.sizes}
-                selectedSizeLabel={size?.label ?? ""}
-                ref={(handle) => {
-                  editorRefs.current[v.label] = handle;
-                }}
-              />
+              {activatedViews.has(v.label) && (
+                <MockupEditor
+                  view={v}
+                  sizes={product.sizes}
+                  selectedSizeLabel={size?.label ?? ""}
+                  ref={(handle) => {
+                    editorRefs.current[v.label] = handle;
+                  }}
+                />
+              )}
             </div>
           ))}
         </div>
