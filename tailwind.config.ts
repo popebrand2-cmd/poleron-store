@@ -11,8 +11,11 @@ const config: Config = {
       colors: {
         ink: "#111111",
         paper: "#fafaf9",
-        // Brand accent — neon green on black, replacing the earlier purple/fuchsia accent.
-        neon: "#39FF14",
+        // Brand accent — neon green on black by default, admin-editable via
+        // the --neon CSS variable (see globals.css / layout.tsx). Utilities
+        // using an opacity modifier (e.g. bg-neon/70) won't pick up the
+        // custom color and should use an explicit rgba/hex value instead.
+        neon: "var(--neon)",
       },
     },
   },

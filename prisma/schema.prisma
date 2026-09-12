@@ -144,6 +144,37 @@ model StoreSettings {
   heroCta        String  @default("Personaliza aquí")
   // "left" | "right" — which side the hero photo sits on (text takes the other side).
   heroImageAlign String  @default("right")
+  // Brand accent color (hex), applied site-wide via a CSS variable in place
+  // of the old hardcoded Tailwind "neon" color. Empty = use the code default.
+  accentColor    String  @default("")
+}
+
+// Freeform key/value store for small homepage text snippets edited inline
+// from the site itself (section eyebrows/headings/subtexts that aren't
+// worth a dedicated StoreSettings column). Missing keys fall back to the
+// hardcoded defaults in src/lib/site-content.ts.
+model SiteText {
+  key   String @id
+  value String
+}
+
+// One item in a repeatable homepage list (the "values" bullets under the
+// hero, the "how it works" steps, the trust badges, or the FAQ). `section`
+// picks which list it belongs to and which fields are actually used:
+//   values      -> icon, text
+//   howItWorks  -> icon, title, text
+//   trustBadges -> icon, title, text
+//   faq         -> title (question), text (answer)
+// Editable inline (add/remove/reorder/edit) from the homepage edit mode.
+model ContentItem {
+  id        String   @id @default(cuid())
+  section   String
+  icon      String   @default("")
+  title     String   @default("")
+  text      String   @default("")
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
 }
 
 // A themed group of ready-made designs the customer can pick instead of

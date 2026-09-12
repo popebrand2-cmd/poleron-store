@@ -1,139 +1,14 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import FeaturedCarousel from "@/components/FeaturedCarousel";
+import EditableText from "@/components/edit/EditableText";
+import ValuesList from "@/components/edit/ValuesList";
+import HowItWorksList from "@/components/edit/HowItWorksList";
+import TrustBadgesList from "@/components/edit/TrustBadgesList";
+import FaqList from "@/components/edit/FaqList";
+import { siteText, CONTENT_DEFAULTS, DEFAULT_ACCENT_COLOR, type ContentSection } from "@/lib/site-content";
 
 export const dynamic = "force-dynamic";
-
-const HERO_VALUES = [
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-5 w-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15V4m0 0L8 8m4-4l4 4" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
-      </svg>
-    ),
-    text: "Tú traes la idea. Nosotros la hacemos realidad en la prenda.",
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-5 w-5">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 4L4 7v3h3v10h10V10h3V7l-4-3" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 4a4 4 0 0 0 8 0" />
-      </svg>
-    ),
-    text: "Cada pieza es única — hecha a tu medida, no en serie.",
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-5 w-5">
-        <circle cx="12" cy="8" r="3.2" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 20c1.2-4 4-6 7-6s5.8 2 7 6" />
-      </svg>
-    ),
-    text: "Aquí no eres cliente. Eres quien diseña.",
-  },
-];
-
-const HOW_IT_WORKS = [
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-7 w-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15V4m0 0L8 8m4-4l4 4" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
-      </svg>
-    ),
-    title: "Sube tu diseño",
-    text: "Una foto, un dibujo, un logo o texto. Lo que tengas en mente.",
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-7 w-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 20l3.5-1 10-10a1.5 1.5 0 0 0 0-2.1L16 5.4a1.5 1.5 0 0 0-2.1 0l-10 10L3 19l1 1z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13 6.5l4.5 4.5" />
-      </svg>
-    ),
-    title: "Personalízalo en vivo",
-    text: "Ajusta tamaño, posición y color sobre la prenda real. Ves el mockup exacto antes de comprar.",
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-7 w-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 8l8-4 8 4-8 4-8-4z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 8v8l8 4 8-4V8M12 12v8" />
-      </svg>
-    ),
-    title: "Lo hacemos realidad",
-    text: "Lo confeccionamos e imprimimos tal cual lo dejaste. Edición única, hecha para ti.",
-  },
-];
-
-const FAQS = [
-  {
-    q: "¿Puedo ver mi diseño antes de pagar?",
-    a: "Sí. El editor te muestra un mockup real sobre la prenda — con tu diseño, tamaño y posición exactos — antes de agregarlo al carrito.",
-  },
-  {
-    q: "¿Qué puedo subir como diseño?",
-    a: "Lo que tengas en mente: una foto, un dibujo, un logo o texto. Tú eliges qué personalizar.",
-  },
-  {
-    q: "¿Cada prenda es realmente única?",
-    a: "Sí. Cada pieza se confecciona bajo pedido con tu diseño — no manejamos stock genérico ni diseños repetidos.",
-  },
-  {
-    q: "¿Cómo se calcula el envío?",
-    a: "Según tu comuna. Eliges dirección de despacho en el checkout y el costo se calcula automáticamente antes de pagar.",
-  },
-  {
-    q: "¿Los pagos son seguros?",
-    a: "Sí, todos los pagos se procesan a través de Mercado Pago — nunca almacenamos tus datos de tarjeta.",
-  },
-];
-
-const TRUST_BADGES = [
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-7 w-7">
-        <rect x="5" y="11" width="14" height="9" rx="1.5" />
-        <path strokeLinecap="round" d="M8 11V7a4 4 0 0 1 8 0v4" />
-      </svg>
-    ),
-    title: "Compra segura",
-    text: "Tu información de pago está protegida.",
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-7 w-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16V6a1 1 0 0 1 1-1h9v11" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13 9h4l3 3v4h-7" />
-        <circle cx="7.5" cy="17.5" r="1.7" />
-        <circle cx="16.5" cy="17.5" r="1.7" />
-      </svg>
-    ),
-    title: "Envío a todo Chile",
-    text: "Retiro gratis en Santiago o despacho a domicilio por comuna.",
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-7 w-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 12a8 8 0 0 1 13.66-5.66M20 12a8 8 0 0 1-13.66 5.66" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M17.5 3v4h-4M6.5 21v-4h4" />
-      </svg>
-    ),
-    title: "Cambios y garantía",
-    text: "Si algo llega con falla de fábrica, lo resolvemos contigo.",
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-7 w-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 20l3.5-1 10-10a1.5 1.5 0 0 0 0-2.1L16 5.4a1.5 1.5 0 0 0-2.1 0l-10 10L3 19l1 1z" />
-        <path strokeLinecap="round" strokeLinejoin="round" d="M13 6.5l4.5 4.5" />
-      </svg>
-    ),
-    title: "100% Personalizable",
-    text: "Tú diseñas, nosotros lo hacemos realidad.",
-  },
-];
 
 // Only two garment types exist today, so this maps straight to a slug each
 // — once there's more than one product per type this should point at a
@@ -144,7 +19,7 @@ const BROWSE_TYPES = [
 ];
 
 export default async function Home() {
-  const [products, settings, designCollections] = await Promise.all([
+  const [products, settings, designCollections, contentItems, siteTextRows] = await Promise.all([
     prisma.product.findMany({
       where: { active: true },
       orderBy: { createdAt: "desc" },
@@ -156,6 +31,8 @@ export default async function Home() {
       orderBy: { sortOrder: "asc" },
       include: { designs: { where: { active: true }, orderBy: { sortOrder: "asc" } } },
     }),
+    prisma.contentItem.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } }),
+    prisma.siteText.findMany(),
   ]);
   const collectionsWithDesigns = designCollections.filter((c) => c.designs.length > 0);
   const heroImageUrl = settings?.heroImageUrl || "";
@@ -168,6 +45,16 @@ export default async function Home() {
     "Sube tu diseño, personalízalo sobre la prenda real y mira el resultado antes de comprar. Sin catálogos genéricos — cada pieza sale exactamente como la imaginaste.";
   const heroCta = settings?.heroCta || "Personaliza aquí";
   const heroImageAlign = (settings?.heroImageAlign as "left" | "right") || "right";
+  const accentColor = settings?.accentColor || DEFAULT_ACCENT_COLOR;
+
+  const textMap = Object.fromEntries(siteTextRows.map((t) => [t.key, t.value]));
+  const t = (key: string) => siteText(textMap, key);
+
+  function itemsFor(section: ContentSection) {
+    const rows = contentItems.filter((c) => c.section === section);
+    if (rows.length > 0) return rows.map((r) => ({ id: r.id, icon: r.icon, title: r.title, text: r.text }));
+    return CONTENT_DEFAULTS[section].map((d, i) => ({ id: `default-${section}-${i}`, ...d }));
+  }
 
   return (
     <main>
@@ -203,7 +90,8 @@ export default async function Home() {
             }`}
           >
             <span className="inline-flex items-center gap-2 rounded-full border border-neutral-700 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.15em] text-neutral-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-neon" /> {heroEyebrow}
+              <span className="h-1.5 w-1.5 rounded-full bg-neon" />
+              <EditableText value={heroEyebrow} heroField="heroEyebrow" as="span" />
             </span>
 
             <h1 className="mt-5 text-4xl font-extrabold uppercase leading-[0.95] tracking-tight text-white sm:text-5xl lg:text-7xl">
@@ -221,23 +109,18 @@ export default async function Home() {
               )}
             </h1>
 
-            <p className="mt-6 max-w-md text-neutral-400">{heroSubtext}</p>
+            <p className="mt-6 max-w-md text-neutral-400">
+              <EditableText value={heroSubtext} heroField="heroSubtext" as="span" multiline />
+            </p>
 
-            <ul className="mt-8 space-y-4">
-              {HERO_VALUES.map((v, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <span className="mt-0.5 shrink-0 text-neon">{v.icon}</span>
-                  <span className="text-sm text-neutral-300">{v.text}</span>
-                </li>
-              ))}
-            </ul>
+            <ValuesList initialItems={itemsFor("values")} />
 
             <div className="mt-10">
               <Link
                 href="#tienda"
                 className="group inline-flex items-center gap-5 rounded-full bg-neon py-3 pl-9 pr-3 text-lg font-bold uppercase tracking-wide text-black transition hover:brightness-90 sm:text-xl"
               >
-                {heroCta}
+                <EditableText value={heroCta} heroField="heroCta" as="span" />
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-neon transition group-hover:translate-x-0.5">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
@@ -263,11 +146,13 @@ export default async function Home() {
       {/* Manifesto banner */}
       <section className="border-t border-neutral-800 bg-black py-14">
         <p className="mx-auto max-w-4xl px-6 text-center text-3xl font-black uppercase leading-[1.05] tracking-tight text-white sm:text-4xl lg:text-5xl">
-          No vendemos catálogos. <span className="text-neon">Hacemos realidad tu idea.</span>
+          <EditableText value={t("manifesto.title")} siteKey="manifesto.title" as="span" />{" "}
+          <span className="text-neon">
+            <EditableText value={t("manifesto.titleAccent")} siteKey="manifesto.titleAccent" as="span" />
+          </span>
         </p>
         <p className="mx-auto mt-5 max-w-lg px-6 text-center text-sm text-neutral-400">
-          Cada pedido es una colaboración: tú traes la idea, nosotros la construimos en la prenda. Sin
-          diseños genéricos, sin stock repetido — cada pieza existe porque alguien la imaginó.
+          <EditableText value={t("manifesto.subtext")} siteKey="manifesto.subtext" as="span" multiline />
         </p>
       </section>
 
@@ -276,41 +161,22 @@ export default async function Home() {
         <div className="mx-auto max-w-6xl px-6 py-16">
           <div className="mb-12 text-center">
             <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-neon">
-              <span className="h-px w-8 bg-neon" /> Así de simple <span className="h-px w-8 bg-neon" />
+              <span className="h-px w-8 bg-neon" />
+              <EditableText value={t("howItWorks.eyebrow")} siteKey="howItWorks.eyebrow" as="span" />
+              <span className="h-px w-8 bg-neon" />
             </p>
             <h2 className="text-3xl font-extrabold uppercase tracking-tight text-white sm:text-4xl">
-              Cómo funciona
+              <EditableText value={t("howItWorks.heading")} siteKey="howItWorks.heading" as="span" />
             </h2>
           </div>
-          <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
-            {HOW_IT_WORKS.map((step, i) => (
-              <div key={i} className="relative text-center">
-                <span className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 text-6xl font-black text-white/[0.06]">
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <div className="relative flex flex-col items-center">
-                  <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-neutral-700 text-neon">
-                    {step.icon}
-                  </span>
-                  <p className="text-sm font-extrabold uppercase tracking-wide text-white">{step.title}</p>
-                  <p className="mt-2 max-w-xs text-sm text-neutral-400">{step.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <HowItWorksList initialItems={itemsFor("howItWorks")} />
         </div>
       </section>
 
       {/* Trust badges */}
       <section className="border-t border-neutral-800 bg-neutral-950">
-        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 py-12 sm:grid-cols-4">
-          {TRUST_BADGES.map((v, i) => (
-            <div key={i} className="flex flex-col items-center text-center">
-              <span className="mb-3 text-neon">{v.icon}</span>
-              <p className="text-xs font-extrabold uppercase tracking-wide text-white">{v.title}</p>
-              <p className="mt-1 text-xs text-neutral-400">{v.text}</p>
-            </div>
-          ))}
+        <div className="mx-auto max-w-6xl px-6 py-12">
+          <TrustBadgesList initialItems={itemsFor("trustBadges")} />
         </div>
       </section>
 
@@ -318,30 +184,32 @@ export default async function Home() {
       <section className="bg-black">
         <div className="border-y border-neutral-800 bg-neutral-950 py-3 text-center">
           <h2 className="text-lg font-extrabold uppercase tracking-widest text-white">
-            <span className="text-neon">MAD</span> · Encuentra tu estilo
+            <span className="text-neon">MAD</span> ·{" "}
+            <EditableText value={t("browseTypes.heading")} siteKey="browseTypes.heading" as="span" />
           </h2>
         </div>
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 px-6 py-10 sm:grid-cols-2">
-          {BROWSE_TYPES.map((t) => {
-            const product = products.find((p) => t.match(p.name));
+          {BROWSE_TYPES.map((tp) => {
+            const product = products.find((p) => tp.match(p.name));
             if (!product) return null;
             const cover = product.colors[0]?.views[0]?.imageUrl;
             return (
               <Link
-                key={t.label}
+                key={tp.label}
                 href={`/productos/${product.slug}`}
-                className="group relative aspect-[16/10] overflow-hidden rounded-xl border-2 border-transparent bg-neon/70 p-6 transition hover:border-neon"
+                style={{ backgroundColor: `${accentColor}b3` }}
+                className="group relative aspect-[16/10] overflow-hidden rounded-xl border-2 border-transparent p-6 transition hover:border-neon"
               >
                 {cover && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={cover}
-                    alt={t.label}
+                    alt={tp.label}
                     className="h-full w-full object-contain transition duration-300 group-hover:scale-105"
                   />
                 )}
                 <span className="absolute bottom-4 left-4 rounded bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-black shadow">
-                  {t.label} →
+                  {tp.label} →
                 </span>
               </Link>
             );
@@ -354,12 +222,16 @@ export default async function Home() {
         <div className="mx-auto max-w-6xl px-6 py-16">
           <div className="mb-10 text-center">
             <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-neon">
-              <span className="h-px w-8 bg-neon" /> MAD · Hecho para ti <span className="h-px w-8 bg-neon" />
+              <span className="h-px w-8 bg-neon" />
+              <EditableText value={t("featured.eyebrow")} siteKey="featured.eyebrow" as="span" />
+              <span className="h-px w-8 bg-neon" />
             </p>
             <h2 className="text-3xl font-extrabold uppercase tracking-tight text-white sm:text-4xl">
-              Lo más buscado
+              <EditableText value={t("featured.heading")} siteKey="featured.heading" as="span" />
             </h2>
-            <p className="mt-2 text-neutral-400">Elige tu prenda base y hazla completamente tuya</p>
+            <p className="mt-2 text-neutral-400">
+              <EditableText value={t("featured.subtext")} siteKey="featured.subtext" as="span" />
+            </p>
           </div>
 
           {products.length === 0 ? (
@@ -388,13 +260,15 @@ export default async function Home() {
           <div className="mx-auto max-w-6xl px-6 py-16">
             <div className="mb-10 text-center">
               <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-neon">
-                <span className="h-px w-8 bg-neon" /> MAD · Colecciones <span className="h-px w-8 bg-neon" />
+                <span className="h-px w-8 bg-neon" />
+                <EditableText value={t("collections.eyebrow")} siteKey="collections.eyebrow" as="span" />
+                <span className="h-px w-8 bg-neon" />
               </p>
               <h2 className="text-3xl font-extrabold uppercase tracking-tight text-white sm:text-4xl">
-                ¿No sabes qué diseñar?
+                <EditableText value={t("collections.heading")} siteKey="collections.heading" as="span" />
               </h2>
               <p className="mt-2 text-neutral-400">
-                Elige uno de estos diseños listos y estámpalo directo en tu prenda — sin partir de cero.
+                <EditableText value={t("collections.subtext")} siteKey="collections.subtext" as="span" multiline />
               </p>
             </div>
 
@@ -440,27 +314,15 @@ export default async function Home() {
         <div className="mx-auto max-w-3xl px-6 py-16">
           <div className="mb-10 text-center">
             <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-neon">
-              <span className="h-px w-8 bg-neon" /> Dudas <span className="h-px w-8 bg-neon" />
+              <span className="h-px w-8 bg-neon" />
+              <EditableText value={t("faq.eyebrow")} siteKey="faq.eyebrow" as="span" />
+              <span className="h-px w-8 bg-neon" />
             </p>
             <h2 className="text-3xl font-extrabold uppercase tracking-tight text-white sm:text-4xl">
-              Preguntas frecuentes
+              <EditableText value={t("faq.heading")} siteKey="faq.heading" as="span" />
             </h2>
           </div>
-          <div className="divide-y divide-neutral-800 rounded-xl border border-neutral-800">
-            {FAQS.map((item, i) => (
-              <details key={i} className="group p-5 open:bg-black/40">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-bold text-white">
-                  {item.q}
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-neutral-700 text-neon transition group-open:rotate-45">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
-                    </svg>
-                  </span>
-                </summary>
-                <p className="mt-3 text-sm text-neutral-400">{item.a}</p>
-              </details>
-            ))}
-          </div>
+          <FaqList initialItems={itemsFor("faq")} />
         </div>
       </section>
     </main>

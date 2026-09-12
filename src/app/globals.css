@@ -10,6 +10,9 @@
      don't need to change. */
   --ink: #f5f5f4;
   --paper: #0a0a0a;
+  /* Brand accent, admin-editable from the homepage edit mode (falls back to
+     this default until StoreSettings.accentColor is set — see layout.tsx). */
+  --neon: #39ff14;
 }
 
 body {

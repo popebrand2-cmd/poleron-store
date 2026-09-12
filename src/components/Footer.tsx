@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import EditableText from "./edit/EditableText";
 
-export default function Footer() {
+export default function Footer({ tagline }: { tagline: string }) {
   const pathname = usePathname();
   if (pathname?.startsWith("/admin")) return null;
 
@@ -14,7 +15,7 @@ export default function Footer() {
           <div>
             <p className="text-2xl font-black uppercase tracking-tight text-white">MAD</p>
             <p className="mt-1 max-w-sm text-xs text-neutral-500">
-              Ropa personalizada — subes tu diseño, ves el mockup real y lo recibimos hecho realidad.
+              <EditableText value={tagline} siteKey="footer.tagline" as="span" multiline />
             </p>
           </div>
           <div className="flex gap-6 text-xs font-medium uppercase tracking-wide text-neutral-400">
