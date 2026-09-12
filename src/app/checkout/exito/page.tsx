@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatCLP } from "@/lib/money";
 import ClearCartOnMount from "@/components/ClearCartOnMount";
+import TrackPurchaseOnMount from "@/components/TrackPurchaseOnMount";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export default async function CheckoutSuccessPage({
       <div className="relative mx-auto max-w-xl overflow-hidden rounded-2xl bg-white p-10 text-center text-neutral-900">
         <div className="absolute inset-x-0 top-0 h-1.5 bg-neon" />
         <ClearCartOnMount />
+        {order && <TrackPurchaseOnMount valueCLP={order.totalAmount} orderId={order.id} />}
         <h1 className="mb-3 text-2xl font-semibold">¡Pago recibido!</h1>
         <p className="text-neutral-600">
           Gracias{order ? ` ${order.customerName}` : ""}, tu pedido está confirmado
