@@ -4,7 +4,39 @@ import FeaturedCarousel from "@/components/FeaturedCarousel";
 
 export const dynamic = "force-dynamic";
 
-const VALUE_PROPS = [
+const TRUST_BADGES = [
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-7 w-7">
+        <rect x="5" y="11" width="14" height="9" rx="1.5" />
+        <path strokeLinecap="round" d="M8 11V7a4 4 0 0 1 8 0v4" />
+      </svg>
+    ),
+    title: "Compra segura",
+    text: "Tu información de pago está protegida.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-7 w-7">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16V6a1 1 0 0 1 1-1h9v11" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13 9h4l3 3v4h-7" />
+        <circle cx="7.5" cy="17.5" r="1.7" />
+        <circle cx="16.5" cy="17.5" r="1.7" />
+      </svg>
+    ),
+    title: "Envío a todo Chile",
+    text: "Retiro gratis en Santiago o despacho a domicilio por comuna.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-7 w-7">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 12a8 8 0 0 1 13.66-5.66M20 12a8 8 0 0 1-13.66 5.66" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17.5 3v4h-4M6.5 21v-4h4" />
+      </svg>
+    ),
+    title: "Cambios y garantía",
+    text: "Si algo llega con falla de fábrica, lo resolvemos contigo.",
+  },
   {
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-7 w-7">
@@ -12,25 +44,17 @@ const VALUE_PROPS = [
         <path strokeLinecap="round" strokeLinejoin="round" d="M13 6.5l4.5 4.5" />
       </svg>
     ),
-    text: "Subes tu propio diseño y lo personalizas en tiempo real, con las medidas reales de la prenda.",
+    title: "100% Personalizable",
+    text: "Tú diseñas, nosotros lo hacemos realidad.",
   },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-7 w-7">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 4L4 8l3 2v10h10V10l3-2-4-4-3 2h-2z" />
-      </svg>
-    ),
-    text: "Ves el mockup real antes de comprar — sabes exactamente cómo va a quedar impreso.",
-  },
-  {
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} className="h-7 w-7">
-        <circle cx="12" cy="12" r="9" />
-        <path strokeLinecap="round" d="M12 3a9 9 0 0 1 0 18M8 7a6 6 0 0 1 8 8M8 17a6 6 0 0 1 0-10M16 12a4 4 0 0 1-4 4" />
-      </svg>
-    ),
-    text: "Aquí no hay dos iguales. Tu prenda es tan única como tu diseño.",
-  },
+];
+
+// Only two garment types exist today, so this maps straight to a slug each
+// — once there's more than one product per type this should point at a
+// real category listing instead of a single product.
+const BROWSE_TYPES = [
+  { label: "Polerones", match: (name: string) => /hoodie|poler[oó]n/i.test(name) },
+  { label: "Poleras", match: (name: string) => /tee|polera/i.test(name) },
 ];
 
 export default async function Home() {
@@ -94,15 +118,50 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Value props */}
+      {/* Trust badges */}
       <section className="border-t border-neutral-800 bg-neutral-950">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-6 py-12 sm:grid-cols-3">
-          {VALUE_PROPS.map((v, i) => (
-            <div key={i} className="flex items-start gap-4">
-              <span className="shrink-0 text-neon">{v.icon}</span>
-              <p className="text-sm text-neutral-300">{v.text}</p>
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 py-12 sm:grid-cols-4">
+          {TRUST_BADGES.map((v, i) => (
+            <div key={i} className="flex flex-col items-center text-center">
+              <span className="mb-3 text-neon">{v.icon}</span>
+              <p className="text-xs font-extrabold uppercase tracking-wide text-white">{v.title}</p>
+              <p className="mt-1 text-xs text-neutral-400">{v.text}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Browse by garment type */}
+      <section className="bg-black">
+        <div className="border-y border-neutral-800 bg-neutral-950 py-3 text-center">
+          <h2 className="text-lg font-extrabold uppercase tracking-widest text-white">Encuentra tu estilo</h2>
+        </div>
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 px-6 py-10 sm:grid-cols-2">
+          {BROWSE_TYPES.map((t) => {
+            const product = products.find((p) => t.match(p.name));
+            if (!product) return null;
+            const cover = product.colors[0]?.views[0]?.imageUrl;
+            return (
+              <Link
+                key={t.label}
+                href={`/productos/${product.slug}`}
+                className="group relative aspect-[16/10] overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900"
+              >
+                {cover && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={cover}
+                    alt={t.label}
+                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                <span className="absolute bottom-4 left-4 rounded bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-black">
+                  {t.label} →
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
