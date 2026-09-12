@@ -16,6 +16,9 @@ export default function TryOnEditor({
   onClose: () => void;
 }) {
   const canvasElRef = useRef<HTMLCanvasElement>(null);
+  // Measures the REAL available width so the canvas shrinks to fit narrow
+  // viewports instead of forcing the page to overflow horizontally.
+  const wrapperRef = useRef<HTMLDivElement>(null);
   const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
   const garmentRef = useRef<fabric.FabricImage | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
@@ -45,7 +48,8 @@ export default function TryOnEditor({
 
       const naturalWidth = photoImg.width ?? 1;
       const naturalHeight = photoImg.height ?? 1;
-      const displayWidth = Math.min(CANVAS_MAX_WIDTH, naturalWidth);
+      const availableWidth = wrapperRef.current?.clientWidth || CANVAS_MAX_WIDTH;
+      const displayWidth = Math.min(CANVAS_MAX_WIDTH, naturalWidth, availableWidth);
       const scale = displayWidth / naturalWidth;
       const displayHeight = naturalHeight * scale;
 
@@ -177,7 +181,10 @@ export default function TryOnEditor({
         </div>
       ) : (
         <div className="flex flex-col items-center gap-4">
-          <div className="relative flex w-full items-center justify-center overflow-hidden rounded-lg bg-neutral-100">
+          <div
+            ref={wrapperRef}
+            className="relative flex w-full min-w-0 items-center justify-center overflow-hidden rounded-lg bg-neutral-100"
+          >
             <canvas ref={canvasElRef} />
             {loading && (
               <div className="absolute inset-0 flex items-center justify-center bg-white/70 text-sm font-medium text-neutral-600">

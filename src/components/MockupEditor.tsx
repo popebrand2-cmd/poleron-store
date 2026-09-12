@@ -54,6 +54,10 @@ type MockupEditorProps = {
 const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
   function MockupEditor({ view, initialPlacement, sizes = [], selectedSizeLabel = "" }, ref) {
     const canvasElRef = useRef<HTMLCanvasElement>(null);
+    // Measures the REAL available width (not the fixed CANVAS_MAX_WIDTH cap)
+    // so the canvas shrinks to fit narrow/mobile viewports instead of
+    // forcing the whole page to overflow horizontally.
+    const wrapperRef = useRef<HTMLDivElement>(null);
     const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
     // The admin-defined MAXIMUM zone, in canvas px — fixed for the life of this editor.
     const maxZoneRef = useRef({ left: 0, top: 0, width: 0, height: 0 });
@@ -161,7 +165,8 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
 
         const naturalWidth = bgImg.width ?? 1;
         const naturalHeight = bgImg.height ?? 1;
-        const displayWidth = Math.min(CANVAS_MAX_WIDTH, naturalWidth);
+        const availableWidth = wrapperRef.current?.clientWidth || CANVAS_MAX_WIDTH;
+        const displayWidth = Math.min(CANVAS_MAX_WIDTH, naturalWidth, availableWidth);
         const scale = displayWidth / naturalWidth;
         const displayHeight = naturalHeight * scale;
 
@@ -762,8 +767,8 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
     }));
 
     return (
-      <div className="space-y-3">
-        <div className="relative mx-auto w-fit overflow-hidden rounded-lg border border-neutral-200">
+      <div ref={wrapperRef} className="min-w-0 space-y-3">
+        <div className="relative mx-auto w-fit max-w-full overflow-hidden rounded-lg border border-neutral-200">
           <canvas ref={canvasElRef} />
           {designBadge && (
             <span

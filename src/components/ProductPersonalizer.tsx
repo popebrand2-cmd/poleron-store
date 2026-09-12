@@ -108,8 +108,8 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
   }
 
   return (
-    <div className="grid grid-cols-1 gap-10 lg:grid-cols-2">
-      <div>
+    <div className="grid min-w-0 grid-cols-1 gap-10 lg:grid-cols-2">
+      <div className="min-w-0">
         <div className="mb-4 flex justify-center gap-2 rounded-lg bg-neutral-100 p-1">
           {color.views.map((v) => (
             <button
@@ -220,7 +220,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
       </div>
 
       {tryOnSnapshot && (
-        <div className="lg:col-span-2">
+        <div className="min-w-0 lg:col-span-2">
           <TryOnEditor garmentSnapshotUrl={tryOnSnapshot} onClose={() => setTryOnSnapshot(null)} />
         </div>
       )}
