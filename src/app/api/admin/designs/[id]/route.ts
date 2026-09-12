@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
+  imageUrl: z.string().min(1).optional(),
   placement: z.enum(["FRONT", "BACK"]).optional(),
   active: z.boolean().optional(),
 });

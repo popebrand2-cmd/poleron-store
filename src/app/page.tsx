@@ -397,7 +397,7 @@ export default async function Home() {
 
       {/* Preset design collections */}
       {collectionsWithDesigns.length > 0 && (
-        <section className="border-t border-neutral-800 bg-black">
+        <section id="colecciones" className="border-t border-neutral-800 bg-black">
           <div className="mx-auto max-w-6xl px-6 py-16">
             <div className="mb-10 text-center">
               <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-neon">

@@ -26,12 +26,15 @@ export default function Header() {
           </Link>
 
           {!isAdmin && (
-            <nav className="hidden items-center gap-8 text-xs font-semibold uppercase tracking-wide text-neutral-300 sm:flex">
+            <nav className="hidden items-center gap-8 text-sm font-semibold uppercase tracking-wide text-neutral-300 sm:flex">
               <Link href="/" className="transition hover:text-neon">
                 Inicio
               </Link>
               <Link href="/#tienda" className="transition hover:text-neon">
                 Tienda
+              </Link>
+              <Link href="/#colecciones" className="transition hover:text-neon">
+                Colecciones
               </Link>
             </nav>
           )}
