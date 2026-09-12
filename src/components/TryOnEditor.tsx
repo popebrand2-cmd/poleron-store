@@ -208,7 +208,7 @@ export default function TryOnEditor({
             Arrastra para mover, usa las esquinas para ajustar el tamaño y rotar.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <label className="cursor-pointer text-sm font-medium text-green-700 hover:underline">
+            <label className="cursor-pointer rounded-full border-2 border-black bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-black transition hover:border-neon hover:bg-neon">
               Cambiar foto
               <input
                 type="file"

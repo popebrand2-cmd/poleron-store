@@ -27,6 +27,13 @@ export type MockupView = {
 
 const CANVAS_MAX_WIDTH = 460;
 
+// Secondary editor actions (crop, remove bg, add text, ...) — pill buttons
+// in the site's black/neon-green brand line instead of plain text links.
+const PILL_BTN =
+  "rounded-full border-2 border-black bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-black transition hover:border-neon hover:bg-neon disabled:opacity-40 disabled:hover:border-black disabled:hover:bg-white";
+const PILL_BTN_DANGER =
+  "rounded-full border-2 border-red-600 bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-40";
+
 // Loaded via Google Fonts <link> in src/app/layout.tsx.
 const FONT_OPTIONS = [
   { label: "Arial", value: "Arial, sans-serif" },
@@ -797,70 +804,42 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
             />
           </label>
           {hasDesign && !pickingBgColor && !cropping && (
-            <button
-              type="button"
-              onClick={handleStartCrop}
-              className="text-sm font-medium text-green-700 hover:underline"
-            >
+            <button type="button" onClick={handleStartCrop} className={PILL_BTN}>
               Recortar imagen
             </button>
           )}
           {cropping && (
             <>
-              <button
-                type="button"
-                onClick={handleApplyCrop}
-                disabled={applyingCrop}
-                className="text-sm font-medium text-green-700 hover:underline disabled:opacity-50"
-              >
+              <button type="button" onClick={handleApplyCrop} disabled={applyingCrop} className={PILL_BTN}>
                 {applyingCrop ? "Recortando..." : "Aplicar recorte"}
               </button>
-              <button type="button" onClick={handleCancelCrop} className="text-sm font-medium text-red-600 hover:underline">
+              <button type="button" onClick={handleCancelCrop} className={PILL_BTN_DANGER}>
                 Cancelar
               </button>
             </>
           )}
           {hasDesign && !pickingBgColor && !cropping && (
-            <button
-              type="button"
-              onClick={handleRemoveWhiteBg}
-              disabled={removingBg}
-              className="text-sm font-medium text-green-700 hover:underline disabled:opacity-50"
-            >
+            <button type="button" onClick={handleRemoveWhiteBg} disabled={removingBg} className={PILL_BTN}>
               {removingBg ? "Quitando fondo..." : "Quitar fondo blanco"}
             </button>
           )}
           {hasDesign && !pickingBgColor && !cropping && (
-            <button
-              type="button"
-              onClick={handleStartPickBgColor}
-              disabled={removingBg}
-              className="text-sm font-medium text-green-700 hover:underline disabled:opacity-50"
-            >
+            <button type="button" onClick={handleStartPickBgColor} disabled={removingBg} className={PILL_BTN}>
               Elegir color de fondo
             </button>
           )}
           {pickingBgColor && (
-            <button type="button" onClick={handleCancelPickBgColor} className="text-sm font-medium text-red-600 hover:underline">
+            <button type="button" onClick={handleCancelPickBgColor} className={PILL_BTN_DANGER}>
               Cancelar selección
             </button>
           )}
           {hasDesign && !pickingBgColor && !cropping && (
-            <button
-              type="button"
-              onClick={handleSegmentSubject}
-              disabled={segmentingSubject}
-              className="text-sm font-medium text-green-700 hover:underline disabled:opacity-50"
-            >
+            <button type="button" onClick={handleSegmentSubject} disabled={segmentingSubject} className={PILL_BTN}>
               {segmentingSubject ? "Aislando (puede tardar)..." : "Aislar sujeto (IA)"}
             </button>
           )}
           {hasDesign && !pickingBgColor && !cropping && (
-            <button
-              type="button"
-              onClick={handleRemoveDesign}
-              className="text-sm font-medium text-red-600 hover:underline"
-            >
+            <button type="button" onClick={handleRemoveDesign} className={PILL_BTN_DANGER}>
               Quitar
             </button>
           )}
@@ -878,11 +857,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         )}
         <div className="flex flex-wrap items-center justify-center gap-3">
           {!hasText && !cropping && !pickingBgColor ? (
-            <button
-              type="button"
-              onClick={handleAddText}
-              className="text-sm font-medium text-green-700 hover:underline"
-            >
+            <button type="button" onClick={handleAddText} className={PILL_BTN}>
               + Agregar texto
             </button>
           ) : hasText ? (
@@ -910,11 +885,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
                   className="h-7 w-10 rounded"
                 />
               </label>
-              <button
-                type="button"
-                onClick={handleRemoveText}
-                className="text-sm font-medium text-red-600 hover:underline"
-              >
+              <button type="button" onClick={handleRemoveText} className={PILL_BTN_DANGER}>
                 Quitar texto
               </button>
             </>
