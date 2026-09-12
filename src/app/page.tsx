@@ -145,17 +145,16 @@ export default async function Home() {
               <Link
                 key={t.label}
                 href={`/productos/${product.slug}`}
-                className="group relative aspect-[16/10] overflow-hidden rounded-xl border-2 border-transparent bg-white transition hover:border-neon"
+                className="group relative aspect-[16/10] overflow-hidden rounded-xl border-2 border-transparent bg-neon/70 p-6 transition hover:border-neon"
               >
                 {cover && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={cover}
                     alt={t.label}
-                    className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                    className="h-full w-full object-contain transition duration-300 group-hover:scale-105"
                   />
                 )}
-                <div className="absolute inset-0 bg-neon/70" />
                 <span className="absolute bottom-4 left-4 rounded bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-black shadow">
                   {t.label} →
                 </span>
