@@ -102,7 +102,30 @@ export default function CheckoutPage() {
     <main className="bg-black px-6 py-10">
     <div className="relative mx-auto max-w-xl overflow-hidden rounded-2xl bg-white p-6 text-neutral-900 sm:p-8">
       <div className="absolute inset-x-0 top-0 h-1.5 bg-neon" />
-      <h1 className="mb-6 text-2xl font-semibold">Datos de envío y pago</h1>
+      <h1 className="mb-4 text-2xl font-semibold">Datos de envío y pago</h1>
+
+      <div className="mb-6 space-y-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+        {items.map((item) => (
+          <div key={item.id} className="flex items-center gap-3">
+            {item.previewImageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={item.previewImageUrl}
+                alt={item.productName}
+                className="h-14 w-14 shrink-0 rounded-md border border-neutral-200 object-cover"
+              />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{item.productName}</p>
+              <p className="text-xs text-neutral-500">
+                Color {item.colorName} · Talla {item.sizeLabel} · x{item.quantity}
+              </p>
+            </div>
+            <p className="shrink-0 text-sm font-medium">{formatCLP(item.unitPrice * item.quantity)}</p>
+          </div>
+        ))}
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="mb-1 block text-sm font-medium">Nombre completo</label>
@@ -238,6 +261,13 @@ export default function CheckoutPage() {
             </span>
           )}
         </button>
+        <p className="flex items-center justify-center gap-1.5 text-xs text-neutral-500">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-3.5 w-3.5">
+            <rect x="5" y="11" width="14" height="9" rx="1.5" />
+            <path strokeLinecap="round" d="M8 11V7a4 4 0 0 1 8 0v4" />
+          </svg>
+          Pago 100% seguro, procesado por Mercado Pago
+        </p>
       </form>
     </div>
     </main>

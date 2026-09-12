@@ -67,6 +67,29 @@ const HOW_IT_WORKS = [
   },
 ];
 
+const FAQS = [
+  {
+    q: "¿Puedo ver mi diseño antes de pagar?",
+    a: "Sí. El editor te muestra un mockup real sobre la prenda — con tu diseño, tamaño y posición exactos — antes de agregarlo al carrito.",
+  },
+  {
+    q: "¿Qué puedo subir como diseño?",
+    a: "Lo que tengas en mente: una foto, un dibujo, un logo o texto. Tú eliges qué personalizar.",
+  },
+  {
+    q: "¿Cada prenda es realmente única?",
+    a: "Sí. Cada pieza se confecciona bajo pedido con tu diseño — no manejamos stock genérico ni diseños repetidos.",
+  },
+  {
+    q: "¿Cómo se calcula el envío?",
+    a: "Según tu comuna. Eliges dirección de despacho en el checkout y el costo se calcula automáticamente antes de pagar.",
+  },
+  {
+    q: "¿Los pagos son seguros?",
+    a: "Sí, todos los pagos se procesan a través de Mercado Pago — nunca almacenamos tus datos de tarjeta.",
+  },
+];
+
 const TRUST_BADGES = [
   {
     icon: (
@@ -328,6 +351,35 @@ export default async function Home() {
               }))}
             />
           )}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="border-t border-neutral-800 bg-neutral-950">
+        <div className="mx-auto max-w-3xl px-6 py-16">
+          <div className="mb-10 text-center">
+            <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-neon">
+              <span className="h-px w-8 bg-neon" /> Dudas <span className="h-px w-8 bg-neon" />
+            </p>
+            <h2 className="text-3xl font-extrabold uppercase tracking-tight text-white sm:text-4xl">
+              Preguntas frecuentes
+            </h2>
+          </div>
+          <div className="divide-y divide-neutral-800 rounded-xl border border-neutral-800">
+            {FAQS.map((item, i) => (
+              <details key={i} className="group p-5 open:bg-black/40">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-bold text-white">
+                  {item.q}
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-neutral-700 text-neon transition group-open:rotate-45">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-3.5 w-3.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+                    </svg>
+                  </span>
+                </summary>
+                <p className="mt-3 text-sm text-neutral-400">{item.a}</p>
+              </details>
+            ))}
+          </div>
         </div>
       </section>
     </main>
