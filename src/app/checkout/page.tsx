@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useCartStore } from "@/lib/cart-store";
 import { formatCLP } from "@/lib/money";
 
@@ -9,6 +9,14 @@ type ShippingInfo = {
   rates: ShippingRate[];
   pickup: { enabled: boolean; address: string; hours: string };
 };
+
+function normalize(s: string) {
+  return s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .trim()
+    .toLowerCase();
+}
 
 export default function CheckoutPage() {
   const items = useCartStore((s) => s.items);
@@ -30,36 +38,47 @@ export default function CheckoutPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
+  const [calle, setCalle] = useState("");
+  const [numero, setNumero] = useState("");
+  const [referencia, setReferencia] = useState("");
   const [method, setMethod] = useState<"PICKUP" | "DELIVERY">("DELIVERY");
   const [comuna, setComuna] = useState("");
+  const [comunaFocused, setComunaFocused] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const regions = useMemo(() => {
-    const map = new Map<string, ShippingRate[]>();
-    for (const r of shipping?.rates ?? []) {
-      if (!map.has(r.region)) map.set(r.region, []);
-      map.get(r.region)!.push(r);
-    }
-    return Array.from(map.entries());
-  }, [shipping]);
-
   if (!mounted) return null;
 
+  const matchedRate = shipping?.rates.find((r) => normalize(r.comuna) === normalize(comuna)) ?? null;
+  const comunaSuggestions =
+    comuna.trim() && !matchedRate
+      ? (shipping?.rates.filter((r) => normalize(r.comuna).includes(normalize(comuna))) ?? []).slice(0, 6)
+      : [];
+  const addressComplete = Boolean(matchedRate && calle.trim() && numero.trim());
+
   const subtotal = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
-  const shippingCost =
-    method === "PICKUP" ? 0 : (shipping?.rates.find((r) => r.comuna === comuna)?.priceCLP ?? null);
+  const shippingCost = method === "PICKUP" ? 0 : addressComplete ? matchedRate!.priceCLP : null;
   const total = subtotal + (shippingCost ?? 0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
-    if (method === "DELIVERY" && shippingCost === null) {
-      setError("Elige una comuna para calcular el envío.");
+    if (method === "DELIVERY" && !matchedRate) {
+      setError("Escribe una comuna válida de nuestra cobertura de envío.");
       return;
     }
+    if (method === "DELIVERY" && (!calle.trim() || !numero.trim())) {
+      setError("Completa la calle y el número de tu dirección.");
+      return;
+    }
+
+    const fullAddress = [
+      [calle.trim(), numero.trim()].filter(Boolean).join(" "),
+      referencia.trim() && `Ref: ${referencia.trim()}`,
+    ]
+      .filter(Boolean)
+      .join(" — ");
 
     setLoading(true);
     const res = await fetch("/api/checkout", {
@@ -70,8 +89,8 @@ export default function CheckoutPage() {
         customerEmail: email,
         customerPhone: phone,
         shippingMethod: method,
-        shippingComuna: method === "DELIVERY" ? comuna : "",
-        shippingAddr: method === "DELIVERY" ? address : shipping?.pickup.address ?? "",
+        shippingComuna: method === "DELIVERY" ? matchedRate!.comuna : "",
+        shippingAddr: method === "DELIVERY" ? fullAddress : shipping?.pickup.address ?? "",
         items,
       }),
     });
@@ -192,41 +211,97 @@ export default function CheckoutPage() {
 
         {method === "DELIVERY" && (
           <>
-            <div>
+            <div className="relative">
               <label className="mb-1 block text-sm font-medium">Comuna</label>
-              <select
+              <input
                 required
+                autoComplete="off"
                 value={comuna}
                 onChange={(e) => setComuna(e.target.value)}
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2"
-              >
-                <option value="">Selecciona tu comuna</option>
-                {regions.map(([region, rates]) => (
-                  <optgroup key={region} label={region}>
-                    {rates.map((r) => (
-                      <option key={r.comuna} value={r.comuna}>
-                        {r.comuna} — {formatCLP(r.priceCLP)}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
-              {shipping && regions.length === 0 && (
+                onFocus={() => setComunaFocused(true)}
+                onBlur={() => setTimeout(() => setComunaFocused(false), 150)}
+                placeholder="Escribe tu comuna"
+                className="w-full rounded-md border border-neutral-300 px-3 py-2"
+              />
+              {matchedRate ? (
+                <p className="mt-1 text-xs text-green-700">
+                  {matchedRate.comuna} · {matchedRate.region}
+                </p>
+              ) : shipping && shipping.rates.length === 0 ? (
                 <p className="mt-1 text-xs text-neutral-500">
                   Por ahora no hay comunas con envío configurado — escríbenos para coordinar.
                 </p>
+              ) : comuna.trim() && comunaSuggestions.length === 0 ? (
+                <p className="mt-1 text-xs text-red-600">
+                  No hacemos envíos a esa comuna todavía. Verifica que esté bien escrita.
+                </p>
+              ) : null}
+
+              {comunaFocused && comunaSuggestions.length > 0 && (
+                <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border border-neutral-200 bg-white shadow-lg">
+                  {comunaSuggestions.map((r) => (
+                    <li key={r.comuna}>
+                      <button
+                        type="button"
+                        onClick={() => setComuna(r.comuna)}
+                        className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-neutral-50"
+                      >
+                        <span>
+                          {r.comuna} <span className="text-neutral-400">· {r.region}</span>
+                        </span>
+                        <span className="text-neutral-500">{formatCLP(r.priceCLP)}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium">Dirección (calle y número)</label>
-              <textarea
-                required
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                rows={2}
-                className="w-full rounded-md border border-neutral-300 px-3 py-2"
-              />
-            </div>
+
+            {matchedRate && (
+              <>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="col-span-2">
+                    <label className="mb-1 block text-sm font-medium">Calle</label>
+                    <input
+                      required
+                      value={calle}
+                      onChange={(e) => setCalle(e.target.value)}
+                      className="w-full rounded-md border border-neutral-300 px-3 py-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium">Número</label>
+                    <input
+                      required
+                      value={numero}
+                      onChange={(e) => setNumero(e.target.value)}
+                      className="w-full rounded-md border border-neutral-300 px-3 py-2"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Referencia (opcional)</label>
+                  <input
+                    value={referencia}
+                    onChange={(e) => setReferencia(e.target.value)}
+                    placeholder="Depto, casa, entre calles, color de la fachada…"
+                    className="w-full rounded-md border border-neutral-300 px-3 py-2"
+                  />
+                </div>
+                {calle.trim() && numero.trim() && (
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      `${calle} ${numero}, ${matchedRate.comuna}, Chile`,
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-green-700 hover:underline"
+                  >
+                    Confirmar ubicación en Google Maps ↗
+                  </a>
+                )}
+              </>
+            )}
           </>
         )}
 
@@ -237,7 +312,13 @@ export default function CheckoutPage() {
           </div>
           <div className="flex items-center justify-between text-sm text-neutral-600">
             <p>Envío</p>
-            <p>{method === "PICKUP" ? "Gratis" : shippingCost === null ? "—" : formatCLP(shippingCost)}</p>
+            <p>
+              {method === "PICKUP"
+                ? "Gratis"
+                : shippingCost === null
+                  ? "Completa tu dirección"
+                  : formatCLP(shippingCost)}
+            </p>
           </div>
           <div className="flex items-center justify-between pt-1 font-semibold">
             <p>Total</p>
