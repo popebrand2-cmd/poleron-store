@@ -12,7 +12,7 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl px-6 py-10">
         <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
           <div>
-            <p className="text-sm font-extrabold uppercase tracking-widest text-white">Poleron Store</p>
+            <p className="text-sm font-extrabold uppercase tracking-widest text-white">MAD</p>
             <p className="mt-1 max-w-sm text-xs text-neutral-500">
               Ropa personalizada — subes tu diseño, ves el mockup real y lo recibimos hecho realidad.
             </p>
@@ -30,7 +30,7 @@ export default function Footer() {
           </div>
         </div>
         <p className="mt-8 text-xs text-neutral-600">
-          © {new Date().getFullYear()} Poleron Store. Todos los derechos reservados.
+          © {new Date().getFullYear()} MAD. Todos los derechos reservados.
         </p>
       </div>
     </footer>

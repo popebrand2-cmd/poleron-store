@@ -4,8 +4,8 @@ import Footer from "@/components/Footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Poleron Store — Ropa personalizada",
-  description: "Diseña tu propio poleron: sube tu arte y míralo en un mockup real antes de comprar.",
+  title: "MAD — Ropa personalizada",
+  description: "Diseña tu propia ropa: sube tu arte y míralo en un mockup real antes de comprar.",
 };
 
 export default function RootLayout({

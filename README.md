@@ -1,5 +1,7 @@
 # Poleron Store
 
+> Nota: la marca que ve el cliente en el sitio es **MAD** (header, footer, título de pestaña, título del pedido en Mercado Pago). "Poleron Store" sigue siendo el nombre del repo/proyecto y del dominio de Railway — son cosas distintas, no hace falta que coincidan.
+
 Tienda de ropa personalizada: subes tus prendas base (frente/espalda/manga), el cliente sube su diseño y lo ubica dentro de la zona de impresión que definiste, y compra con pago real vía Mercado Pago.
 
 **En producción:** https://poleron-store-production.up.railway.app (desplegado en Railway, conectado a este repositorio — cada push a `main` se publica solo).
