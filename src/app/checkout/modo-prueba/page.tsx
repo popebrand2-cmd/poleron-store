@@ -15,7 +15,8 @@ export default async function CheckoutTestModePage({
 
   return (
     <main className="bg-black px-6 py-16">
-      <div className="mx-auto max-w-xl rounded-2xl bg-white p-10 text-center text-neutral-900">
+      <div className="relative mx-auto max-w-xl overflow-hidden rounded-2xl bg-white p-10 text-center text-neutral-900">
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-neon" />
         <ClearCartOnMount />
         <div className="mb-4 inline-block rounded-full bg-amber-100 px-3 py-1 text-sm font-medium text-amber-800">
           Modo de prueba — Mercado Pago no está configurado

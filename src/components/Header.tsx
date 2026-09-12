@@ -21,7 +21,7 @@ export default function Header() {
       {!isAdmin && <AnnouncementBar />}
       <header className="border-b border-neutral-800 bg-black">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="text-lg font-extrabold uppercase tracking-widest text-white">
+          <Link href="/" className="text-3xl font-black uppercase tracking-tight text-white sm:text-4xl">
             MAD
           </Link>
 

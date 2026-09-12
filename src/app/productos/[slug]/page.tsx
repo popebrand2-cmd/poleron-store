@@ -22,7 +22,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   return (
     <main className="bg-black px-6 py-10">
-    <div className="mx-auto max-w-5xl rounded-2xl bg-white p-6 text-neutral-900 sm:p-8">
+    <div className="relative mx-auto max-w-5xl overflow-hidden rounded-2xl bg-white p-6 text-neutral-900 sm:p-8">
+      <div className="absolute inset-x-0 top-0 h-1.5 bg-neon" />
       <ProductPersonalizer
         product={{
           id: product.id,

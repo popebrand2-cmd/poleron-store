@@ -16,7 +16,8 @@ export default async function CheckoutSuccessPage({
 
   return (
     <main className="bg-black px-6 py-16">
-      <div className="mx-auto max-w-xl rounded-2xl bg-white p-10 text-center text-neutral-900">
+      <div className="relative mx-auto max-w-xl overflow-hidden rounded-2xl bg-white p-10 text-center text-neutral-900">
+        <div className="absolute inset-x-0 top-0 h-1.5 bg-neon" />
         <ClearCartOnMount />
         <h1 className="mb-3 text-2xl font-semibold">¡Pago recibido!</h1>
         <p className="text-neutral-600">

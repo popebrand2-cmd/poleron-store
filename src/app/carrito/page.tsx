@@ -17,7 +17,8 @@ export default function CartPage() {
   if (items.length === 0) {
     return (
       <main className="bg-black px-6 py-16">
-        <div className="mx-auto max-w-3xl rounded-2xl bg-white p-10 text-center text-neutral-900">
+        <div className="relative mx-auto max-w-3xl overflow-hidden rounded-2xl bg-white p-10 text-center text-neutral-900">
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-neon" />
           <h1 className="mb-3 text-2xl font-semibold">Tu carrito está vacío</h1>
           <Link href="/" className="text-green-700 hover:underline">
             Ver productos
@@ -29,7 +30,8 @@ export default function CartPage() {
 
   return (
     <main className="bg-black px-6 py-10">
-    <div className="mx-auto max-w-3xl rounded-2xl bg-white p-6 text-neutral-900 sm:p-8">
+    <div className="relative mx-auto max-w-3xl overflow-hidden rounded-2xl bg-white p-6 text-neutral-900 sm:p-8">
+      <div className="absolute inset-x-0 top-0 h-1.5 bg-neon" />
       <h1 className="mb-6 text-2xl font-semibold">Tu carrito</h1>
       <div className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 bg-white">
         {items.map((item) => (
@@ -77,9 +79,14 @@ export default function CartPage() {
 
       <Link
         href="/checkout"
-        className="mt-6 block w-full rounded-md bg-neutral-900 px-6 py-3 text-center font-medium text-white"
+        className="group mt-6 flex w-full items-center justify-center gap-3 rounded-full bg-neon py-3 pl-6 pr-2 text-sm font-bold uppercase tracking-wide text-black transition hover:brightness-90"
       >
         Ir a pagar
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-neon transition group-hover:translate-x-0.5">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </span>
       </Link>
     </div>
     </main>

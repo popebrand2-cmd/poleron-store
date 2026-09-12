@@ -90,7 +90,8 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <main className="bg-black px-6 py-16">
-        <div className="mx-auto max-w-xl rounded-2xl bg-white p-10 text-center text-neutral-500">
+        <div className="relative mx-auto max-w-xl overflow-hidden rounded-2xl bg-white p-10 text-center text-neutral-500">
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-neon" />
           Tu carrito está vacío.
         </div>
       </main>
@@ -99,7 +100,8 @@ export default function CheckoutPage() {
 
   return (
     <main className="bg-black px-6 py-10">
-    <div className="mx-auto max-w-xl rounded-2xl bg-white p-6 text-neutral-900 sm:p-8">
+    <div className="relative mx-auto max-w-xl overflow-hidden rounded-2xl bg-white p-6 text-neutral-900 sm:p-8">
+      <div className="absolute inset-x-0 top-0 h-1.5 bg-neon" />
       <h1 className="mb-6 text-2xl font-semibold">Datos de envío y pago</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -225,9 +227,16 @@ export default function CheckoutPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-md bg-neutral-900 px-6 py-3 font-medium text-white disabled:opacity-50"
+          className="group flex w-full items-center justify-center gap-3 rounded-full bg-neon py-3 pl-6 pr-2 text-sm font-bold uppercase tracking-wide text-black transition hover:brightness-90 disabled:opacity-50"
         >
           {loading ? "Redirigiendo a pago..." : "Pagar con Mercado Pago"}
+          {!loading && (
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-neon transition group-hover:translate-x-0.5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </span>
+          )}
         </button>
       </form>
     </div>

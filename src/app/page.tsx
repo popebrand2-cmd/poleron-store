@@ -4,6 +4,69 @@ import FeaturedCarousel from "@/components/FeaturedCarousel";
 
 export const dynamic = "force-dynamic";
 
+const HERO_VALUES = [
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-5 w-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15V4m0 0L8 8m4-4l4 4" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+      </svg>
+    ),
+    text: "Tú traes la idea. Nosotros la hacemos realidad en la prenda.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-5 w-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 4L4 7v3h3v10h10V10h3V7l-4-3" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 4a4 4 0 0 0 8 0" />
+      </svg>
+    ),
+    text: "Cada pieza es única — hecha a tu medida, no en serie.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-5 w-5">
+        <circle cx="12" cy="8" r="3.2" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 20c1.2-4 4-6 7-6s5.8 2 7 6" />
+      </svg>
+    ),
+    text: "Aquí no eres cliente. Eres quien diseña.",
+  },
+];
+
+const HOW_IT_WORKS = [
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-7 w-7">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15V4m0 0L8 8m4-4l4 4" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
+      </svg>
+    ),
+    title: "Sube tu diseño",
+    text: "Una foto, un dibujo, un logo o texto. Lo que tengas en mente.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-7 w-7">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 20l3.5-1 10-10a1.5 1.5 0 0 0 0-2.1L16 5.4a1.5 1.5 0 0 0-2.1 0l-10 10L3 19l1 1z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M13 6.5l4.5 4.5" />
+      </svg>
+    ),
+    title: "Personalízalo en vivo",
+    text: "Ajusta tamaño, posición y color sobre la prenda real. Ves el mockup exacto antes de comprar.",
+  },
+  {
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} className="h-7 w-7">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 8l8-4 8 4-8 4-8-4z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 8v8l8 4 8-4V8M12 12v8" />
+      </svg>
+    ),
+    title: "Lo hacemos realidad",
+    text: "Lo confeccionamos e imprimimos tal cual lo dejaste. Edición única, hecha para ti.",
+  },
+];
+
 const TRUST_BADGES = [
   {
     icon: (
@@ -72,48 +135,117 @@ export default async function Home() {
     <main>
       {/* Hero */}
       <section className="relative overflow-hidden bg-black">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-10 px-6 py-16 md:grid-cols-2 md:py-24">
-          <div>
-            <p className="mb-4 text-xs font-bold uppercase tracking-[0.2em] text-neon">
-              Tu diseño, tu regla
-            </p>
-            <h1 className="text-4xl font-extrabold uppercase leading-[1.05] tracking-tight text-white sm:text-5xl lg:text-6xl">
-              Viste tu propia esencia
+        <div className="absolute inset-0">
+          {heroImageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={heroImageUrl} alt="Prenda personalizada" className="h-full w-full object-cover object-top" />
+          ) : (
+            <div className="h-full w-full bg-gradient-to-br from-neutral-900 via-neutral-950 to-black" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/85 to-black/25" />
+          <div className="pointer-events-none absolute -inset-x-1/4 -top-1/3 h-[140%] rotate-12 bg-gradient-to-b from-white/[0.04] via-transparent to-transparent" />
+        </div>
+
+        <p
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-8 -right-2 select-none text-[130px] font-black uppercase leading-none tracking-tighter text-white mix-blend-overlay sm:-right-4 sm:text-[200px] lg:-right-8 lg:text-[260px]"
+        >
+          MAD
+        </p>
+
+        {!heroImageUrl && (
+          <div className="absolute inset-y-0 right-0 hidden w-[42%] flex-col items-center justify-center gap-3 lg:flex">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} className="h-20 w-20 text-neutral-800">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.5-6 3.5 4 2.5-3L20 16" />
+              <rect x="3" y="4" width="18" height="16" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+            </svg>
+            <p className="text-xs uppercase tracking-widest text-neutral-700">Foto próximamente</p>
+          </div>
+        )}
+
+        <div className="relative mx-auto max-w-6xl px-6 py-20 md:py-28">
+          <div className="max-w-xl">
+            <span className="inline-flex items-center gap-2 rounded-full border border-neutral-700 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.15em] text-neutral-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-neon" /> MAD · Personalización 100% real
+            </span>
+
+            <h1 className="mt-5 text-5xl font-extrabold uppercase leading-[0.95] tracking-tight text-white sm:text-6xl lg:text-7xl">
+              Diseña
+              <br />
+              tu propia
+              <br />
+              <span className="text-neon">esencia.</span>
             </h1>
-            <p className="mt-5 max-w-md text-neutral-400">
-              Sube tu diseño, personalízalo sobre la prenda real y míralo hecho realidad. Sin catálogos genéricos —
-              cada pieza sale exactamente como la imaginaste.
+
+            <p className="mt-6 max-w-md text-neutral-400">
+              Sube tu diseño, personalízalo sobre la prenda real y mira el resultado antes de comprar. Sin
+              catálogos genéricos — cada pieza sale exactamente como la imaginaste.
             </p>
-            <div className="mt-8 flex flex-wrap gap-4">
+
+            <ul className="mt-8 space-y-4">
+              {HERO_VALUES.map((v, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <span className="mt-0.5 shrink-0 text-neon">{v.icon}</span>
+                  <span className="text-sm text-neutral-300">{v.text}</span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-9">
               <Link
                 href="#tienda"
-                className="rounded-md bg-neon px-6 py-3 text-sm font-bold uppercase tracking-wide text-black transition hover:brightness-90"
+                className="group inline-flex items-center gap-4 rounded-full bg-neon py-2 pl-6 pr-2 text-sm font-bold uppercase tracking-wide text-black transition hover:brightness-90"
               >
-                Personalizar ahora
+                Personaliza aquí
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-neon transition group-hover:translate-x-0.5">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </span>
               </Link>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="relative mx-auto aspect-[4/5] w-full max-w-sm overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900">
-            {heroImageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={heroImageUrl} alt="Prenda personalizada" className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-gradient-to-br from-neutral-900 via-neutral-950 to-black p-8 text-center">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.2}
-                  className="h-16 w-16 text-neutral-700"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.5-6 3.5 4 2.5-3L20 16" />
-                  <rect x="3" y="4" width="18" height="16" rx="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                </svg>
-                <p className="text-xs uppercase tracking-widest text-neutral-600">Foto próximamente</p>
+      {/* Manifesto banner */}
+      <section className="border-t border-neutral-800 bg-black py-14">
+        <p className="mx-auto max-w-4xl px-6 text-center text-3xl font-black uppercase leading-[1.05] tracking-tight text-white sm:text-4xl lg:text-5xl">
+          No vendemos catálogos. <span className="text-neon">Hacemos realidad tu idea.</span>
+        </p>
+        <p className="mx-auto mt-5 max-w-lg px-6 text-center text-sm text-neutral-400">
+          Cada pedido es una colaboración: tú traes la idea, nosotros la construimos en la prenda. Sin
+          diseños genéricos, sin stock repetido — cada pieza existe porque alguien la imaginó.
+        </p>
+      </section>
+
+      {/* How it works */}
+      <section className="border-t border-neutral-800 bg-neutral-950">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <div className="mb-12 text-center">
+            <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-neon">
+              <span className="h-px w-8 bg-neon" /> Así de simple <span className="h-px w-8 bg-neon" />
+            </p>
+            <h2 className="text-3xl font-extrabold uppercase tracking-tight text-white sm:text-4xl">
+              Cómo funciona
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-3">
+            {HOW_IT_WORKS.map((step, i) => (
+              <div key={i} className="relative text-center">
+                <span className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 text-6xl font-black text-white/[0.06]">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div className="relative flex flex-col items-center">
+                  <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-neutral-700 text-neon">
+                    {step.icon}
+                  </span>
+                  <p className="text-sm font-extrabold uppercase tracking-wide text-white">{step.title}</p>
+                  <p className="mt-2 max-w-xs text-sm text-neutral-400">{step.text}</p>
+                </div>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </section>
@@ -134,7 +266,9 @@ export default async function Home() {
       {/* Browse by garment type */}
       <section className="bg-black">
         <div className="border-y border-neutral-800 bg-neutral-950 py-3 text-center">
-          <h2 className="text-lg font-extrabold uppercase tracking-widest text-white">Encuentra tu estilo</h2>
+          <h2 className="text-lg font-extrabold uppercase tracking-widest text-white">
+            <span className="text-neon">MAD</span> · Encuentra tu estilo
+          </h2>
         </div>
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 px-6 py-10 sm:grid-cols-2">
           {BROWSE_TYPES.map((t) => {
@@ -169,7 +303,7 @@ export default async function Home() {
         <div className="mx-auto max-w-6xl px-6 py-16">
           <div className="mb-10 text-center">
             <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-neon">
-              <span className="h-px w-8 bg-neon" /> Hecho para ti <span className="h-px w-8 bg-neon" />
+              <span className="h-px w-8 bg-neon" /> MAD · Hecho para ti <span className="h-px w-8 bg-neon" />
             </p>
             <h2 className="text-3xl font-extrabold uppercase tracking-tight text-white sm:text-4xl">
               Lo más buscado
