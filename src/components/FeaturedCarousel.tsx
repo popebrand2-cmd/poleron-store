@@ -1,16 +1,72 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { formatCLP } from "@/lib/money";
+
+export type FeaturedProductColor = { name: string; hex: string; imageUrl: string | null };
 
 export type FeaturedProduct = {
   id: string;
   slug: string;
   name: string;
   basePrice: number;
-  imageUrl: string | null;
+  colors: FeaturedProductColor[];
 };
+
+// Whether a garment color reads as "light" — used to flip the card's
+// backdrop so the garment always shows up against it (a black hoodie needs
+// a light backdrop, a white one needs a dark backdrop) instead of both
+// sitting on the same dark card background and disappearing into it.
+function isLightColor(hex: string): boolean {
+  const clean = hex.replace("#", "");
+  if (clean.length !== 6) return false;
+  const r = parseInt(clean.slice(0, 2), 16);
+  const g = parseInt(clean.slice(2, 4), 16);
+  const b = parseInt(clean.slice(4, 6), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6;
+}
+
+function ProductCard({ p }: { p: FeaturedProduct }) {
+  const [hovered, setHovered] = useState(false);
+  const base = p.colors[0];
+  const alt = p.colors[1];
+  // Hover swaps to the other color (if there is one) so the customer sees
+  // both options without leaving the carousel; moving the cursor away
+  // switches it back.
+  const shown = hovered && alt ? alt : base;
+  const backdropClass = shown && isLightColor(shown.hex) ? "bg-black" : "bg-white";
+
+  return (
+    <Link
+      href={`/productos/${p.slug}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="group relative w-[220px] shrink-0 snap-start overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 transition hover:border-neon sm:w-[260px]"
+    >
+      <span className="absolute left-3 top-3 z-10 rounded bg-neon px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-black">
+        Personalizable
+      </span>
+      <div className={`aspect-square overflow-hidden transition-colors ${backdropClass}`}>
+        {shown?.imageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={shown.imageUrl}
+            src={shown.imageUrl}
+            alt={`${p.name} — ${shown.name}`}
+            className="h-full w-full object-cover transition group-hover:scale-105"
+          />
+        )}
+      </div>
+      <div className="p-4">
+        <p className="font-semibold uppercase tracking-tight text-white">{p.name}</p>
+        <p className="mt-1 text-sm text-neutral-400">{formatCLP(p.basePrice)}</p>
+        <p className="mt-2 text-xs font-bold uppercase tracking-wide text-neon">Ver producto →</p>
+      </div>
+    </Link>
+  );
+}
 
 export default function FeaturedCarousel({ products }: { products: FeaturedProduct[] }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -29,30 +85,7 @@ export default function FeaturedCarousel({ products }: { products: FeaturedProdu
         style={{ scrollbarWidth: "none" }}
       >
         {products.map((p) => (
-          <Link
-            key={p.id}
-            href={`/productos/${p.slug}`}
-            className="group relative w-[220px] shrink-0 snap-start overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 transition hover:border-neon sm:w-[260px]"
-          >
-            <span className="absolute left-3 top-3 z-10 rounded bg-neon px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-black">
-              Personalizable
-            </span>
-            <div className="aspect-square overflow-hidden bg-neutral-950">
-              {p.imageUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={p.imageUrl}
-                  alt={p.name}
-                  className="h-full w-full object-cover transition group-hover:scale-105"
-                />
-              )}
-            </div>
-            <div className="p-4">
-              <p className="font-semibold uppercase tracking-tight text-white">{p.name}</p>
-              <p className="mt-1 text-sm text-neutral-400">{formatCLP(p.basePrice)}</p>
-              <p className="mt-2 text-xs font-bold uppercase tracking-wide text-neon">Ver producto →</p>
-            </div>
-          </Link>
+          <ProductCard key={p.id} p={p} />
         ))}
       </div>
 

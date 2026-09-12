@@ -128,7 +128,11 @@ export default async function Home() {
                 slug: p.slug,
                 name: p.name,
                 basePrice: p.basePrice,
-                imageUrl: p.colors[0]?.views[0]?.imageUrl ?? null,
+                colors: p.colors.map((c) => ({
+                  name: c.name,
+                  hex: c.hex,
+                  imageUrl: c.views[0]?.imageUrl ?? null,
+                })),
               }))}
             />
           )}
