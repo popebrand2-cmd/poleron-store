@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { formatCLP } from "@/lib/money";
+import FeaturedCarousel from "@/components/FeaturedCarousel";
 
 export const dynamic = "force-dynamic";
 
@@ -106,41 +106,31 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Products */}
+      {/* Featured */}
       <section id="tienda" className="bg-black">
         <div className="mx-auto max-w-6xl px-6 py-16">
-          <h2 className="mb-8 text-2xl font-extrabold uppercase tracking-tight text-white">Elige tu prenda</h2>
+          <div className="mb-10 text-center">
+            <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-neon">
+              <span className="h-px w-8 bg-neon" /> Hecho para ti <span className="h-px w-8 bg-neon" />
+            </p>
+            <h2 className="text-3xl font-extrabold uppercase tracking-tight text-white sm:text-4xl">
+              Lo más buscado
+            </h2>
+            <p className="mt-2 text-neutral-400">Elige tu prenda base y hazla completamente tuya</p>
+          </div>
 
           {products.length === 0 ? (
-            <p className="text-neutral-500">Todavía no hay productos publicados.</p>
+            <p className="text-center text-neutral-500">Todavía no hay productos publicados.</p>
           ) : (
-            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
-              {products.map((p) => {
-                const cover = p.colors[0]?.views[0];
-                return (
-                  <Link
-                    key={p.id}
-                    href={`/productos/${p.slug}`}
-                    className="group overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 transition hover:border-neon"
-                  >
-                    <div className="aspect-square overflow-hidden bg-neutral-950">
-                      {cover && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={cover.imageUrl}
-                          alt={p.name}
-                          className="h-full w-full object-cover transition group-hover:scale-105"
-                        />
-                      )}
-                    </div>
-                    <div className="p-3">
-                      <p className="font-medium text-white">{p.name}</p>
-                      <p className="text-sm text-neutral-400">{formatCLP(p.basePrice)}</p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
+            <FeaturedCarousel
+              products={products.map((p) => ({
+                id: p.id,
+                slug: p.slug,
+                name: p.name,
+                basePrice: p.basePrice,
+                imageUrl: p.colors[0]?.views[0]?.imageUrl ?? null,
+              }))}
+            />
           )}
         </div>
       </section>
