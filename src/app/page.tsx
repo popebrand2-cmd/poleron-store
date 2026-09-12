@@ -173,15 +173,30 @@ export default async function Home() {
     <main>
       {/* Hero */}
       <section className="relative overflow-hidden bg-black">
+        {heroImageUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={heroImageUrl}
+            alt="Prenda personalizada"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
+
+        {/* Legibility wash: bottom-heavy on mobile (stacked layout), side-heavy on desktop (split layout) */}
         <div
           aria-hidden="true"
-          className={`pointer-events-none absolute inset-0 ${
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,_#000_0%,_rgba(0,0,0,0.6)_35%,_rgba(0,0,0,0.3)_65%,_rgba(0,0,0,0.15)_100%)] sm:hidden"
+        />
+        <div
+          aria-hidden="true"
+          className={`pointer-events-none absolute inset-0 hidden sm:block ${
             heroImageAlign === "left"
-              ? "bg-[linear-gradient(to_right,_rgba(35,110,35,0.55)_0%,_rgba(10,30,10,0.35)_65%,_#000_100%)]"
-              : "bg-[linear-gradient(to_left,_rgba(35,110,35,0.55)_0%,_rgba(10,30,10,0.35)_65%,_#000_100%)]"
+              ? "bg-[linear-gradient(to_right,_rgba(0,0,0,0.2)_0%,_rgba(0,0,0,0.55)_45%,_rgba(0,0,0,0.92)_100%)]"
+              : "bg-[linear-gradient(to_left,_rgba(0,0,0,0.2)_0%,_rgba(0,0,0,0.55)_45%,_rgba(0,0,0,0.92)_100%)]"
           }`}
         />
-        <div className="relative z-10 mx-auto max-w-6xl px-6 py-16 sm:py-20 md:py-28">
+
+        <div className="relative z-10 mx-auto flex min-h-[540px] max-w-6xl items-end px-6 py-16 sm:min-h-[600px] sm:items-center sm:py-20 md:min-h-[680px] md:py-28">
           <div
             className={`max-w-xl sm:max-w-[46%] lg:max-w-xl ${
               heroImageAlign === "left" ? "sm:ml-auto" : ""
@@ -233,36 +248,8 @@ export default async function Home() {
           </div>
         </div>
 
-        {heroImageUrl && (
-          <div
-            className={`relative z-0 mx-auto aspect-[2/3] w-full max-w-[280px] px-6 pb-12 sm:absolute sm:inset-y-0 sm:z-0 sm:mx-0 sm:aspect-auto sm:w-[54%] sm:max-w-none sm:px-0 sm:pb-0 lg:w-[40%] ${
-              heroImageAlign === "left" ? "sm:left-0" : "sm:right-0"
-            }`}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={heroImageUrl}
-              alt="Prenda personalizada"
-              className={`h-full w-full object-contain object-center ${
-                heroImageAlign === "left" ? "sm:object-left" : "sm:object-right"
-              }`}
-            />
-            <div
-              className={`absolute inset-y-0 hidden w-1/3 sm:block ${
-                heroImageAlign === "left"
-                  ? "right-0 bg-gradient-to-l from-black to-transparent"
-                  : "left-0 bg-gradient-to-r from-black to-transparent"
-              }`}
-            />
-          </div>
-        )}
-
         {!heroImageUrl && (
-          <div
-            className={`absolute inset-y-0 hidden w-[42%] flex-col items-center justify-center gap-3 lg:flex ${
-              heroImageAlign === "left" ? "left-0" : "right-0"
-            }`}
-          >
+          <div className="absolute inset-0 hidden flex-col items-center justify-center gap-3 lg:flex">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} className="h-20 w-20 text-neutral-800">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.5-6 3.5 4 2.5-3L20 16" />
               <rect x="3" y="4" width="18" height="16" rx="2" />
