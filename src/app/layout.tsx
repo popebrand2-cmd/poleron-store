@@ -47,7 +47,13 @@ export default async function RootLayout({
           <Header />
           <div className="flex-1">{children}</div>
           <Footer tagline={footerTagline} />
-          <EditModeToggle initialAccentColor={accentColor} />
+          <EditModeToggle
+            initialAccentColor={accentColor}
+            initialHeroAlign={(settings?.heroImageAlign as "left" | "right") || "right"}
+            initialHeroPosX={settings?.heroImagePosX ?? 50}
+            initialHeroPosY={settings?.heroImagePosY ?? 50}
+            initialHeroZoom={settings?.heroImageZoom ?? 1}
+          />
         </EditModeProvider>
         <WhatsAppButton />
         <MetaPixel />

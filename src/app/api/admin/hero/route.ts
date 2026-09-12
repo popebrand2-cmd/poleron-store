@@ -10,6 +10,9 @@ const putSchema = z.object({
   heroCta: z.string().min(1).optional(),
   heroImageAlign: z.enum(["left", "right"]).optional(),
   accentColor: z.string().optional(),
+  heroImagePosX: z.number().min(0).max(100).optional(),
+  heroImagePosY: z.number().min(0).max(100).optional(),
+  heroImageZoom: z.number().min(1).max(2).optional(),
 });
 
 export async function GET() {
@@ -22,6 +25,9 @@ export async function GET() {
     heroCta: settings?.heroCta ?? "",
     heroImageAlign: settings?.heroImageAlign ?? "right",
     accentColor: settings?.accentColor ?? "",
+    heroImagePosX: settings?.heroImagePosX ?? 50,
+    heroImagePosY: settings?.heroImagePosY ?? 50,
+    heroImageZoom: settings?.heroImageZoom ?? 1,
   });
 }
 

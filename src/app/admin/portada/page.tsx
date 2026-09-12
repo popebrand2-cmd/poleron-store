@@ -14,6 +14,9 @@ const DEFAULTS = {
     "Sube tu diseño, personalízalo sobre la prenda real y mira el resultado antes de comprar. Sin catálogos genéricos — cada pieza sale exactamente como la imaginaste.",
   heroCta: "Personaliza aquí",
   heroImageAlign: "right" as const,
+  heroImagePosX: 50,
+  heroImagePosY: 50,
+  heroImageZoom: 1,
 };
 
 export default async function AdminPortadaPage() {
@@ -46,6 +49,9 @@ export default async function AdminPortadaPage() {
         initialHeroSubtext={settings?.heroSubtext || DEFAULTS.heroSubtext}
         initialHeroCta={settings?.heroCta || DEFAULTS.heroCta}
         initialHeroImageAlign={(settings?.heroImageAlign as "left" | "right") || DEFAULTS.heroImageAlign}
+        initialHeroImagePosX={settings?.heroImagePosX ?? DEFAULTS.heroImagePosX}
+        initialHeroImagePosY={settings?.heroImagePosY ?? DEFAULTS.heroImagePosY}
+        initialHeroImageZoom={settings?.heroImageZoom ?? DEFAULTS.heroImageZoom}
       />
     </main>
   );

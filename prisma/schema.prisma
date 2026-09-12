@@ -144,6 +144,12 @@ model StoreSettings {
   heroCta        String  @default("Personaliza aquí")
   // "left" | "right" — which side the hero photo sits on (text takes the other side).
   heroImageAlign String  @default("right")
+  // Focal point (0-100, % from left/top) and zoom (1 = no zoom, 2 = 2x) for
+  // the full-bleed hero photo, so the admin can re-frame it without
+  // re-cropping the source file.
+  heroImagePosX  Float   @default(50)
+  heroImagePosY  Float   @default(50)
+  heroImageZoom  Float   @default(1)
   // Brand accent color (hex), applied site-wide via a CSS variable in place
   // of the old hardcoded Tailwind "neon" color. Empty = use the code default.
   accentColor    String  @default("")

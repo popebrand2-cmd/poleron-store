@@ -9,6 +9,9 @@ export default function PortadaForm({
   initialHeroSubtext,
   initialHeroCta,
   initialHeroImageAlign,
+  initialHeroImagePosX,
+  initialHeroImagePosY,
+  initialHeroImageZoom,
 }: {
   initialHeroImageUrl: string;
   initialHeroEyebrow: string;
@@ -16,6 +19,9 @@ export default function PortadaForm({
   initialHeroSubtext: string;
   initialHeroCta: string;
   initialHeroImageAlign: "left" | "right";
+  initialHeroImagePosX: number;
+  initialHeroImagePosY: number;
+  initialHeroImageZoom: number;
 }) {
   const [heroImageUrl, setHeroImageUrl] = useState(initialHeroImageUrl);
   const [heroEyebrow, setHeroEyebrow] = useState(initialHeroEyebrow);
@@ -23,6 +29,9 @@ export default function PortadaForm({
   const [heroSubtext, setHeroSubtext] = useState(initialHeroSubtext);
   const [heroCta, setHeroCta] = useState(initialHeroCta);
   const [heroImageAlign, setHeroImageAlign] = useState<"left" | "right">(initialHeroImageAlign);
+  const [heroImagePosX, setHeroImagePosX] = useState(initialHeroImagePosX);
+  const [heroImagePosY, setHeroImagePosY] = useState(initialHeroImagePosY);
+  const [heroImageZoom, setHeroImageZoom] = useState(initialHeroImageZoom);
 
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -56,7 +65,17 @@ export default function PortadaForm({
       const res = await fetch("/api/admin/hero", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ heroImageUrl, heroEyebrow, heroHeadline, heroSubtext, heroCta, heroImageAlign }),
+        body: JSON.stringify({
+          heroImageUrl,
+          heroEyebrow,
+          heroHeadline,
+          heroSubtext,
+          heroCta,
+          heroImageAlign,
+          heroImagePosX,
+          heroImagePosY,
+          heroImageZoom,
+        }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -82,7 +101,16 @@ export default function PortadaForm({
         <div className="mb-4 aspect-[4/5] w-full max-w-xs overflow-hidden rounded-lg border border-neutral-200 bg-neutral-100">
           {heroImageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={heroImageUrl} alt="Foto del inicio" className="h-full w-full object-cover" />
+            <img
+              src={heroImageUrl}
+              alt="Foto del inicio"
+              className="h-full w-full object-cover"
+              style={{
+                objectPosition: `${heroImagePosX}% ${heroImagePosY}%`,
+                transform: `scale(${heroImageZoom})`,
+                transformOrigin: `${heroImagePosX}% ${heroImagePosY}%`,
+              }}
+            />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-center text-sm text-neutral-400">
               Sin foto todavía
@@ -133,6 +161,44 @@ export default function PortadaForm({
             </label>
           </div>
         </div>
+
+        {heroImageUrl && (
+          <div className="mt-5 space-y-3">
+            <div>
+              <label className="mb-1 block text-sm font-medium">Posición horizontal de la foto</label>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={heroImagePosX}
+                onChange={(e) => setHeroImagePosX(Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Posición vertical de la foto</label>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={heroImagePosY}
+                onChange={(e) => setHeroImagePosY(Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium">Zoom</label>
+              <input
+                type="range"
+                min={100}
+                max={200}
+                value={heroImageZoom * 100}
+                onChange={(e) => setHeroImageZoom(Number(e.target.value) / 100)}
+                className="w-full"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="rounded-xl border border-neutral-200 bg-white p-6">

@@ -8,7 +8,7 @@ export async function saveSiteText(key: string, value: string) {
   });
 }
 
-export async function patchHero(fields: Record<string, string>) {
+export async function patchHero(fields: Record<string, string | number>) {
   await fetch("/api/admin/hero", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },

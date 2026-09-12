@@ -45,6 +45,9 @@ export default async function Home() {
     "Sube tu diseño, personalízalo sobre la prenda real y mira el resultado antes de comprar. Sin catálogos genéricos — cada pieza sale exactamente como la imaginaste.";
   const heroCta = settings?.heroCta || "Personaliza aquí";
   const heroImageAlign = (settings?.heroImageAlign as "left" | "right") || "right";
+  const heroImagePosX = settings?.heroImagePosX ?? 50;
+  const heroImagePosY = settings?.heroImagePosY ?? 50;
+  const heroImageZoom = settings?.heroImageZoom ?? 1;
   const accentColor = settings?.accentColor || DEFAULT_ACCENT_COLOR;
 
   const textMap = Object.fromEntries(siteTextRows.map((t) => [t.key, t.value]));
@@ -63,9 +66,15 @@ export default async function Home() {
         {heroImageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
+            id="hero-photo"
             src={heroImageUrl}
             alt="Prenda personalizada"
             className="absolute inset-0 h-full w-full object-cover"
+            style={{
+              objectPosition: `${heroImagePosX}% ${heroImagePosY}%`,
+              transform: `scale(${heroImageZoom})`,
+              transformOrigin: `${heroImagePosX}% ${heroImagePosY}%`,
+            }}
           />
         )}
 
