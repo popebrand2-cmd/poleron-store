@@ -144,14 +144,20 @@ const BROWSE_TYPES = [
 ];
 
 export default async function Home() {
-  const [products, settings] = await Promise.all([
+  const [products, settings, designCollections] = await Promise.all([
     prisma.product.findMany({
       where: { active: true },
       orderBy: { createdAt: "desc" },
       include: { colors: { include: { views: true } } },
     }),
     prisma.storeSettings.findUnique({ where: { id: "singleton" } }),
+    prisma.designCollection.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: "asc" },
+      include: { designs: { where: { active: true }, orderBy: { sortOrder: "asc" } } },
+    }),
   ]);
+  const collectionsWithDesigns = designCollections.filter((c) => c.designs.length > 0);
   const heroImageUrl = settings?.heroImageUrl || "";
   const heroEyebrow = settings?.heroEyebrow || "MAD · Personalización 100% real";
   const heroHeadlineLines = (
@@ -167,6 +173,14 @@ export default async function Home() {
     <main>
       {/* Hero */}
       <section className="relative overflow-hidden bg-black">
+        <div
+          aria-hidden="true"
+          className={`pointer-events-none absolute inset-0 ${
+            heroImageAlign === "left"
+              ? "bg-[linear-gradient(to_right,_rgba(35,110,35,0.55)_0%,_rgba(10,30,10,0.35)_65%,_#000_100%)]"
+              : "bg-[linear-gradient(to_left,_rgba(35,110,35,0.55)_0%,_rgba(10,30,10,0.35)_65%,_#000_100%)]"
+          }`}
+        />
         <div className="relative z-10 mx-auto max-w-6xl px-6 py-16 sm:py-20 md:py-28">
           <div
             className={`max-w-xl sm:max-w-[46%] lg:max-w-xl ${
@@ -380,6 +394,59 @@ export default async function Home() {
           )}
         </div>
       </section>
+
+      {/* Preset design collections */}
+      {collectionsWithDesigns.length > 0 && (
+        <section className="border-t border-neutral-800 bg-black">
+          <div className="mx-auto max-w-6xl px-6 py-16">
+            <div className="mb-10 text-center">
+              <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-neon">
+                <span className="h-px w-8 bg-neon" /> MAD · Colecciones <span className="h-px w-8 bg-neon" />
+              </p>
+              <h2 className="text-3xl font-extrabold uppercase tracking-tight text-white sm:text-4xl">
+                ¿No sabes qué diseñar?
+              </h2>
+              <p className="mt-2 text-neutral-400">
+                Elige uno de estos diseños listos y estámpalo directo en tu prenda — sin partir de cero.
+              </p>
+            </div>
+
+            <div className="space-y-10">
+              {collectionsWithDesigns.map((c) => (
+                <div key={c.id}>
+                  <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-white">{c.name}</h3>
+                  <div className="flex gap-4 overflow-x-auto pb-2">
+                    {c.designs.map((d) => (
+                      <div
+                        key={d.id}
+                        className="flex w-32 shrink-0 flex-col items-center gap-2 rounded-lg border border-neutral-800 bg-neutral-950 p-3"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={d.imageUrl} alt={d.name} className="h-20 w-20 object-contain" />
+                        <p className="truncate text-center text-xs text-neutral-400">{d.name}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-10 text-center">
+              <Link
+                href="#tienda"
+                className="group inline-flex items-center gap-4 rounded-full bg-neon py-2 pl-6 pr-2 text-sm font-bold uppercase tracking-wide text-black transition hover:brightness-90"
+              >
+                Personaliza aquí
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-neon transition group-hover:translate-x-0.5">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </span>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* FAQ */}
       <section className="border-t border-neutral-800 bg-neutral-950">
