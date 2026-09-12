@@ -28,6 +28,18 @@ function isLightColor(hex: string): boolean {
   return luminance > 0.6;
 }
 
+// Manual per-photo vertical nudge. object-contain preserves each source
+// photo's own framing, but these product photos aren't framed consistently
+// with each other — the white tee has a much bigger gap above the collar
+// than the black one, and both hoodie photos crop the hood almost flush
+// with the top edge. Tuned by eye against the actual photos; revisit if
+// they're ever replaced.
+function garmentPositionY(productName: string, colorName: string): string {
+  if (/tee|polera/i.test(productName) && /blanco/i.test(colorName)) return "15%";
+  if (/hoodie|poler[oó]n/i.test(productName)) return "70%";
+  return "50%";
+}
+
 function ProductCard({ p }: { p: FeaturedProduct }) {
   const [hovered, setHovered] = useState(false);
   const base = p.colors[0];
@@ -55,7 +67,8 @@ function ProductCard({ p }: { p: FeaturedProduct }) {
             key={shown.imageUrl}
             src={shown.imageUrl}
             alt={`${p.name} — ${shown.name}`}
-            className="h-full w-full object-contain object-center transition group-hover:scale-105"
+            style={{ objectPosition: `50% ${garmentPositionY(p.name, shown.name)}` }}
+            className="h-full w-full object-contain transition group-hover:scale-105"
           />
         )}
       </div>
