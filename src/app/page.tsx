@@ -155,7 +155,8 @@ export default async function Home() {
                     className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                   />
                 )}
-                <span className="absolute bottom-4 left-4 rounded bg-neon px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-black shadow">
+                <div className="absolute inset-0 bg-neon/70" />
+                <span className="absolute bottom-4 left-4 rounded bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-black shadow">
                   {t.label} →
                 </span>
               </Link>
