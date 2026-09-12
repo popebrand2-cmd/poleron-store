@@ -35,6 +35,9 @@ export default async function AdminOrdersPage() {
           <Link href="/admin/envios" className="text-sm font-medium text-neutral-700 hover:underline">
             Envíos
           </Link>
+          <Link href="/admin/portada" className="text-sm font-medium text-neutral-700 hover:underline">
+            Portada
+          </Link>
           <Link href="/admin" className="text-sm font-medium text-neutral-700 hover:underline">
             ← Productos
           </Link>

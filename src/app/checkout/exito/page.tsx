@@ -15,17 +15,19 @@ export default async function CheckoutSuccessPage({
   const order = id ? await prisma.order.findUnique({ where: { id } }) : null;
 
   return (
-    <main className="mx-auto max-w-xl px-6 py-16 text-center">
-      <ClearCartOnMount />
-      <h1 className="mb-3 text-2xl font-semibold">¡Pago recibido!</h1>
-      <p className="text-neutral-600">
-        Gracias{order ? ` ${order.customerName}` : ""}, tu pedido está confirmado
-        {order ? ` (#${order.id.slice(0, 8)})` : ""} por {order ? formatCLP(order.totalAmount) : ""}.
-      </p>
-      <p className="mt-2 text-neutral-600">Te enviaremos la confirmación de envío por email.</p>
-      <Link href="/" className="mt-8 inline-block text-fuchsia-600 hover:underline">
-        Seguir comprando
-      </Link>
+    <main className="bg-black px-6 py-16">
+      <div className="mx-auto max-w-xl rounded-2xl bg-white p-10 text-center text-neutral-900">
+        <ClearCartOnMount />
+        <h1 className="mb-3 text-2xl font-semibold">¡Pago recibido!</h1>
+        <p className="text-neutral-600">
+          Gracias{order ? ` ${order.customerName}` : ""}, tu pedido está confirmado
+          {order ? ` (#${order.id.slice(0, 8)})` : ""} por {order ? formatCLP(order.totalAmount) : ""}.
+        </p>
+        <p className="mt-2 text-neutral-600">Te enviaremos la confirmación de envío por email.</p>
+        <Link href="/" className="mt-8 inline-block text-green-700 hover:underline">
+          Seguir comprando
+        </Link>
+      </div>
     </main>
   );
 }

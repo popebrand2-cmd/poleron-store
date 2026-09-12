@@ -132,6 +132,9 @@ model StoreSettings {
   pickupEnabled  Boolean @default(true)
   pickupAddress  String  @default("")
   pickupHours    String  @default("")
+  // Home page hero photo (customer-facing lifestyle photo) — empty until
+  // the admin uploads one; the hero renders a styled placeholder until then.
+  heroImageUrl   String  @default("")
 }
 
 model OrderItem {

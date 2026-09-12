@@ -80,7 +80,7 @@ export default function TryOnEditor({
                 top: 0,
                 scaleX: scale,
                 scaleY: scale,
-                cornerColor: "#d946ef",
+                cornerColor: "#39FF14",
                 cornerStyle: "circle",
                 transparentCorners: false,
               });
@@ -107,7 +107,7 @@ export default function TryOnEditor({
             originY: "center",
             scaleX: targetScale,
             scaleY: targetScale,
-            cornerColor: "#d946ef",
+            cornerColor: "#39FF14",
             cornerStyle: "circle",
             transparentCorners: false,
           });
@@ -201,7 +201,7 @@ export default function TryOnEditor({
             Arrastra para mover, usa las esquinas para ajustar el tamaño y rotar.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <label className="cursor-pointer text-sm font-medium text-fuchsia-600 hover:underline">
+            <label className="cursor-pointer text-sm font-medium text-green-700 hover:underline">
               Cambiar foto
               <input
                 type="file"

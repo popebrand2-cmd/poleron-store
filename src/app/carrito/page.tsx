@@ -16,17 +16,20 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <main className="mx-auto max-w-3xl px-6 py-16 text-center">
-        <h1 className="mb-3 text-2xl font-semibold">Tu carrito está vacío</h1>
-        <Link href="/" className="text-fuchsia-600 hover:underline">
-          Ver productos
-        </Link>
+      <main className="bg-black px-6 py-16">
+        <div className="mx-auto max-w-3xl rounded-2xl bg-white p-10 text-center text-neutral-900">
+          <h1 className="mb-3 text-2xl font-semibold">Tu carrito está vacío</h1>
+          <Link href="/" className="text-green-700 hover:underline">
+            Ver productos
+          </Link>
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-10">
+    <main className="bg-black px-6 py-10">
+    <div className="mx-auto max-w-3xl rounded-2xl bg-white p-6 text-neutral-900 sm:p-8">
       <h1 className="mb-6 text-2xl font-semibold">Tu carrito</h1>
       <div className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 bg-white">
         {items.map((item) => (
@@ -78,6 +81,7 @@ export default function CartPage() {
       >
         Ir a pagar
       </Link>
+    </div>
     </main>
   );
 }

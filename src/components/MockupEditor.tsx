@@ -309,7 +309,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           scaleY: targetScale,
           angle: targetAngle,
           lockRotation: !view.allowRotate,
-          cornerColor: "#d946ef",
+          cornerColor: "#39FF14",
           cornerStyle: "circle",
           transparentCorners: false,
         });
@@ -343,7 +343,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         fontFamily,
         fontSize: Math.max(14, Math.round(zone.height * 0.18)),
         fill: textColor,
-        cornerColor: "#d946ef",
+        cornerColor: "#39FF14",
         cornerStyle: "circle",
         transparentCorners: false,
       });
@@ -433,7 +433,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         originX: "center",
         originY: "center",
         lockRotation: !view.allowRotate,
-        cornerColor: "#d946ef",
+        cornerColor: "#39FF14",
         cornerStyle: "circle",
         transparentCorners: false,
       });
@@ -507,10 +507,10 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         width: bounds.width,
         height: bounds.height,
         fill: "rgba(217,70,239,0.15)",
-        stroke: "#d946ef",
+        stroke: "#39FF14",
         strokeWidth: 1.5,
         strokeDashArray: [6, 4],
-        cornerColor: "#d946ef",
+        cornerColor: "#39FF14",
         cornerStyle: "circle",
         transparentCorners: false,
         lockRotation: true,
@@ -601,7 +601,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           scaleY: cropBounds.height / (newImg.height ?? 1),
           angle: 0,
           lockRotation: !view.allowRotate,
-          cornerColor: "#d946ef",
+          cornerColor: "#39FF14",
           cornerStyle: "circle",
           transparentCorners: false,
         });
@@ -795,7 +795,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
             <button
               type="button"
               onClick={handleStartCrop}
-              className="text-sm font-medium text-fuchsia-600 hover:underline"
+              className="text-sm font-medium text-green-700 hover:underline"
             >
               Recortar imagen
             </button>
@@ -806,7 +806,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
                 type="button"
                 onClick={handleApplyCrop}
                 disabled={applyingCrop}
-                className="text-sm font-medium text-fuchsia-600 hover:underline disabled:opacity-50"
+                className="text-sm font-medium text-green-700 hover:underline disabled:opacity-50"
               >
                 {applyingCrop ? "Recortando..." : "Aplicar recorte"}
               </button>
@@ -820,7 +820,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
               type="button"
               onClick={handleRemoveWhiteBg}
               disabled={removingBg}
-              className="text-sm font-medium text-fuchsia-600 hover:underline disabled:opacity-50"
+              className="text-sm font-medium text-green-700 hover:underline disabled:opacity-50"
             >
               {removingBg ? "Quitando fondo..." : "Quitar fondo blanco"}
             </button>
@@ -830,7 +830,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
               type="button"
               onClick={handleStartPickBgColor}
               disabled={removingBg}
-              className="text-sm font-medium text-fuchsia-600 hover:underline disabled:opacity-50"
+              className="text-sm font-medium text-green-700 hover:underline disabled:opacity-50"
             >
               Elegir color de fondo
             </button>
@@ -845,7 +845,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
               type="button"
               onClick={handleSegmentSubject}
               disabled={segmentingSubject}
-              className="text-sm font-medium text-fuchsia-600 hover:underline disabled:opacity-50"
+              className="text-sm font-medium text-green-700 hover:underline disabled:opacity-50"
             >
               {segmentingSubject ? "Aislando (puede tardar)..." : "Aislar sujeto (IA)"}
             </button>
@@ -861,12 +861,12 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           )}
         </div>
         {cropping && (
-          <p className="text-center text-sm font-medium text-fuchsia-600">
+          <p className="text-center text-sm font-medium text-green-700">
             Ajusta el recuadro a la parte de la imagen que quieres conservar y presiona &quot;Aplicar recorte&quot;.
           </p>
         )}
         {pickingBgColor && (
-          <p className="text-center text-sm font-medium text-fuchsia-600">
+          <p className="text-center text-sm font-medium text-green-700">
             Haz clic sobre el color de fondo de tu diseño que quieres quitar (funciona con cualquier color, no solo
             blanco).
           </p>
@@ -876,7 +876,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
             <button
               type="button"
               onClick={handleAddText}
-              className="text-sm font-medium text-fuchsia-600 hover:underline"
+              className="text-sm font-medium text-green-700 hover:underline"
             >
               + Agregar texto
             </button>

@@ -89,14 +89,17 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <main className="mx-auto max-w-xl px-6 py-16 text-center text-neutral-500">
-        Tu carrito está vacío.
+      <main className="bg-black px-6 py-16">
+        <div className="mx-auto max-w-xl rounded-2xl bg-white p-10 text-center text-neutral-500">
+          Tu carrito está vacío.
+        </div>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-xl px-6 py-10">
+    <main className="bg-black px-6 py-10">
+    <div className="mx-auto max-w-xl rounded-2xl bg-white p-6 text-neutral-900 sm:p-8">
       <h1 className="mb-6 text-2xl font-semibold">Datos de envío y pago</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -227,6 +230,7 @@ export default function CheckoutPage() {
           {loading ? "Redirigiendo a pago..." : "Pagar con Mercado Pago"}
         </button>
       </form>
+    </div>
     </main>
   );
 }

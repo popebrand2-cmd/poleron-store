@@ -3,8 +3,13 @@
 @tailwind utilities;
 
 :root {
-  --ink: #111111;
-  --paper: #fafaf9;
+  /* The storefront shell (nav, hero, footer, page backgrounds) is dark by
+     brand — see ZOAN-style redesign. Individual light "cards" (product
+     personalizer, cart, checkout) opt back into light colors explicitly
+     rather than relying on these globals, so their already-tested internals
+     don't need to change. */
+  --ink: #f5f5f4;
+  --paper: #0a0a0a;
 }
 
 body {

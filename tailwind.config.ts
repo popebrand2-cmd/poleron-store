@@ -11,6 +11,8 @@ const config: Config = {
       colors: {
         ink: "#111111",
         paper: "#fafaf9",
+        // Brand accent — neon green on black, replacing the earlier purple/fuchsia accent.
+        neon: "#39FF14",
       },
     },
   },

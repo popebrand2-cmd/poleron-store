@@ -21,7 +21,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   if (!product || !product.active || product.colors.length === 0) notFound();
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-10">
+    <main className="bg-black px-6 py-10">
+    <div className="mx-auto max-w-5xl rounded-2xl bg-white p-6 text-neutral-900 sm:p-8">
       <ProductPersonalizer
         product={{
           id: product.id,
@@ -54,6 +55,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         }}
       />
       {product.description && <p className="mt-12 max-w-2xl text-neutral-600">{product.description}</p>}
+    </div>
     </main>
   );
 }
