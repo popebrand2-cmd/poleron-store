@@ -158,42 +158,13 @@ export default async function Home() {
     <main>
       {/* Hero */}
       <section className="relative overflow-hidden bg-black">
-        <div className="absolute inset-0">
-          {heroImageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={heroImageUrl} alt="Prenda personalizada" className="h-full w-full object-cover object-top" />
-          ) : (
-            <div className="h-full w-full bg-gradient-to-br from-neutral-900 via-neutral-950 to-black" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/85 to-black/25" />
-          <div className="pointer-events-none absolute -inset-x-1/4 -top-1/3 h-[140%] rotate-12 bg-gradient-to-b from-white/[0.04] via-transparent to-transparent" />
-        </div>
-
-        <p
-          aria-hidden="true"
-          className="pointer-events-none absolute -bottom-8 -right-2 select-none text-[130px] font-black uppercase leading-none tracking-tighter text-white mix-blend-overlay sm:-right-4 sm:text-[200px] lg:-right-8 lg:text-[260px]"
-        >
-          MAD
-        </p>
-
-        {!heroImageUrl && (
-          <div className="absolute inset-y-0 right-0 hidden w-[42%] flex-col items-center justify-center gap-3 lg:flex">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} className="h-20 w-20 text-neutral-800">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.5-6 3.5 4 2.5-3L20 16" />
-              <rect x="3" y="4" width="18" height="16" rx="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-            </svg>
-            <p className="text-xs uppercase tracking-widest text-neutral-700">Foto próximamente</p>
-          </div>
-        )}
-
-        <div className="relative mx-auto max-w-6xl px-6 py-20 md:py-28">
-          <div className="max-w-xl">
+        <div className="relative z-10 mx-auto max-w-6xl px-6 py-16 sm:py-20 md:py-28">
+          <div className="max-w-xl sm:max-w-[46%] lg:max-w-xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-neutral-700 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.15em] text-neutral-300">
               <span className="h-1.5 w-1.5 rounded-full bg-neon" /> MAD · Personalización 100% real
             </span>
 
-            <h1 className="mt-5 text-5xl font-extrabold uppercase leading-[0.95] tracking-tight text-white sm:text-6xl lg:text-7xl">
+            <h1 className="mt-5 text-4xl font-extrabold uppercase leading-[0.95] tracking-tight text-white sm:text-5xl lg:text-7xl">
               Diseña
               <br />
               tu propia
@@ -215,14 +186,14 @@ export default async function Home() {
               ))}
             </ul>
 
-            <div className="mt-9">
+            <div className="mt-10">
               <Link
                 href="#tienda"
-                className="group inline-flex items-center gap-4 rounded-full bg-neon py-2 pl-6 pr-2 text-sm font-bold uppercase tracking-wide text-black transition hover:brightness-90"
+                className="group inline-flex items-center gap-5 rounded-full bg-neon py-3 pl-9 pr-3 text-lg font-bold uppercase tracking-wide text-black transition hover:brightness-90 sm:text-xl"
               >
                 Personaliza aquí
-                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-neon transition group-hover:translate-x-0.5">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-neon transition group-hover:translate-x-0.5">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
                   </svg>
                 </span>
@@ -230,6 +201,29 @@ export default async function Home() {
             </div>
           </div>
         </div>
+
+        {heroImageUrl && (
+          <div className="relative z-0 mx-auto aspect-[2/3] w-full max-w-[280px] px-6 pb-12 sm:absolute sm:inset-y-0 sm:right-0 sm:z-0 sm:mx-0 sm:aspect-auto sm:w-[54%] sm:max-w-none sm:px-0 sm:pb-0 lg:w-[40%]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={heroImageUrl}
+              alt="Prenda personalizada"
+              className="h-full w-full object-contain object-center sm:object-right"
+            />
+            <div className="absolute inset-y-0 left-0 hidden w-1/3 bg-gradient-to-r from-black to-transparent sm:block" />
+          </div>
+        )}
+
+        {!heroImageUrl && (
+          <div className="absolute inset-y-0 right-0 hidden w-[42%] flex-col items-center justify-center gap-3 lg:flex">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} className="h-20 w-20 text-neutral-800">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.5-6 3.5 4 2.5-3L20 16" />
+              <rect x="3" y="4" width="18" height="16" rx="2" />
+              <circle cx="8.5" cy="8.5" r="1.5" />
+            </svg>
+            <p className="text-xs uppercase tracking-widest text-neutral-700">Foto próximamente</p>
+          </div>
+        )}
       </section>
 
       {/* Manifesto banner */}
