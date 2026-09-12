@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
-import MockupEditor, { type MockupEditorHandle, type MockupView } from "./MockupEditor";
+import MockupEditor, { type MockupEditorHandle, type MockupView, type PresetPosition } from "./MockupEditor";
 import TryOnEditor from "./TryOnEditor";
 import { useCartStore } from "@/lib/cart-store";
 import { formatCLP } from "@/lib/money";
@@ -54,6 +54,30 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
   const [formError, setFormError] = useState("");
   const [tryOnSnapshot, setTryOnSnapshot] = useState<string | null>(null);
 
+  type PresetDesign = { id: string; name: string; imageUrl: string; placement: "FRONT" | "BACK" };
+  type PresetCollection = { id: string; name: string; designs: PresetDesign[] };
+  const [collections, setCollections] = useState<PresetCollection[]>([]);
+  const [presetFront, setPresetFront] = useState<{ url: string; position: PresetPosition } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/collections")
+      .then((res) => res.json())
+      .then((data) => setCollections(data.collections ?? []))
+      .catch(() => setCollections([]));
+  }, []);
+
+  const activePlacement = activeViewLabel === "Frente" ? "FRONT" : activeViewLabel === "Espalda" ? "BACK" : null;
+  const collectionsForView = collections
+    .map((c) => ({ ...c, designs: c.designs.filter((d) => d.placement === activePlacement) }))
+    .filter((c) => c.designs.length > 0);
+
+  function applyPresetDesign(design: PresetDesign, position: PresetPosition | "back") {
+    editorRefs.current[activeViewLabel]?.applyPresetDesign(design.imageUrl, position);
+    if (design.placement === "FRONT" && position !== "back") {
+      setPresetFront({ url: design.imageUrl, position });
+    }
+  }
+
   const size = product.sizes[sizeIndex];
   const material = product.materials[materialIndex];
   const unitPrice = product.basePrice + (size?.priceDelta ?? 0) + (material?.priceDelta ?? 0);
@@ -65,11 +89,13 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     setActiveViewLabel(firstLabel);
     setActivatedViews(new Set(firstLabel ? [firstLabel] : []));
     setTryOnSnapshot(null);
+    setPresetFront(null);
   }
 
   function handleViewChange(label: string) {
     setActiveViewLabel(label);
     setActivatedViews((prev) => (prev.has(label) ? prev : new Set(prev).add(label)));
+    setPresetFront(null);
   }
 
   function handleTryOn() {
@@ -157,6 +183,65 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
             </div>
           ))}
         </div>
+
+        {collectionsForView.length > 0 && (
+          <div className="mt-6 space-y-5 rounded-lg border border-neutral-200 p-4">
+            <p className="text-sm font-medium">O elige de nuestra colección</p>
+            {collectionsForView.map((c) => (
+              <div key={c.id}>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">{c.name}</p>
+                <div className="flex flex-wrap gap-3">
+                  {c.designs.map((d) => {
+                    const selected = presetFront?.url === d.imageUrl;
+                    return (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => applyPresetDesign(d, activePlacement === "BACK" ? "back" : "center")}
+                        className={`h-16 w-16 overflow-hidden rounded-md border-2 bg-white p-1 ${
+                          selected ? "border-neon" : "border-neutral-200"
+                        }`}
+                        title={d.name}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={d.imageUrl} alt={d.name} className="h-full w-full object-contain" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {presetFront && (
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                  Posición en el pecho
+                </p>
+                <div className="flex gap-2">
+                  {(["left", "center", "right"] as const).map((pos) => (
+                    <button
+                      key={pos}
+                      type="button"
+                      onClick={() => {
+                        const design = collectionsForView
+                          .flatMap((c) => c.designs)
+                          .find((d) => d.imageUrl === presetFront.url);
+                        if (design) applyPresetDesign(design, pos);
+                      }}
+                      className={`rounded-md border px-3 py-1.5 text-xs font-medium ${
+                        presetFront.position === pos
+                          ? "border-neutral-900 bg-neutral-900 text-white"
+                          : "border-neutral-300"
+                      }`}
+                    >
+                      {pos === "left" ? "Izquierda" : pos === "center" ? "Centro" : "Derecha"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div>

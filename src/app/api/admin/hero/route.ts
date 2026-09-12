@@ -2,11 +2,25 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
-const putSchema = z.object({ heroImageUrl: z.string() });
+const putSchema = z.object({
+  heroImageUrl: z.string().optional(),
+  heroEyebrow: z.string().min(1).optional(),
+  heroHeadline: z.string().min(1).optional(),
+  heroSubtext: z.string().min(1).optional(),
+  heroCta: z.string().min(1).optional(),
+  heroImageAlign: z.enum(["left", "right"]).optional(),
+});
 
 export async function GET() {
   const settings = await prisma.storeSettings.findUnique({ where: { id: "singleton" } });
-  return NextResponse.json({ heroImageUrl: settings?.heroImageUrl ?? "" });
+  return NextResponse.json({
+    heroImageUrl: settings?.heroImageUrl ?? "",
+    heroEyebrow: settings?.heroEyebrow ?? "",
+    heroHeadline: settings?.heroHeadline ?? "",
+    heroSubtext: settings?.heroSubtext ?? "",
+    heroCta: settings?.heroCta ?? "",
+    heroImageAlign: settings?.heroImageAlign ?? "right",
+  });
 }
 
 export async function PUT(request: Request) {
@@ -18,8 +32,8 @@ export async function PUT(request: Request) {
 
   await prisma.storeSettings.upsert({
     where: { id: "singleton" },
-    create: { id: "singleton", heroImageUrl: parsed.data.heroImageUrl },
-    update: { heroImageUrl: parsed.data.heroImageUrl },
+    create: { id: "singleton", ...parsed.data },
+    update: parsed.data,
   });
 
   return NextResponse.json({ ok: true });

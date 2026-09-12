@@ -25,6 +25,9 @@ export default async function AdminDashboard() {
           <Link href="/admin/portada" className="text-sm font-medium text-neutral-700 hover:underline">
             Portada
           </Link>
+          <Link href="/admin/colecciones" className="text-sm font-medium text-neutral-700 hover:underline">
+            Colecciones
+          </Link>
           <Link
             href="/admin/productos/nuevo"
             className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white"

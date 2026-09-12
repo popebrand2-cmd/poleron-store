@@ -153,29 +153,46 @@ export default async function Home() {
     prisma.storeSettings.findUnique({ where: { id: "singleton" } }),
   ]);
   const heroImageUrl = settings?.heroImageUrl || "";
+  const heroEyebrow = settings?.heroEyebrow || "MAD · Personalización 100% real";
+  const heroHeadlineLines = (
+    settings?.heroHeadline || "Diseña\ntu propia\nesencia."
+  ).split("\n");
+  const heroSubtext =
+    settings?.heroSubtext ||
+    "Sube tu diseño, personalízalo sobre la prenda real y mira el resultado antes de comprar. Sin catálogos genéricos — cada pieza sale exactamente como la imaginaste.";
+  const heroCta = settings?.heroCta || "Personaliza aquí";
+  const heroImageAlign = (settings?.heroImageAlign as "left" | "right") || "right";
 
   return (
     <main>
       {/* Hero */}
       <section className="relative overflow-hidden bg-black">
         <div className="relative z-10 mx-auto max-w-6xl px-6 py-16 sm:py-20 md:py-28">
-          <div className="max-w-xl sm:max-w-[46%] lg:max-w-xl">
+          <div
+            className={`max-w-xl sm:max-w-[46%] lg:max-w-xl ${
+              heroImageAlign === "left" ? "sm:ml-auto" : ""
+            }`}
+          >
             <span className="inline-flex items-center gap-2 rounded-full border border-neutral-700 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.15em] text-neutral-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-neon" /> MAD · Personalización 100% real
+              <span className="h-1.5 w-1.5 rounded-full bg-neon" /> {heroEyebrow}
             </span>
 
             <h1 className="mt-5 text-4xl font-extrabold uppercase leading-[0.95] tracking-tight text-white sm:text-5xl lg:text-7xl">
-              Diseña
-              <br />
-              tu propia
-              <br />
-              <span className="text-neon">esencia.</span>
+              {heroHeadlineLines.map((line, i) =>
+                i === heroHeadlineLines.length - 1 ? (
+                  <span key={i} className="text-neon">
+                    {line}
+                  </span>
+                ) : (
+                  <span key={i}>
+                    {line}
+                    <br />
+                  </span>
+                ),
+              )}
             </h1>
 
-            <p className="mt-6 max-w-md text-neutral-400">
-              Sube tu diseño, personalízalo sobre la prenda real y mira el resultado antes de comprar. Sin
-              catálogos genéricos — cada pieza sale exactamente como la imaginaste.
-            </p>
+            <p className="mt-6 max-w-md text-neutral-400">{heroSubtext}</p>
 
             <ul className="mt-8 space-y-4">
               {HERO_VALUES.map((v, i) => (
@@ -191,7 +208,7 @@ export default async function Home() {
                 href="#tienda"
                 className="group inline-flex items-center gap-5 rounded-full bg-neon py-3 pl-9 pr-3 text-lg font-bold uppercase tracking-wide text-black transition hover:brightness-90 sm:text-xl"
               >
-                Personaliza aquí
+                {heroCta}
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-neon transition group-hover:translate-x-0.5">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
@@ -203,19 +220,35 @@ export default async function Home() {
         </div>
 
         {heroImageUrl && (
-          <div className="relative z-0 mx-auto aspect-[2/3] w-full max-w-[280px] px-6 pb-12 sm:absolute sm:inset-y-0 sm:right-0 sm:z-0 sm:mx-0 sm:aspect-auto sm:w-[54%] sm:max-w-none sm:px-0 sm:pb-0 lg:w-[40%]">
+          <div
+            className={`relative z-0 mx-auto aspect-[2/3] w-full max-w-[280px] px-6 pb-12 sm:absolute sm:inset-y-0 sm:z-0 sm:mx-0 sm:aspect-auto sm:w-[54%] sm:max-w-none sm:px-0 sm:pb-0 lg:w-[40%] ${
+              heroImageAlign === "left" ? "sm:left-0" : "sm:right-0"
+            }`}
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={heroImageUrl}
               alt="Prenda personalizada"
-              className="h-full w-full object-contain object-center sm:object-right"
+              className={`h-full w-full object-contain object-center ${
+                heroImageAlign === "left" ? "sm:object-left" : "sm:object-right"
+              }`}
             />
-            <div className="absolute inset-y-0 left-0 hidden w-1/3 bg-gradient-to-r from-black to-transparent sm:block" />
+            <div
+              className={`absolute inset-y-0 hidden w-1/3 sm:block ${
+                heroImageAlign === "left"
+                  ? "right-0 bg-gradient-to-l from-black to-transparent"
+                  : "left-0 bg-gradient-to-r from-black to-transparent"
+              }`}
+            />
           </div>
         )}
 
         {!heroImageUrl && (
-          <div className="absolute inset-y-0 right-0 hidden w-[42%] flex-col items-center justify-center gap-3 lg:flex">
+          <div
+            className={`absolute inset-y-0 hidden w-[42%] flex-col items-center justify-center gap-3 lg:flex ${
+              heroImageAlign === "left" ? "left-0" : "right-0"
+            }`}
+          >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} className="h-20 w-20 text-neutral-800">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.5-6 3.5 4 2.5-3L20 16" />
               <rect x="3" y="4" width="18" height="16" rx="2" />

@@ -8,9 +8,22 @@ import { removeColorBackground } from "@/lib/remove-color-bg";
 import { segmentSubject, preloadSubjectSegmenter } from "@/lib/segment-subject";
 import { zoneScaleFactor, type SizeMeasurements } from "@/lib/size-scale";
 
+export type PresetPosition = "left" | "center" | "right";
+
+// Fixed placement recipes for preset (ready-made) designs — front designs
+// let the customer choose which of these three to use; back designs always
+// use "back" with no choice, sitting just below the hood.
+const PRESET_POSITIONS: Record<PresetPosition | "back", { xPct: number; yPct: number; widthPct: number }> = {
+  left: { xPct: 28, yPct: 25, widthPct: 28 },
+  center: { xPct: 50, yPct: 45, widthPct: 55 },
+  right: { xPct: 72, yPct: 25, widthPct: 28 },
+  back: { xPct: 50, yPct: 22, widthPct: 55 },
+};
+
 export type MockupEditorHandle = {
   getPlacement: () => Promise<ViewPlacement | null>;
   getSnapshot: () => string | null;
+  applyPresetDesign: (url: string, position: PresetPosition | "back") => void;
 };
 
 export type MockupView = {
@@ -770,6 +783,21 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         const canvas = fabricCanvasRef.current;
         if (!canvas) return null;
         return canvas.toDataURL({ format: "png", multiplier: 1 });
+      },
+      applyPresetDesign(url, position) {
+        const canvas = fabricCanvasRef.current;
+        if (!canvas) return;
+        const p = PRESET_POSITIONS[position];
+        originalDesignUrlRef.current = url;
+        loadDesign(canvas, url, {
+          designUrl: url,
+          xPct: p.xPct,
+          yPct: p.yPct,
+          widthPct: p.widthPct,
+          rotationDeg: 0,
+          zoneWidthCm: 0,
+          zoneHeightCm: 0,
+        });
       },
     }));
 

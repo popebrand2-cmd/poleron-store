@@ -135,6 +135,44 @@ model StoreSettings {
   // Home page hero photo (customer-facing lifestyle photo) — empty until
   // the admin uploads one; the hero renders a styled placeholder until then.
   heroImageUrl   String  @default("")
+  // Hero text content, admin-editable from /admin/portada. heroHeadline
+  // uses literal "\n" to mark line breaks; the LAST line is always
+  // rendered in the brand's neon accent color.
+  heroEyebrow    String  @default("MAD · Personalización 100% real")
+  heroHeadline   String  @default("Diseña\ntu propia\nesencia.")
+  heroSubtext    String  @default("Sube tu diseño, personalízalo sobre la prenda real y mira el resultado antes de comprar. Sin catálogos genéricos — cada pieza sale exactamente como la imaginaste.")
+  heroCta        String  @default("Personaliza aquí")
+  // "left" | "right" — which side the hero photo sits on (text takes the other side).
+  heroImageAlign String  @default("right")
+}
+
+// A themed group of ready-made designs the customer can pick instead of
+// uploading their own artwork (e.g. "Urbano", "Navidad"). Admin-managed.
+model DesignCollection {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  active    Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  designs PresetDesign[]
+}
+
+// One ready-made design image within a collection. `placement` decides how
+// it behaves in the personalizer: "FRONT" designs let the customer choose
+// left/center/right chest; "BACK" designs always apply at a fixed size
+// centered below the hood, with no position choice.
+model PresetDesign {
+  id           String           @id @default(cuid())
+  collectionId String
+  collection   DesignCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  name      String
+  imageUrl  String
+  placement String // "FRONT" | "BACK"
+  sortOrder Int     @default(0)
+  active    Boolean @default(true)
 }
 
 model OrderItem {
