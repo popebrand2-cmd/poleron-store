@@ -48,14 +48,14 @@ function ProductCard({ p }: { p: FeaturedProduct }) {
       <span className="absolute left-3 top-3 z-10 rounded bg-neon px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-black">
         Personalizable
       </span>
-      <div className={`aspect-square overflow-hidden transition-colors ${backdropClass}`}>
+      <div className={`aspect-square overflow-hidden p-6 transition-colors ${backdropClass}`}>
         {shown?.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={shown.imageUrl}
             src={shown.imageUrl}
             alt={`${p.name} — ${shown.name}`}
-            className="h-full w-full object-cover transition group-hover:scale-105"
+            className="h-full w-full object-contain object-center transition group-hover:scale-105"
           />
         )}
       </div>
