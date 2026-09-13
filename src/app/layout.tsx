@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import MetaPixel from "@/components/MetaPixel";
+import VisitTracker from "@/components/VisitTracker";
 import { EditModeProvider } from "@/components/edit/EditModeContext";
 import EditModeToggle from "@/components/edit/EditModeToggle";
 import { ADMIN_COOKIE_NAME, adminAuthToken } from "@/lib/admin-auth";
@@ -57,6 +58,7 @@ export default async function RootLayout({
         </EditModeProvider>
         <WhatsAppButton />
         <MetaPixel />
+        <VisitTracker />
       </body>
     </html>
   );

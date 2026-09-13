@@ -172,6 +172,17 @@ model SiteText {
 //   trustBadges -> icon, title, text
 //   faq         -> title (question), text (answer)
 // Editable inline (add/remove/reorder/edit) from the homepage edit mode.
+// One page view, logged client-side (see VisitTracker.tsx) so it only
+// counts real browser loads. visitorId is a random id stored in a
+// long-lived first-party cookie — no personal data — just enough to tell
+// pageviews and unique visitors apart in /admin/estadisticas.
+model Visit {
+  id        String   @id @default(cuid())
+  path      String
+  visitorId String
+  createdAt DateTime @default(now())
+}
+
 model ContentItem {
   id        String   @id @default(cuid())
   section   String

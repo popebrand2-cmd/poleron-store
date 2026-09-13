@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import NewCollectionForm from "@/components/admin/NewCollectionForm";
 import DeleteCollectionButton from "@/components/admin/DeleteCollectionButton";
+import AdminNav from "@/components/admin/AdminNav";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +16,7 @@ export default async function AdminCollectionsPage() {
     <main className="mx-auto max-w-5xl p-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Colecciones de diseños</h1>
-        <Link href="/admin" className="text-sm font-medium text-neutral-700 hover:underline">
-          ← Productos
-        </Link>
+        <AdminNav current="/admin/colecciones" />
       </div>
 
       <p className="mb-6 max-w-2xl text-sm text-neutral-500">
