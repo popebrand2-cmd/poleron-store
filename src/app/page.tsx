@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import FeaturedCarousel from "@/components/FeaturedCarousel";
+import CollectionCarousel from "@/components/CollectionCarousel";
 import EditableText from "@/components/edit/EditableText";
 import ValuesList from "@/components/edit/ValuesList";
 import HowItWorksList from "@/components/edit/HowItWorksList";
@@ -285,18 +286,7 @@ export default async function Home() {
               {collectionsWithDesigns.map((c) => (
                 <div key={c.id}>
                   <h3 className="mb-4 text-sm font-bold uppercase tracking-widest text-white">{c.name}</h3>
-                  <div className="flex gap-4 overflow-x-auto pb-2">
-                    {c.designs.map((d) => (
-                      <div
-                        key={d.id}
-                        className="flex w-32 shrink-0 flex-col items-center gap-2 rounded-lg border border-neutral-800 bg-neutral-950 p-3"
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={d.imageUrl} alt={d.name} className="h-20 w-20 object-contain" />
-                        <p className="truncate text-center text-xs text-neutral-400">{d.name}</p>
-                      </div>
-                    ))}
-                  </div>
+                  <CollectionCarousel designs={c.designs} />
                 </div>
               ))}
             </div>
