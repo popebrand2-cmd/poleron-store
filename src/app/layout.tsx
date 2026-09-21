@@ -3,7 +3,7 @@ import { Inter, Teko, Yellowtail } from "next/font/google";
 import { cookies } from "next/headers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import WhatsAppButton from "@/components/WhatsAppButton";
+import SocialDock from "@/components/SocialDock";
 import MetaPixel from "@/components/MetaPixel";
 import VisitTracker from "@/components/VisitTracker";
 import { EditModeProvider } from "@/components/edit/EditModeContext";
@@ -70,9 +70,9 @@ export default async function RootLayout({
           <Header />
           <div className="flex-1">{children}</div>
           <Footer />
+          <SocialDock />
           <EditModeToggle initialAccentColor={accentColor} />
         </EditModeProvider>
-        <WhatsAppButton />
         </SiteContentProvider>
         <MetaPixel />
         <VisitTracker />

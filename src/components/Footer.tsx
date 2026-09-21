@@ -4,10 +4,12 @@ import { usePathname } from "next/navigation";
 import EditableLink from "./edit/EditableLink";
 import Txt from "./edit/Txt";
 import { useSiteImage } from "./SiteContentProvider";
+import { SocialButton, useSocials } from "./SocialLinks";
 
 export default function Footer() {
   const pathname = usePathname();
   const logo = useSiteImage("image.logo");
+  const socials = useSocials();
   if (pathname?.startsWith("/admin")) return null;
 
   return (
@@ -22,6 +24,14 @@ export default function Footer() {
             <p className="mt-1 max-w-sm text-xs text-neutral-500">
               <Txt k="footer.tagline" multiline />
             </p>
+            {socials.length > 0 && (
+              <div className="mt-4 flex items-center gap-3">
+                <Txt k="footer.follow" className="font-script text-2xl text-neon" />
+                {socials.map((s) => (
+                  <SocialButton key={s.kind} social={s} className="!h-10 !w-10" />
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex gap-6 text-xs font-medium uppercase tracking-wide text-neutral-400">
             <EditableLink href="/" className="hover:text-white">

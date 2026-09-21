@@ -76,7 +76,7 @@ function ImageSlot({ k }: { k: string }) {
   );
 }
 
-function SettingField({ k, label, multiline }: { k: string; label: string; multiline?: boolean }) {
+function SettingField({ k, label, multiline, optional, placeholder }: { k: string; label: string; multiline?: boolean; optional?: boolean; placeholder?: string }) {
   const router = useRouter();
   const saved = useSiteText(k);
   const [value, setValue] = useState(saved);
@@ -84,7 +84,7 @@ function SettingField({ k, label, multiline }: { k: string; label: string; multi
 
   async function save() {
     const next = value.trim();
-    if (!next || next === saved) return;
+    if ((!next && !optional) || next === saved) return;
     await saveSiteText(k, next);
     setStatus("Guardado");
     router.refresh();
@@ -95,6 +95,7 @@ function SettingField({ k, label, multiline }: { k: string; label: string; multi
     value,
     onChange: (e: React.ChangeEvent<HTMLInputElement & HTMLTextAreaElement>) => setValue(e.target.value),
     onBlur: save,
+    placeholder,
     className: "w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 text-xs text-white focus:border-neon focus:outline-none",
   };
 
@@ -123,6 +124,8 @@ export default function SiteAssetsPanel({ defaultOpen = false }: { defaultOpen?:
           ))}
         </ul>
         <div className="space-y-3 border-t border-white/10 pt-3">
+          <SettingField k="setting.instagramUrl" label="Enlace de Instagram" optional placeholder="https://instagram.com/tu_usuario" />
+          <SettingField k="setting.facebookUrl" label="Enlace de Facebook" optional placeholder="https://facebook.com/tu_pagina" />
           <SettingField k="setting.whatsappNumber" label="Número de WhatsApp (con código de país)" />
           <SettingField k="setting.whatsappMessage" label="Mensaje inicial de WhatsApp" multiline />
         </div>

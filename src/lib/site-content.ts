@@ -74,6 +74,9 @@ export const SITE_TEXT_DEFAULTS: Record<string, string> = {
   "browse.tees": "Poleras",
   "collections.cta": "Personaliza aquí",
 
+  "setting.instagramUrl": "",
+  "setting.facebookUrl": "",
+  "footer.follow": "Síguenos",
   "setting.whatsappNumber": "56995162982",
   "setting.whatsappMessage": "Hola! Tengo una consulta sobre mi personalización en POPE.",
 };

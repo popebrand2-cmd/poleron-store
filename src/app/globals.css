@@ -341,3 +341,17 @@ h1, h2, h3 {
 @media (prefers-reduced-motion: reduce) {
   .hiw-handle, .hiw-float { animation: none !important; }
 }
+
+/* ---------- Redes sociales (dock + pie) ---------- */
+.pope-social {
+  display: flex; height: 3rem; width: 3rem; align-items: center; justify-content: center; border-radius: 9999px;
+  color: var(--neon);
+  transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.pope-social-main { height: 3.5rem; width: 3.5rem; }
+a.pope-social:hover, a.pope-social:focus-visible {
+  background: var(--neon); color: #000; border-color: var(--neon);
+  transform: translateY(-3px) scale(1.06);
+  box-shadow: 0 0 22px color-mix(in srgb, var(--neon) 55%, transparent);
+}
+a.pope-social:active { transform: scale(0.96); }
