@@ -10,7 +10,8 @@ import { EditModeProvider } from "@/components/edit/EditModeContext";
 import EditModeToggle from "@/components/edit/EditModeToggle";
 import { getAdminAccess } from "@/lib/admin-session";
 import { prisma } from "@/lib/prisma";
-import { DEFAULT_ACCENT_COLOR, siteText } from "@/lib/site-content";
+import { DEFAULT_ACCENT_COLOR, SITE_IMAGE_DEFAULTS, SITE_TEXT_DEFAULTS } from "@/lib/site-content";
+import { SiteContentProvider } from "@/components/SiteContentProvider";
 import "./globals.css";
 
 // POPE brand typography (guía tipográfica): Inter = texto informativo,
@@ -38,7 +39,10 @@ export default async function RootLayout({
   const isAdmin = !!access && access.perms.includes("portada");
   const accentColor = settings?.accentColor || DEFAULT_ACCENT_COLOR;
   const textMap = Object.fromEntries(siteTextRows.map((t) => [t.key, t.value]));
-  const footerTagline = siteText(textMap, "footer.tagline");
+  const texts = { ...SITE_TEXT_DEFAULTS, ...textMap };
+  const images = Object.fromEntries(
+    Object.entries(SITE_IMAGE_DEFAULTS).map(([k, def]) => [k, textMap[k] || def]),
+  );
 
   return (
     <html lang="es" className={`${inter.variable} ${teko.variable} ${yellowtail.variable}`} style={{ ["--neon" as string]: accentColor }}>
@@ -61,19 +65,15 @@ export default async function RootLayout({
             </filter>
           </defs>
         </svg>
+        <SiteContentProvider texts={texts} images={images}>
         <EditModeProvider isAdmin={isAdmin}>
           <Header />
           <div className="flex-1">{children}</div>
-          <Footer tagline={footerTagline} />
-          <EditModeToggle
-            initialAccentColor={accentColor}
-            initialHeroAlign={(settings?.heroImageAlign as "left" | "right") || "right"}
-            initialHeroPosX={settings?.heroImagePosX ?? 50}
-            initialHeroPosY={settings?.heroImagePosY ?? 50}
-            initialHeroZoom={settings?.heroImageZoom ?? 1}
-          />
+          <Footer />
+          <EditModeToggle initialAccentColor={accentColor} />
         </EditModeProvider>
         <WhatsAppButton />
+        </SiteContentProvider>
         <MetaPixel />
         <VisitTracker />
       </body>

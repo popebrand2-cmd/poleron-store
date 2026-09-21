@@ -5,15 +5,19 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCartStore } from "@/lib/cart-store";
 import AnnouncementBar from "./AnnouncementBar";
+import EditableLink from "./edit/EditableLink";
+import Txt from "./edit/Txt";
+import { useSiteImage } from "./SiteContentProvider";
 
 const NAV_LINKS = [
-  { href: "/", label: "Inicio" },
-  { href: "/#tienda", label: "Tienda" },
-  { href: "/#colecciones", label: "Colecciones" },
+  { href: "/", key: "nav.home" },
+  { href: "/#tienda", key: "nav.shop" },
+  { href: "/#colecciones", key: "nav.collections" },
 ];
 
 export default function Header() {
   const pathname = usePathname();
+  const logo = useSiteImage("image.logo");
   const isAdmin = pathname?.startsWith("/admin");
 
   const items = useCartStore((s) => s.items);
@@ -50,15 +54,15 @@ export default function Header() {
 
           <Link href="/" aria-label="POPE Brand — inicio" className="flex items-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/pope-logo.png" alt="POPE Brand" className="h-11 w-auto sm:h-14" />
+            <img src={logo} alt="POPE Brand" className="h-11 w-auto sm:h-14" />
           </Link>
 
           {!isAdmin && (
             <nav className="hidden items-center gap-8 text-sm font-semibold uppercase tracking-wide text-neutral-300 sm:flex">
               {NAV_LINKS.map((link) => (
-                <Link key={link.href} href={link.href} className="transition hover:text-neon">
-                  {link.label}
-                </Link>
+                <EditableLink key={link.href} href={link.href} className="transition hover:text-neon">
+                  <Txt k={link.key} />
+                </EditableLink>
               ))}
             </nav>
           )}
@@ -96,14 +100,14 @@ export default function Header() {
         {!isAdmin && menuOpen && (
           <nav className="flex flex-col border-t border-white/10 py-2 text-sm font-semibold uppercase tracking-wide text-neutral-300 sm:hidden">
             {NAV_LINKS.map((link) => (
-              <Link
+              <EditableLink
                 key={link.href}
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
                 className="px-6 py-3 transition hover:bg-neutral-900 hover:text-neon"
               >
-                {link.label}
-              </Link>
+                <Txt k={link.key} />
+              </EditableLink>
             ))}
           </nav>
         )}

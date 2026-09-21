@@ -1,8 +1,9 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import FeaturedCarousel from "@/components/FeaturedCarousel";
 import CollectionCarousel from "@/components/CollectionCarousel";
 import EditableText from "@/components/edit/EditableText";
+import EditableLink from "@/components/edit/EditableLink";
+import Txt from "@/components/edit/Txt";
 import PopeHero from "@/components/PopeHero";
 import HowItWorks from "@/components/preview/HowItWorks";
 import TrustBadgesList from "@/components/edit/TrustBadgesList";
@@ -15,8 +16,8 @@ export const dynamic = "force-dynamic";
 // — once there's more than one product per type this should point at a
 // real category listing instead of a single product.
 const BROWSE_TYPES = [
-  { label: "Polerones", match: (name: string) => /hoodie|poler[oó]n/i.test(name) },
-  { label: "Poleras", match: (name: string) => /tee|polera/i.test(name) },
+  { labelKey: "browse.hoodies", match: (name: string) => /hoodie|poler[oó]n/i.test(name) },
+  { labelKey: "browse.tees", match: (name: string) => /tee|polera/i.test(name) },
 ];
 
 export default async function Home() {
@@ -83,7 +84,10 @@ export default async function Home() {
       <section className="bg-black">
         <div className="border-y border-neutral-800 bg-neutral-950 py-3 text-center">
           <h2 className="text-lg font-extrabold uppercase tracking-widest text-white">
-            <span className="text-neon">POPE</span> ·{" "}
+            <span className="text-neon">
+              <Txt k="browseTypes.prefix" />
+            </span>{" "}
+            ·{" "}
             <EditableText value={t("browseTypes.heading")} siteKey="browseTypes.heading" as="span" />
           </h2>
         </div>
@@ -93,8 +97,8 @@ export default async function Home() {
             if (!product) return null;
             const cover = product.colors[0]?.views[0]?.imageUrl;
             return (
-              <Link
-                key={tp.label}
+              <EditableLink
+                key={tp.labelKey}
                 href={`/productos/${product.slug}`}
                 style={{ backgroundColor: `${accentColor}b3` }}
                 className="group relative aspect-[16/10] overflow-hidden rounded-xl border-2 border-transparent p-6 transition hover:border-neon"
@@ -103,14 +107,14 @@ export default async function Home() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={cover}
-                    alt={tp.label}
+                    alt={t(tp.labelKey)}
                     className="h-full w-full object-contain transition duration-300 group-hover:scale-105"
                   />
                 )}
                 <span className="absolute bottom-4 left-4 rounded bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-black shadow">
-                  {tp.label} →
+                  <Txt k={tp.labelKey} /> →
                 </span>
-              </Link>
+              </EditableLink>
             );
           })}
         </div>
@@ -181,17 +185,17 @@ export default async function Home() {
             </div>
 
             <div className="mt-10 text-center">
-              <Link
+              <EditableLink
                 href="#tienda"
                 className="group glass-neon inline-flex items-center gap-4 whitespace-nowrap rounded-full py-1.5 pl-7 pr-2 font-script text-2xl font-normal normal-case tracking-normal text-black transition hover:brightness-90"
               >
-                Personaliza aquí
+                <Txt k="collections.cta" />
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-neon transition group-hover:translate-x-0.5">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
                   </svg>
                 </span>
-              </Link>
+              </EditableLink>
             </div>
           </div>
         </section>

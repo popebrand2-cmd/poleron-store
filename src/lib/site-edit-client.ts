@@ -45,3 +45,12 @@ export async function reorderContentItems(orderedIds: string[]) {
     body: JSON.stringify({ orderedIds }),
   });
 }
+
+export async function uploadSiteImage(file: File): Promise<string> {
+  const body = new FormData();
+  body.append("file", file);
+  const res = await fetch("/api/upload", { method: "POST", body });
+  const data = await res.json();
+  if (!res.ok || !data.url) throw new Error(data.error ?? "No se pudo subir la imagen.");
+  return data.url as string;
+}

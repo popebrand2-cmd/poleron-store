@@ -1,16 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { useHoodieColor, type HoodieColor } from "@/lib/hoodie-color";
-
-// Position of the design on the chest, as a share of the 1200x990 garment photo.
-const CHEST = { left: "41.67%", top: "30.4%", width: "17.9%", height: "21.7%" };
-
-const HOODIE = { negro: "/preview/hoodie-before.webp", blanco: "/preview/hoodie-white-before.webp" };
-// Neon design on the black hoodie, black design on the white one (same as the hero).
-const DESIGN = "/preview/design-sample.png";
-const DESIGN_BY_COLOR = { negro: DESIGN, blanco: "/preview/design-sample-black.png" };
+import { CHEST } from "@/lib/hoodie-stage";
+import EditableLink from "@/components/edit/EditableLink";
+import Txt from "@/components/edit/Txt";
+import { useEditMode } from "@/components/edit/EditModeContext";
+import { useSiteImage } from "@/components/SiteContentProvider";
 
 const Svg = ({ children, className }: { children: ReactNode; className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
@@ -63,13 +59,13 @@ function Connector({ index }: { index: number }) {
   );
 }
 
-function StepHead({ n, label, icon, main }: { n: string; label: string; icon: ReactNode; main?: boolean }) {
+function StepHead({ n, labelKey, icon, main }: { n: string; labelKey: string; icon: ReactNode; main?: boolean }) {
   return (
     <div className="flex items-start justify-between gap-3">
       <div>
         <span className="block font-display text-7xl font-bold leading-[0.8] text-neon sm:text-8xl">{n}</span>
         <span className="mt-2 inline-block rounded-full border border-white/15 px-3 py-0.5 font-display text-xl uppercase tracking-widest text-neutral-200">
-          {label}
+          <Txt k={labelKey} />
         </span>
       </div>
       <span className={`hiw-ico glass-neon flex items-center justify-center rounded-full text-black ${main ? "h-14 w-14" : "h-12 w-12"}`}>{icon}</span>
@@ -77,17 +73,18 @@ function StepHead({ n, label, icon, main }: { n: string; label: string; icon: Re
   );
 }
 
-function StepText({ title, text }: { title: string; text: string }) {
+function StepText({ titleKey, textKey }: { titleKey: string; textKey: string }) {
   return (
     <div className="mt-5">
-      <h3 className="font-display text-4xl font-bold uppercase leading-none text-white sm:text-5xl">{title}</h3>
-      <p className="mt-2 text-lg leading-snug text-neutral-300">{text}</p>
+      <Txt k={titleKey} as="h3" className="block font-display text-4xl font-bold uppercase leading-none text-white sm:text-5xl" />
+      <Txt k={textKey} as="p" multiline className="mt-2 block text-lg leading-snug text-neutral-300" />
     </div>
   );
 }
 
 // The garment with the design on the chest — identical in steps 2 and 3.
 function Garment({ color, children, design }: { color: HoodieColor; children?: ReactNode; design: ReactNode }) {
+  const HOODIE: Record<HoodieColor, string> = { negro: useSiteImage("image.hoodieBlack"), blanco: useSiteImage("image.hoodieWhite") };
   return (
     <div className="relative aspect-[1200/990] w-full">
       {(Object.keys(HOODIE) as HoodieColor[]).map((c) => (
@@ -114,6 +111,7 @@ function Garment({ color, children, design }: { color: HoodieColor; children?: R
 
 // The design: neon on the black hoodie, black on the white one.
 function DesignImg({ color }: { color: HoodieColor }) {
+  const DESIGN_BY_COLOR: Record<HoodieColor, string> = { negro: useSiteImage("image.designOnBlack"), blanco: useSiteImage("image.designOnWhite") };
   return (
     <>
       {(Object.keys(DESIGN_BY_COLOR) as HoodieColor[]).map((c) => (
@@ -135,6 +133,9 @@ function DesignImg({ color }: { color: HoodieColor }) {
 export default function HowItWorks({ editorHref }: { editorHref: string }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const color = useHoodieColor();
+  const { editMode } = useEditMode();
+  const pe = editMode ? "" : "pointer-events-none";
+  const phoneDesign = useSiteImage("image.designOnBlack");
   const ink = color === "blanco" ? "#102200" : "var(--neon)";
 
   useEffect(() => {
@@ -174,26 +175,26 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
 
       <div className="mx-auto max-w-7xl px-5 py-16 sm:py-24">
         <div data-hiw className="hiw-reveal mb-12 text-center sm:mb-16">
-          <h2 className="font-display text-[4.5rem] font-bold uppercase leading-[0.85] text-white sm:text-[7rem]">Así funciona</h2>
-          <p className="-mt-1 font-script text-4xl text-neon sm:text-5xl">De tu idea a tu prenda.</p>
+          <Txt k="how.title" as="h2" className="block font-display text-[4.5rem] font-bold uppercase leading-[0.85] text-white sm:text-[7rem]" />
+          <Txt k="how.subtitle" as="p" className="-mt-1 block font-script text-4xl text-neon sm:text-5xl" />
         </div>
 
         <div className="flex flex-col gap-0 lg:grid lg:grid-cols-[1fr_auto_1.3fr_auto_1fr] lg:items-center lg:gap-2">
           {/* 01 — Sube tu diseño */}
           <div data-hiw className="hiw-reveal mx-auto w-full max-w-[30rem] lg:max-w-none" style={delay(0)}>
             <article className="hiw-card rounded-3xl p-5 sm:p-6">
-              <StepHead n="01" label="Sube" icon={<UploadIcon className="h-6 w-6" />} />
+              <StepHead n="01" labelKey="how.tag1" icon={<UploadIcon className="h-6 w-6" />} />
 
               <div className="hiw-scene relative mt-4 flex aspect-[1200/990] w-full items-center justify-center overflow-hidden rounded-2xl bg-black/50">
                 {/* phone */}
                 <div className="relative h-[90%] aspect-[9/17] rounded-[1.5rem] border-2 border-white/25 bg-neutral-950 p-2 shadow-[0_0_30px_-8px_color-mix(in_srgb,var(--neon)_50%,transparent)]">
                   <span className="absolute left-1/2 top-1.5 h-1 w-8 -translate-x-1/2 rounded-full bg-white/20" aria-hidden="true" />
                   <div className="mt-3 flex h-[calc(100%-1.4rem)] flex-col justify-between rounded-[1rem] bg-neutral-900 p-2">
-                    <p className="whitespace-nowrap font-display text-base uppercase leading-none tracking-wide text-white">Tu diseño</p>
+                    <Txt k="how.phone" as="p" className="block whitespace-nowrap font-display text-base uppercase leading-none tracking-wide text-white" />
                     <div className="relative flex flex-1 items-center justify-center rounded-lg border border-dashed [border-color:color-mix(in_srgb,var(--neon)_70%,transparent)] my-1.5">
                       <UploadIcon className="hiw-drop h-7 w-7 text-neon" />
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={DESIGN} alt="" loading="lazy" decoding="async" draggable={false} className="hiw-loaded absolute inset-1 m-auto h-[80%] w-[80%] object-contain" />
+                      <img src={phoneDesign} alt="" loading="lazy" decoding="async" draggable={false} className="hiw-loaded absolute inset-1 m-auto h-[80%] w-[80%] object-contain" />
                     </div>
                     <div className="h-1.5 overflow-hidden rounded-full bg-white/15">
                       <div className="hiw-bar h-full w-full rounded-full bg-neon" />
@@ -208,23 +209,23 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
                 </span>
 
                 {/* accepted formats */}
-                <ul className="pointer-events-none absolute inset-y-0 left-2 flex flex-col justify-center gap-3 sm:left-3" aria-label="Puedes subir">
-                  {["Foto", "Logo"].map((t) => (
-                    <li key={t} className="glass-dark rounded-full px-2.5 py-1 text-sm font-semibold uppercase tracking-wide text-white">
-                      {t}
+                <ul className={`${pe} absolute inset-y-0 left-2 flex flex-col justify-center gap-3 sm:left-3`} aria-label="Puedes subir">
+                  {["how.fmt1", "how.fmt2"].map((k) => (
+                    <li key={k} className="glass-dark rounded-full px-2.5 py-1 text-sm font-semibold uppercase tracking-wide text-white">
+                      <Txt k={k} />
                     </li>
                   ))}
                 </ul>
-                <ul className="pointer-events-none absolute inset-y-0 right-2 flex flex-col justify-center gap-3 sm:right-3" aria-hidden="true">
-                  {["Dibujo", "Texto"].map((t) => (
-                    <li key={t} className="glass-dark rounded-full px-2.5 py-1 text-sm font-semibold uppercase tracking-wide text-white">
-                      {t}
+                <ul className={`${pe} absolute inset-y-0 right-2 flex flex-col justify-center gap-3 sm:right-3`}>
+                  {["how.fmt3", "how.fmt4"].map((k) => (
+                    <li key={k} className="glass-dark rounded-full px-2.5 py-1 text-sm font-semibold uppercase tracking-wide text-white">
+                      <Txt k={k} />
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <StepText title="Sube tu diseño" text="Foto, logo, dibujo o texto." />
+              <StepText titleKey="how.title1" textKey="how.text1" />
             </article>
           </div>
 
@@ -233,7 +234,7 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
           {/* 02 — Personaliza en vivo (main card) */}
           <div data-hiw className="hiw-reveal mx-auto w-full max-w-[30rem] lg:max-w-none" style={delay(1)}>
             <article className="hiw-card hiw-card-main rounded-3xl p-5 sm:p-7 lg:py-8">
-              <StepHead n="02" label="Personaliza" icon={<SizeIcon className="h-7 w-7" />} main />
+              <StepHead n="02" labelKey="how.tag2" icon={<SizeIcon className="h-7 w-7" />} main />
 
               <div className="hiw-scene relative -mx-3 mt-4 overflow-hidden rounded-2xl sm:mx-0 bg-[radial-gradient(60%_60%_at_50%_45%,color-mix(in_srgb,var(--neon)_16%,transparent),transparent_75%)] bg-black/60">
                 <Garment
@@ -259,16 +260,16 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
                   {/* floating controls (visual only) */}
                   <div aria-hidden="true" className="hiw-float glass-dark absolute left-[3%] top-[14%] flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold uppercase tracking-wide text-white">
                     <SizeIcon className="h-4 w-4 text-neon" />
-                    Tamaño
+                    <Txt k="how.ctlSize" />
                   </div>
                   <div aria-hidden="true" className="hiw-float glass-dark absolute bottom-[12%] right-[3%] flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold uppercase tracking-wide text-white" style={{ animationDelay: "-1.7s" }}>
                     <MoveIcon className="h-4 w-4 text-neon" />
-                    Posición
+                    <Txt k="how.ctlPos" />
                   </div>
                 </Garment>
               </div>
 
-              <StepText title="Personaliza en vivo" text="Ajusta tu diseño y mira cómo queda." />
+              <StepText titleKey="how.title2" textKey="how.text2" />
             </article>
           </div>
 
@@ -277,38 +278,39 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
           {/* 03 — Lo hacemos realidad */}
           <div data-hiw className="hiw-reveal mx-auto w-full max-w-[30rem] lg:max-w-none" style={delay(2)}>
             <article className="hiw-card rounded-3xl p-5 sm:p-6">
-              <StepHead n="03" label="Creamos" icon={<ShirtIcon className="h-6 w-6" />} />
+              <StepHead n="03" labelKey="how.tag3" icon={<ShirtIcon className="h-6 w-6" />} />
 
               <div className="hiw-scene relative -mx-2 mt-4 overflow-hidden rounded-2xl sm:mx-0 bg-[radial-gradient(55%_55%_at_50%_50%,color-mix(in_srgb,var(--neon)_10%,transparent),transparent_75%)] bg-black/50">
                 <Garment color={color} design={<DesignImg color={color} />}>
                   <div className="glass-neon absolute bottom-[10%] left-[4%] flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold uppercase tracking-wide text-black">
                     <CheckIcon className="h-4 w-4" />
-                    Hecha para ti
+                    <Txt k="how.done" />
                   </div>
                 </Garment>
               </div>
 
-              <StepText title="Lo hacemos realidad" text="Nosotros producimos tu prenda personalizada." />
+              <StepText titleKey="how.title3" textKey="how.text3" />
             </article>
           </div>
         </div>
 
         <div data-hiw className="hiw-reveal mt-14 text-center" style={delay(1)}>
-          <Link href={editorHref} className="pope-cta text-black">
+          <EditableLink href={editorHref} className="pope-cta text-black">
             <span className="pope-cta-goo" aria-hidden="true">
                   <span className="pope-cta-bg" />
                   <span className="pope-cta-drop" />
                 </span>
-            <span className="pope-cta-label whitespace-nowrap px-6 py-3 font-display text-3xl font-bold uppercase leading-none tracking-wide sm:px-8 sm:text-4xl">
-              Diseña la tuya
-            </span>
+            <Txt
+              k="how.cta"
+              className="pope-cta-label whitespace-nowrap px-6 py-3 font-display text-3xl font-bold uppercase leading-none tracking-wide sm:px-8 sm:text-4xl"
+            />
             <span className="pope-cta-circle" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} className="h-5 w-5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
               </svg>
             </span>
-          </Link>
-          <p className="mt-3 text-sm text-neutral-400">Las imágenes son ilustrativas: el resultado final depende de tu diseño y de la prenda.</p>
+          </EditableLink>
+          <Txt k="how.disclaimer" as="p" className="mt-3 block text-sm text-neutral-400" />
         </div>
       </div>
     </section>

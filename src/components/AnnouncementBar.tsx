@@ -1,28 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Txt from "./edit/Txt";
+import { useEditMode } from "./edit/EditModeContext";
 
-const MESSAGES = [
-  "📦 ENVÍO GRATIS SOBRE $70.000 EN LA REGIÓN METROPOLITANA",
-  "🎨 SUBE TU PROPIO DISEÑO Y VE EL MOCKUP REAL ANTES DE COMPRAR",
-  "🧵 CADA PRENDA ES UNA EDICIÓN DE UNA SOLA PERSONA: TÚ",
-];
+const MESSAGE_KEYS = ["announce.1", "announce.2", "announce.3"];
 
 const INTERVAL_MS = 5000;
 
 export default function AnnouncementBar() {
   const [index, setIndex] = useState(0);
+  const { editMode } = useEditMode();
 
+  // Don't rotate the message away while the owner is typing in it.
   useEffect(() => {
-    const id = setInterval(() => setIndex((i) => (i + 1) % MESSAGES.length), INTERVAL_MS);
+    if (editMode) return;
+    const id = setInterval(() => setIndex((i) => (i + 1) % MESSAGE_KEYS.length), INTERVAL_MS);
     return () => clearInterval(id);
-  }, []);
+  }, [editMode]);
 
   function prev() {
-    setIndex((i) => (i - 1 + MESSAGES.length) % MESSAGES.length);
+    setIndex((i) => (i - 1 + MESSAGE_KEYS.length) % MESSAGE_KEYS.length);
   }
   function next() {
-    setIndex((i) => (i + 1) % MESSAGES.length);
+    setIndex((i) => (i + 1) % MESSAGE_KEYS.length);
   }
 
   return (
@@ -35,7 +36,7 @@ export default function AnnouncementBar() {
       >
         ‹
       </button>
-      <p className="truncate text-center">{MESSAGES[index]}</p>
+      <Txt key={MESSAGE_KEYS[index]} k={MESSAGE_KEYS[index]} as="p" className="truncate text-center" />
       <button
         type="button"
         onClick={next}

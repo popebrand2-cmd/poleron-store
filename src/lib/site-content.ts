@@ -20,6 +20,82 @@ export const SITE_TEXT_DEFAULTS: Record<string, string> = {
   "faq.eyebrow": "Dudas",
   "faq.heading": "Preguntas frecuentes",
   "footer.tagline": "Ropa personalizada — subes tu diseño, ves el mockup real y lo recibimos hecho realidad.",
+  "footer.script": "Tu idea, tu estilo, tu esencia.",
+  "footer.motto": "Personaliza / Crea / Viste",
+  "footer.cart": "Carrito",
+  "footer.copyright": "POPE. Todos los derechos reservados.",
+
+  "announce.1": "📦 ENVÍO GRATIS SOBRE $70.000 EN LA REGIÓN METROPOLITANA",
+  "announce.2": "🎨 SUBE TU PROPIO DISEÑO Y VE EL MOCKUP REAL ANTES DE COMPRAR",
+  "announce.3": "🧵 CADA PRENDA ES UNA EDICIÓN DE UNA SOLA PERSONA: TÚ",
+  "nav.home": "Inicio",
+  "nav.shop": "Tienda",
+  "nav.collections": "Colecciones",
+
+  "hero.line1": "TU IDEA.",
+  "hero.line2": "TU PRENDA.",
+  "hero.subtext": "Personaliza tu ropa y mira cómo queda antes de comprar.",
+  "hero.tagline": "Tu idea, tu estilo, tu esencia.",
+  "hero.cta": "Diseña la tuya",
+  "hero.disclaimer": "Imagen ilustrativa: el resultado final puede variar según el diseño y la prenda.",
+  "hero.colorLabel": "Elige el color",
+  "hero.colorBlack": "Negro",
+  "hero.colorWhite": "Blanco",
+  "hero.before": "Antes",
+  "hero.after": "Después",
+  "hero.hintMouse": "Pasa el cursor sobre la prenda",
+  "hero.hintTouch": "Toca y arrastra sobre la prenda",
+
+  "how.title": "Así funciona",
+  "how.subtitle": "De tu idea a tu prenda.",
+  "how.tag1": "Sube",
+  "how.tag2": "Personaliza",
+  "how.tag3": "Creamos",
+  "how.title1": "Sube tu diseño",
+  "how.title2": "Personaliza en vivo",
+  "how.title3": "Lo hacemos realidad",
+  "how.text1": "Foto, logo, dibujo o texto.",
+  "how.text2": "Ajusta tu diseño y mira cómo queda.",
+  "how.text3": "Nosotros producimos tu prenda personalizada.",
+  "how.fmt1": "Foto",
+  "how.fmt2": "Logo",
+  "how.fmt3": "Dibujo",
+  "how.fmt4": "Texto",
+  "how.phone": "Tu diseño",
+  "how.file": "mi-diseño.png",
+  "how.ctlSize": "Tamaño",
+  "how.ctlPos": "Posición",
+  "how.done": "Hecha para ti",
+  "how.cta": "Diseña la tuya",
+  "how.disclaimer": "Las imágenes son ilustrativas: el resultado final depende de tu diseño y de la prenda.",
+
+  "browseTypes.prefix": "POPE",
+  "browse.hoodies": "Polerones",
+  "browse.tees": "Poleras",
+  "collections.cta": "Personaliza aquí",
+
+  "setting.whatsappNumber": "56995162982",
+  "setting.whatsappMessage": "Hola! Tengo una consulta sobre mi personalización en POPE.",
+};
+
+// Replaceable pictures. Stored in SiteText under these keys (value = URL);
+// the defaults below are the files that ship with the site.
+export const SITE_IMAGE_DEFAULTS: Record<string, string> = {
+  "image.logo": "/brand/pope-logo.png",
+  "image.signature": "/brand/pope-firma.png",
+  "image.hoodieBlack": "/preview/hoodie-before.webp",
+  "image.hoodieWhite": "/preview/hoodie-white-before.webp",
+  "image.designOnBlack": "/preview/design-sample.png",
+  "image.designOnWhite": "/preview/design-sample-black.png",
+};
+
+export const SITE_IMAGE_LABELS: Record<string, { label: string; hint: string }> = {
+  "image.logo": { label: "Logo POPE", hint: "Se ve en el menú y en el pie de página." },
+  "image.signature": { label: "Firma junto a la capucha", hint: "PNG con fondo transparente." },
+  "image.hoodieBlack": { label: "Polerón negro (sin diseño)", hint: "Foto en proporción 1200×990, fondo transparente." },
+  "image.hoodieWhite": { label: "Polerón blanco (sin diseño)", hint: "Misma proporción y encuadre que el negro." },
+  "image.designOnBlack": { label: "Diseño de muestra sobre el negro", hint: "PNG transparente, cuadrado." },
+  "image.designOnWhite": { label: "Diseño de muestra sobre el blanco", hint: "PNG transparente, cuadrado." },
 };
 
 export function siteText(map: Record<string, string>, key: string): string {

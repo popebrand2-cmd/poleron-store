@@ -4,21 +4,9 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useEditMode } from "./EditModeContext";
 import { patchHero } from "@/lib/site-edit-client";
-import HeroImageControls from "./HeroImageControls";
+import SiteAssetsPanel from "./SiteAssetsPanel";
 
-export default function EditModeToggle({
-  initialAccentColor,
-  initialHeroAlign,
-  initialHeroPosX,
-  initialHeroPosY,
-  initialHeroZoom,
-}: {
-  initialAccentColor: string;
-  initialHeroAlign: "left" | "right";
-  initialHeroPosX: number;
-  initialHeroPosY: number;
-  initialHeroZoom: number;
-}) {
+export default function EditModeToggle({ initialAccentColor }: { initialAccentColor: string }) {
   const { isAdmin, editMode, setEditMode } = useEditMode();
   const [accentColor, setAccentColor] = useState(initialAccentColor);
   const pathname = usePathname();
@@ -33,14 +21,7 @@ export default function EditModeToggle({
 
   return (
     <div className="fixed bottom-6 left-6 z-50 flex max-h-[85vh] flex-col items-start gap-2 overflow-y-auto">
-      {editMode && pathname === "/" && (
-        <HeroImageControls
-          initialAlign={initialHeroAlign}
-          initialPosX={initialHeroPosX}
-          initialPosY={initialHeroPosY}
-          initialZoom={initialHeroZoom}
-        />
-      )}
+      {editMode && <SiteAssetsPanel />}
       {editMode && (
         <div className="flex items-center gap-2 glass-dark rounded-full px-4 py-2">
           <label htmlFor="accent-color-input" className="text-xs font-medium text-neutral-300">

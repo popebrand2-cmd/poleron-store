@@ -2,8 +2,12 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { setHoodieColor, useHoodieColor, type HoodieColor } from "@/lib/hoodie-color";
+import { CHEST } from "@/lib/hoodie-stage";
+import Txt from "@/components/edit/Txt";
+import { useEditMode } from "@/components/edit/EditModeContext";
+import { useSiteImage, useSiteText } from "@/components/SiteContentProvider";
 
-export type HoodieVariant = { id: string; label: string; swatch: string; before: string; after: string };
+type Variant = { id: HoodieColor; labelKey: string; swatch: string; garment: string; design: string };
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
@@ -14,7 +18,14 @@ const radius = (w: number, touch: boolean) => (touch ? clamp(w * 0.36, 100, 190)
 // follows the cursor on desktop and the finger on touch screens (held slightly
 // above the fingertip so the hand doesn't cover it). Only CSS variables change
 // per frame — no canvas and no base64 images.
-export default function RevealStage({ variants, alt }: { variants: HoodieVariant[]; alt: string }) {
+export default function RevealStage({ alt }: { alt: string }) {
+  const { editMode } = useEditMode();
+  const hintMouse = useSiteText("hero.hintMouse");
+  const hintTouch = useSiteText("hero.hintTouch");
+  const variants: Variant[] = [
+    { id: "negro", labelKey: "hero.colorBlack", swatch: "#0b0b0b", garment: useSiteImage("image.hoodieBlack"), design: useSiteImage("image.designOnBlack") },
+    { id: "blanco", labelKey: "hero.colorWhite", swatch: "#f5f5f0", garment: useSiteImage("image.hoodieWhite"), design: useSiteImage("image.designOnWhite") },
+  ];
   const active = useHoodieColor();
   const stageRef = useRef<HTMLDivElement>(null);
   const [touchUI, setTouchUI] = useState(false);
@@ -179,8 +190,8 @@ export default function RevealStage({ variants, alt }: { variants: HoodieVariant
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={v.before}
-              alt={`${alt} ${v.label.toLowerCase()} sin diseño`}
+              src={v.garment}
+              alt={`${alt} ${v.id} sin diseño`}
               width={1200}
               height={990}
               fetchPriority={i === 0 ? "high" : "auto"}
@@ -188,24 +199,23 @@ export default function RevealStage({ variants, alt }: { variants: HoodieVariant
               draggable={false}
               className="absolute inset-0 h-full w-full object-contain"
             />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={v.after}
-              alt={`${alt} ${v.label.toLowerCase()} con un diseño personalizado`}
-              width={1200}
-              height={990}
-              decoding="async"
-              draggable={false}
-              className="reveal-after absolute inset-0 h-full w-full object-contain"
-            />
+            {/* the same garment with the sample design on the chest, revealed by the spotlight */}
+            <div className="reveal-after absolute inset-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={v.garment} alt="" width={1200} height={990} decoding="async" draggable={false} className="absolute inset-0 h-full w-full object-contain" />
+              <div className="absolute" style={CHEST}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={v.design} alt={`${alt} ${v.id} con un diseño personalizado`} decoding="async" draggable={false} className="h-full w-full object-contain" />
+              </div>
+            </div>
           </div>
         ))}
 
         <span className="glass-dark pointer-events-none absolute left-2 top-2 rounded-full px-3 py-1 font-display text-xl uppercase tracking-wide text-white">
-          Antes
+          <Txt k="hero.before" />
         </span>
         <span className="glass-neon pointer-events-none absolute right-2 top-2 rounded-full px-3 py-1 font-display text-xl uppercase tracking-wide text-black">
-          Después
+          <Txt k="hero.after" />
         </span>
 
         {!touched && (
@@ -213,33 +223,34 @@ export default function RevealStage({ variants, alt }: { variants: HoodieVariant
             <span className="pope-nudge text-neon" aria-hidden="true">
               ◎
             </span>
-            {touchUI ? "Toca y arrastra sobre la prenda" : "Pasa el cursor sobre la prenda"}
+            {touchUI ? hintTouch : hintMouse}
           </p>
         )}
       </div>
 
       <div className="mt-4 flex flex-col items-center gap-2">
-        <p className="font-script text-2xl text-neon">Elige el color</p>
+        <Txt k="hero.colorLabel" as="p" className="font-script text-2xl text-neon" />
         <div role="radiogroup" aria-label="Color del polerón" className="glass-dark flex gap-1 rounded-full p-1.5">
           {variants.map((v) => {
             const on = v.id === active;
-            return (
-              <button
-                key={v.id}
-                type="button"
-                role="radio"
-                aria-checked={on}
-                onClick={() => setHoodieColor(v.id as HoodieColor)}
-                className={`flex items-center gap-2 rounded-full px-4 py-2 font-display text-2xl uppercase leading-none tracking-wide transition-colors ${
-                  on ? "glass-neon text-black" : "text-white hover:text-neon"
-                }`}
-              >
-                <span
-                  aria-hidden="true"
-                  className="h-5 w-5 rounded-full border border-white/40"
-                  style={{ background: v.swatch }}
-                />
-                {v.label}
+            const cls = `flex items-center gap-2 rounded-full px-4 py-2 font-display text-2xl uppercase leading-none tracking-wide transition-colors ${
+              on ? "glass-neon text-black" : "text-white hover:text-neon"
+            }`;
+            const swatch = (
+              <span aria-hidden="true" className="h-5 w-5 rounded-full border border-white/40" style={{ background: v.swatch }} />
+            );
+            // While editing, the label must be typeable, so it can't live inside a <button>.
+            return editMode ? (
+              <div key={v.id} className={cls}>
+                <button type="button" onClick={() => setHoodieColor(v.id)} aria-label={v.id}>
+                  {swatch}
+                </button>
+                <Txt k={v.labelKey} />
+              </div>
+            ) : (
+              <button key={v.id} type="button" role="radio" aria-checked={on} onClick={() => setHoodieColor(v.id)} className={cls}>
+                {swatch}
+                <Txt k={v.labelKey} />
               </button>
             );
           })}

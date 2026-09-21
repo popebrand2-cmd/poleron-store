@@ -1,15 +1,15 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-
-const WHATSAPP_NUMBER = "56995162982";
-const DEFAULT_MESSAGE = "Hola! Tengo una consulta sobre mi personalización en POPE.";
+import { useSiteText } from "./SiteContentProvider";
 
 export default function WhatsAppButton() {
   const pathname = usePathname();
+  const number = useSiteText("setting.whatsappNumber").replace(/D/g, "");
+  const message = useSiteText("setting.whatsappMessage");
   if (pathname?.startsWith("/admin")) return null;
 
-  const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(DEFAULT_MESSAGE)}`;
+  const href = `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 
   return (
     <a
