@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SocialDock from "@/components/SocialDock";
+import OfferPopup from "@/components/OfferPopup";
 import MetaPixel from "@/components/MetaPixel";
 import VisitTracker from "@/components/VisitTracker";
 import { EditModeProvider } from "@/components/edit/EditModeContext";
@@ -71,6 +72,7 @@ export default async function RootLayout({
           <div className="flex-1">{children}</div>
           <Footer />
           <SocialDock />
+          <OfferPopup />
           <EditModeToggle initialAccentColor={accentColor} />
         </EditModeProvider>
         </SiteContentProvider>

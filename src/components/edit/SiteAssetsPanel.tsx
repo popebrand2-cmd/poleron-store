@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { SITE_IMAGE_DEFAULTS, SITE_IMAGE_LABELS } from "@/lib/site-content";
 import { saveSiteText, uploadSiteImage } from "@/lib/site-edit-client";
 import { useSiteImage, useSiteText } from "@/components/SiteContentProvider";
+import { setPopupPreview } from "@/lib/popup-preview";
 
 function ImageSlot({ k }: { k: string }) {
   const router = useRouter();
@@ -110,6 +111,38 @@ function SettingField({ k, label, multiline, optional, placeholder }: { k: strin
   );
 }
 
+function PopupSettings() {
+  const router = useRouter();
+  const enabled = useSiteText("popup.enabled") === "1";
+
+  async function toggle(next: boolean) {
+    await saveSiteText("popup.enabled", next ? "1" : "0");
+    router.refresh();
+  }
+
+  return (
+    <div className="space-y-3 border-t border-white/10 pt-3">
+      <p className="text-xs font-bold uppercase tracking-wide text-neon">Popup de oferta</p>
+      <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-white">
+        <input type="checkbox" checked={enabled} onChange={(e) => toggle(e.target.checked)} className="h-4 w-4 accent-[var(--neon)]" />
+        Mostrar el popup a los visitantes
+      </label>
+      <p className="text-[11px] leading-tight text-neutral-400">
+        Apagado por defecto. Edita sus textos con «Ver popup», y actívalo cuando tu oferta esté lista.
+      </p>
+      <button
+        type="button"
+        onClick={() => setPopupPreview(true)}
+        className="rounded-full bg-neon px-3 py-1.5 text-[11px] font-bold uppercase text-black"
+      >
+        Ver popup
+      </button>
+      <SettingField k="popup.link" label="A dónde lleva el botón" placeholder="/#tienda o /productos/hoodie-oversize" />
+      <SettingField k="popup.delay" label="Segundos antes de aparecer" placeholder="4" />
+    </div>
+  );
+}
+
 // Everything that isn't plain text on the page: pictures and contact settings.
 export default function SiteAssetsPanel({ defaultOpen = false }: { defaultOpen?: boolean }) {
   return (
@@ -129,6 +162,7 @@ export default function SiteAssetsPanel({ defaultOpen = false }: { defaultOpen?:
           <SettingField k="setting.whatsappNumber" label="Número de WhatsApp (con código de país)" />
           <SettingField k="setting.whatsappMessage" label="Mensaje inicial de WhatsApp" multiline />
         </div>
+        <PopupSettings />
       </div>
     </details>
   );

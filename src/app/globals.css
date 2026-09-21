@@ -355,3 +355,9 @@ a.pope-social:hover, a.pope-social:focus-visible {
   box-shadow: 0 0 22px color-mix(in srgb, var(--neon) 55%, transparent);
 }
 a.pope-social:active { transform: scale(0.96); }
+
+/* ---------- Popup de oferta ---------- */
+.pope-popup-backdrop { animation: popupFade 0.35s ease-out both; }
+.pope-popup { animation: popupIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; box-shadow: 0 30px 80px -20px color-mix(in srgb, var(--neon) 35%, transparent); }
+@keyframes popupFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popupIn { from { opacity: 0; transform: translateY(24px) scale(0.96); } to { opacity: 1; transform: none; } }

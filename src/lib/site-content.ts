@@ -74,6 +74,14 @@ export const SITE_TEXT_DEFAULTS: Record<string, string> = {
   "browse.tees": "Poleras",
   "collections.cta": "Personaliza aquí",
 
+  "popup.enabled": "0",
+  "popup.delay": "4",
+  "popup.link": "/#tienda",
+  "popup.badge": "Oferta",
+  "popup.title": "Tu diseño, con oferta",
+  "popup.text": "Escribe aquí los detalles de tu oferta: qué incluye y hasta cuándo está disponible.",
+  "popup.cta": "Aprovechar",
+  "popup.dismiss": "No, gracias",
   "setting.instagramUrl": "",
   "setting.facebookUrl": "",
   "footer.follow": "Síguenos",
@@ -90,6 +98,7 @@ export const SITE_IMAGE_DEFAULTS: Record<string, string> = {
   "image.hoodieWhite": "/preview/hoodie-white-before.webp",
   "image.designOnBlack": "/preview/design-sample.png",
   "image.designOnWhite": "/preview/design-sample-black.png",
+  "image.popup": "/preview/hoodie-after.webp",
 };
 
 export const SITE_IMAGE_LABELS: Record<string, { label: string; hint: string }> = {
@@ -99,6 +108,7 @@ export const SITE_IMAGE_LABELS: Record<string, { label: string; hint: string }> 
   "image.hoodieWhite": { label: "Polerón blanco (sin diseño)", hint: "Misma proporción y encuadre que el negro." },
   "image.designOnBlack": { label: "Diseño de muestra sobre el negro", hint: "PNG transparente, cuadrado." },
   "image.designOnWhite": { label: "Diseño de muestra sobre el blanco", hint: "PNG transparente, cuadrado." },
+  "image.popup": { label: "Imagen del popup de oferta", hint: "PNG/WEBP con fondo transparente o negro." },
 };
 
 export function siteText(map: Record<string, string>, key: string): string {
