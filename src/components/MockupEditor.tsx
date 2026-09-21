@@ -853,7 +853,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           )}
           {hasDesign && !pickingBgColor && !cropping && (
             <button type="button" onClick={handleStartPickBgColor} disabled={removingBg} className={PILL_BTN}>
-              Elegir color de fondo
+              Quitar fondo negro
             </button>
           )}
           {pickingBgColor && (
@@ -879,8 +879,8 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         )}
         {pickingBgColor && (
           <p className="text-center text-sm font-medium text-green-700">
-            Haz clic sobre el color de fondo de tu diseño que quieres quitar (funciona con cualquier color, no solo
-            blanco).
+            Haz clic sobre el fondo negro de tu diseño para quitarlo (si tu fondo es de otro color, haz clic sobre ese
+            color).
           </p>
         )}
         <div className="flex flex-wrap items-center justify-center gap-3">
