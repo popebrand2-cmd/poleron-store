@@ -184,6 +184,9 @@ export default function RealVideos() {
   const listRef = useRef<HTMLUListElement>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Set when the browser refused to autoplay, or while the (large) clip is still buffering.
+  const [blocked, setBlocked] = useState(false);
+  const [buffering, setBuffering] = useState(false);
 
   const all: Card[] = useMemo(() => {
     const out: Card[] = [];
@@ -218,8 +221,9 @@ export default function RealVideos() {
     cards.forEach((_, i) => {
       const v = videoRefs.current[i];
       if (!v) return;
-      if (i === current && inView && open === null) v.play().catch(() => {});
-      else v.pause();
+      if (i === current && inView && open === null) {
+        v.play().then(() => setBlocked(false)).catch(() => setBlocked(true));
+      } else v.pause();
     });
   }, [cards, current, inView, open]);
 
@@ -274,7 +278,19 @@ export default function RealVideos() {
                   if (hoverTimer.current) clearTimeout(hoverTimer.current);
                 }}
                 onFocus={() => setActive(i)}
-                onClick={() => (on ? setOpen(i) : setActive(i))}
+                onClick={() => {
+                  if (on) {
+                    setOpen(i);
+                    return;
+                  }
+                  setActive(i);
+                  setBlocked(false);
+                  const v = videoRefs.current[i];
+                  if (v) {
+                    v.muted = true;
+                    v.play().catch(() => setBlocked(true));
+                  }
+                }}
                 aria-label={`${on ? "Ver con sonido" : "Abrir"}${c.caption ? `: ${c.caption}` : ""}`}
                 aria-current={on}
                 className={`group relative block h-full w-full overflow-hidden rounded-3xl border-2 bg-neutral-900 text-left transition-[border-color,box-shadow,filter] duration-[900ms] ease-in-out ${
@@ -286,12 +302,24 @@ export default function RealVideos() {
                 <video
                   ref={(el) => {
                     videoRefs.current[i] = el;
+                    if (el) {
+                      // React sets `muted` as a property only; iOS/Safari also want the attribute
+                      el.defaultMuted = true;
+                      el.muted = true;
+                      el.setAttribute("muted", "");
+                    }
                   }}
+                  onWaiting={() => on && setBuffering(true)}
+                  onPlaying={() => {
+                    setBuffering(false);
+                    setBlocked(false);
+                  }}
+                  onCanPlay={() => setBuffering(false)}
                   src={`${c.src}#t=0.1`}
                   muted
                   loop
                   playsInline
-                  preload="metadata"
+                  preload={on ? "auto" : "metadata"}
                   tabIndex={-1}
                   aria-hidden="true"
                   className={`pointer-events-none h-full w-full object-cover transition-transform duration-[1400ms] ease-out ${
@@ -312,6 +340,14 @@ export default function RealVideos() {
                 {/* Open card: chip, title and the invitation to play with sound */}
                 {on && (
                   <>
+                    {buffering && !blocked && (
+                      <span className="pointer-events-none absolute right-3 top-3 h-9 w-9 animate-spin rounded-full border-2 border-white/25 border-t-neon" aria-label="Cargando video" />
+                    )}
+                    {blocked && (
+                      <span className="pointer-events-none absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-neon backdrop-blur-sm">
+                        <PlayIcon className="h-7 w-7" />
+                      </span>
+                    )}
                     {c.tag && (
                       <span className="pope-strip-fade glass-neon pointer-events-none absolute left-3 top-3 rounded-full px-3 py-0.5 font-display text-lg font-bold uppercase leading-none tracking-wide text-black">
                         {c.tag}
