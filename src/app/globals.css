@@ -19,3 +19,71 @@ body {
   background: var(--paper);
   color: var(--ink);
 }
+
+/* Admin back-office in the POPE brand look (black + neon accent). The admin
+   components are written with light Tailwind utilities, so this remaps that
+   small set of classes inside .admin-dark instead of rewriting every form. */
+.admin-dark {
+  background: #0a0a0a;
+  color: #f5f5f4;
+  color-scheme: dark;
+}
+.admin-dark .bg-white { background-color: #111111; }
+.admin-dark .bg-neutral-50,
+.admin-dark .bg-neutral-100 { background-color: #171717; }
+.admin-dark .bg-neutral-200 { background-color: #262626; }
+.admin-dark .border-neutral-100,
+.admin-dark .border-neutral-200,
+.admin-dark .border-neutral-300 { border-color: #2a2a2a; }
+.admin-dark .divide-neutral-200 > :not([hidden]) ~ :not([hidden]) { border-color: #2a2a2a; }
+.admin-dark .text-neutral-900,
+.admin-dark .text-neutral-700 { color: #f5f5f4; }
+.admin-dark .text-neutral-600,
+.admin-dark .text-neutral-500 { color: #a3a3a3; }
+.admin-dark .text-neutral-400 { color: #737373; }
+.admin-dark .text-red-600 { color: #f87171; }
+.admin-dark .text-fuchsia-600,
+.admin-dark .text-emerald-600 { color: var(--neon); }
+.admin-dark .border-fuchsia-500,
+.admin-dark .hover\:border-fuchsia-400:hover { border-color: var(--neon); }
+.admin-dark .bg-fuchsia-500 { background-color: var(--neon); }
+.admin-dark .bg-fuchsia-500\/10 { background-color: color-mix(in srgb, var(--neon) 12%, transparent); }
+.admin-dark .bg-neutral-900 { background-color: var(--neon); color: #000; }
+.admin-dark .bg-neutral-900.text-white { color: #000; }
+.admin-dark .hover\:bg-neutral-50:hover { background-color: #1c1c1c; }
+.admin-dark .focus\:border-neutral-900:focus { border-color: var(--neon); }
+.admin-dark input,
+.admin-dark textarea,
+.admin-dark select { background-color: #0a0a0a; color: #f5f5f4; }
+.admin-dark a.hover\:underline:hover { color: var(--neon); }
+.admin-dark h1 {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+.admin-dark h1::after {
+  content: "";
+  display: block;
+  width: 2.5rem;
+  height: 3px;
+  margin-top: 0.4rem;
+  background: var(--neon);
+}
+.admin-dark h2 {
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.admin-dark nav a {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.admin-dark button.bg-neutral-900,
+.admin-dark a.bg-neutral-900 {
+  border-radius: 9999px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

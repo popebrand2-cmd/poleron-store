@@ -1,7 +1,11 @@
-// The storefront (home, product, cart, checkout) uses a dark brand theme,
-// but the admin back-office stays plain/light for readability — this
-// wrapper opts every /admin/* page back into light colors explicitly so it
-// doesn't inherit the dark body background/text from globals.css.
+// The admin back-office wears the same black + neon POPE look as the
+// storefront; the remapping of its light utility classes lives in
+// globals.css under .admin-dark.
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <div className="min-h-screen bg-neutral-50 text-neutral-900">{children}</div>;
+  return (
+    <div className="admin-dark min-h-screen">
+      <div className="h-1 bg-neon" />
+      {children}
+    </div>
+  );
 }
