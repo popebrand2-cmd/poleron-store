@@ -51,12 +51,6 @@ async function compactSnapshot(dataUrl: string): Promise<string> {
   }
 }
 
-const STEPS = [
-  { n: "01", label: "Elige", href: "#paso-1" },
-  { n: "02", label: "Personaliza", href: "#paso-2" },
-  { n: "03", label: "Confirma", href: "#paso-3" },
-];
-
 function StepTitle({ n, title, hint }: { n: string; title: string; hint?: string }) {
   return (
     <div className="mb-3 flex items-end gap-3">
@@ -269,18 +263,6 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
           {formatCLP(unitPrice)}
         </p>
         <VatNote />
-        <nav aria-label="Pasos" className="mt-4 flex flex-wrap gap-2">
-          {STEPS.map((st) => (
-            <a
-              key={st.n}
-              href={st.href}
-              className="flex items-center gap-2 rounded-full border-2 border-black bg-white px-3 py-1 font-display text-xl font-bold uppercase leading-none tracking-wide text-black transition hover:bg-neon"
-            >
-              <span className="rounded-full bg-black px-2 py-0.5 text-neon">{st.n}</span>
-              {st.label}
-            </a>
-          ))}
-        </nav>
         {editing && (
           <p className="mt-3 rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
             Estás editando un producto de tu carrito. Al confirmar, reemplaza al anterior.
