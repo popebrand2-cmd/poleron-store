@@ -94,7 +94,7 @@ export default function FeaturedCarousel({ products }: { products: FeaturedProdu
     <div className="relative">
       <div
         ref={scrollerRef}
-        className="scrollbar-none flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-2"
+        className="scrollbar-none -mx-4 -mb-8 -mt-6 flex snap-x snap-mandatory scroll-px-4 gap-5 overflow-x-auto scroll-smooth px-4 pb-10 pt-6"
         style={{ scrollbarWidth: "none" }}
       >
         {products.map((p) => (
@@ -103,7 +103,7 @@ export default function FeaturedCarousel({ products }: { products: FeaturedProdu
       </div>
 
       {products.length > 2 && (
-        <div className="mt-4 flex justify-end gap-2">
+        <div className="mt-6 flex justify-end gap-2">
           <button
             type="button"
             onClick={() => scrollBy(-1)}

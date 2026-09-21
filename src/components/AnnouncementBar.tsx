@@ -26,7 +26,7 @@ export default function AnnouncementBar() {
   }
 
   return (
-    <div className="flex h-9 items-center justify-center gap-3 bg-black/40 px-4 text-[11px] font-semibold tracking-wide text-white sm:text-xs">
+    <div className="flex h-9 items-center justify-center gap-3 bg-black/90 backdrop-blur-md px-4 text-[11px] font-semibold tracking-wide text-white sm:text-xs">
       <button
         type="button"
         onClick={prev}

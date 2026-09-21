@@ -17,7 +17,7 @@ export default function CollectionCarousel({ designs }: { designs: CollectionDes
     <div className="relative">
       <div
         ref={scrollerRef}
-        className="scrollbar-none flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth pb-2"
+        className="scrollbar-none -mx-4 -mb-8 -mt-6 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto scroll-smooth px-4 pb-10 pt-6"
         style={{ scrollbarWidth: "none" }}
       >
         {designs.map((d) => (
@@ -39,7 +39,7 @@ export default function CollectionCarousel({ designs }: { designs: CollectionDes
       </div>
 
       {designs.length > 4 && (
-        <div className="mt-3 flex justify-end gap-2">
+        <div className="mt-6 flex justify-end gap-2">
           <button
             type="button"
             onClick={() => scrollBy(-1)}
