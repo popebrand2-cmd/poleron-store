@@ -51,10 +51,9 @@ async function compactSnapshot(dataUrl: string): Promise<string> {
   }
 }
 
-function StepTitle({ n, title, hint }: { n: string; title: string; hint?: string }) {
+function StepTitle({ title, hint }: { title: string; hint?: string }) {
   return (
-    <div className="mb-3 flex items-end gap-3">
-      <span className="font-display text-5xl font-bold leading-[0.8] text-black">{n}</span>
+    <div className="mb-3">
       <div>
         <h2 className="font-display text-3xl font-bold uppercase leading-none text-black">{title}</h2>
         {hint && <p className="mt-0.5 text-xs text-neutral-500">{hint}</p>}
@@ -257,7 +256,6 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     <div className="grid min-w-0 grid-cols-1 gap-8 pb-28 lg:grid-cols-2 lg:gap-x-10 lg:pb-0">
       {/* Header + the three stages */}
       <header className="lg:col-span-2">
-        <p className="font-script text-2xl text-black">Pope simple</p>
         <h1 className="font-display text-5xl font-bold uppercase leading-[0.9] text-black sm:text-6xl">{product.name}</h1>
         <p className="mt-1 text-2xl font-semibold text-black" aria-live="polite">
           {formatCLP(unitPrice)}
@@ -272,7 +270,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
 
       {/* 01 — ELIGE */}
       <section id="paso-1" className="scroll-mt-28 lg:col-start-2 lg:row-start-2">
-        <StepTitle n="01" title="Elige" hint="Color, talla y técnica" />
+        <StepTitle title="Elige" hint="Color, talla y técnica" />
 
         <div>
           <p className="mb-2 text-sm font-medium">Color: {color.name}</p>
@@ -365,7 +363,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
 
       {/* 02 — PERSONALIZA */}
       <section id="paso-2" className="min-w-0 scroll-mt-28 lg:col-start-1 lg:row-span-2 lg:row-start-2">
-        <StepTitle n="02" title="Personaliza" hint="Sube tu diseño, muévelo y mira cómo queda" />
+        <StepTitle title="Personaliza" hint="Sube tu diseño, muévelo y mira cómo queda" />
 
         <div className="mb-4 flex justify-center gap-2 rounded-lg bg-neutral-100 p-1">
           {color.views.map((v) => (
@@ -463,7 +461,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
 
       {/* 03 — CONFIRMA */}
       <section id="paso-3" className="scroll-mt-28 lg:col-start-2 lg:row-start-3">
-        <StepTitle n="03" title="Confirma" hint="Revisa tu prenda y compra" />
+        <StepTitle title="Confirma" hint="Revisa tu prenda y compra" />
 
         <dl className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 text-sm">
           <div className="flex justify-between gap-4 px-4 py-2">
