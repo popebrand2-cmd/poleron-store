@@ -5,6 +5,7 @@ import EditableText from "@/components/edit/EditableText";
 import EditableLink from "@/components/edit/EditableLink";
 import Txt from "@/components/edit/Txt";
 import PopeHero from "@/components/PopeHero";
+import RealWorks from "@/components/RealWorks";
 import HowItWorks from "@/components/preview/HowItWorks";
 import TrustBadgesList from "@/components/edit/TrustBadgesList";
 import FaqList from "@/components/edit/FaqList";
@@ -156,6 +157,9 @@ export default async function Home() {
           )}
         </div>
       </section>
+
+      {/* Photos of real, finished garments (hidden until the owner uploads some) */}
+      <RealWorks />
 
       {/* Preset design collections */}
       {collectionsWithDesigns.length > 0 && (

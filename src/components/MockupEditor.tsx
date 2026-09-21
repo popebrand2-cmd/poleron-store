@@ -66,13 +66,61 @@ const FONT_OPTIONS = [
 
 type MockupEditorProps = {
   view: MockupView;
+  // Fired once each time the customer adds a NEW design (upload or ready-made) — not when restoring one.
+  onDesignAdded?: () => void;
   initialPlacement?: ViewPlacement | null;
   sizes?: SizeMeasurements[];
   selectedSizeLabel?: string;
 };
 
+// Round 44px button that repeats while it is held down (nudging a design with a finger).
+function PadButton({ label, onStep, children }: { label: string; onStep: () => void; children: React.ReactNode }) {
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const interval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stepRef = useRef(onStep);
+  stepRef.current = onStep;
+
+  function stop() {
+    if (timer.current) clearTimeout(timer.current);
+    if (interval.current) clearInterval(interval.current);
+    timer.current = null;
+    interval.current = null;
+  }
+  useEffect(() => stop, []);
+
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onPointerDown={(e) => {
+        e.preventDefault();
+        stepRef.current();
+        stop();
+        timer.current = setTimeout(() => {
+          interval.current = setInterval(() => stepRef.current(), 70);
+        }, 350);
+      }}
+      onPointerUp={stop}
+      onPointerLeave={stop}
+      onPointerCancel={stop}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          stepRef.current();
+        }
+      }}
+      className="flex h-11 w-11 touch-none select-none items-center justify-center rounded-full border-2 border-black bg-white text-lg font-bold leading-none text-black transition active:bg-neon hover:border-neon hover:bg-neon"
+    >
+      {children}
+    </button>
+  );
+}
+
 const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
-  function MockupEditor({ view, initialPlacement, sizes = [], selectedSizeLabel = "" }, ref) {
+  function MockupEditor({ view, initialPlacement, onDesignAdded, sizes = [], selectedSizeLabel = "" }, ref) {
+    const onDesignAddedRef = useRef(onDesignAdded);
+    onDesignAddedRef.current = onDesignAdded;
     const canvasElRef = useRef<HTMLCanvasElement>(null);
     // Measures the REAL available width (not the fixed CANVAS_MAX_WIDTH cap)
     // so the canvas shrinks to fit narrow/mobile viewports instead of
@@ -352,7 +400,53 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         updateDesignBadge(img);
         canvas.renderAll();
         setHasDesign(true);
+        if (!placement) onDesignAddedRef.current?.();
       });
+    }
+
+    // --- Button controls: touch-friendly alternatives to dragging/scaling -----
+    // They act on the selected design/text (or the design when nothing is selected).
+    function adjustTarget(): fabric.FabricObject | null {
+      const canvas = fabricCanvasRef.current;
+      if (!canvas) return null;
+      const active = canvas.getActiveObject();
+      if (active && (active === designRef.current || active === textRef.current)) return active;
+      return designRef.current ?? textRef.current;
+    }
+
+    function finishAdjust(obj: fabric.FabricObject) {
+      const canvas = fabricCanvasRef.current;
+      if (!canvas) return;
+      obj.setCoords();
+      canvas.setActiveObject(obj);
+      updateDesignBadge(obj);
+      canvas.requestRenderAll();
+    }
+
+    function moveBy(dx: number, dy: number) {
+      const obj = adjustTarget();
+      const canvas = fabricCanvasRef.current;
+      if (!obj || !canvas) return;
+      const left = Math.min(canvas.getWidth(), Math.max(0, (obj.left ?? 0) + dx));
+      const top = Math.min(canvas.getHeight(), Math.max(0, (obj.top ?? 0) + dy));
+      obj.set({ left, top });
+      finishAdjust(obj);
+    }
+
+    function scaleBy(factor: number) {
+      const obj = adjustTarget();
+      if (!obj) return;
+      obj.set({ scaleX: (obj.scaleX ?? 1) * factor, scaleY: (obj.scaleY ?? 1) * factor });
+      clampObjectToMaxSize(obj);
+      finishAdjust(obj);
+    }
+
+    function centerInZone() {
+      const obj = adjustTarget();
+      if (!obj) return;
+      const zone = currentZoneRect();
+      obj.set({ left: zone.left + zone.width / 2, top: zone.top + zone.height / 2 });
+      finishAdjust(obj);
     }
 
     function handleAddText() {
@@ -818,6 +912,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
             </span>
           )}
         </div>
+        {/* Main controls: always visible */}
         <div className="flex flex-wrap items-center justify-center gap-3">
           <label className="cursor-pointer rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white">
             {uploading ? "Subiendo..." : hasDesign ? "Cambiar diseño" : "Subir tu diseño"}
@@ -831,11 +926,6 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
               }}
             />
           </label>
-          {hasDesign && !pickingBgColor && !cropping && (
-            <button type="button" onClick={handleStartCrop} className={PILL_BTN}>
-              Recortar imagen
-            </button>
-          )}
           {cropping && (
             <>
               <button type="button" onClick={handleApplyCrop} disabled={applyingCrop} className={PILL_BTN}>
@@ -846,29 +936,9 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
               </button>
             </>
           )}
-          {hasDesign && !pickingBgColor && !cropping && (
-            <button type="button" onClick={handleRemoveWhiteBg} disabled={removingBg} className={PILL_BTN}>
-              {removingBg ? "Quitando fondo..." : "Quitar fondo blanco"}
-            </button>
-          )}
-          {hasDesign && !pickingBgColor && !cropping && (
-            <button type="button" onClick={handleStartPickBgColor} disabled={removingBg} className={PILL_BTN}>
-              Quitar fondo negro
-            </button>
-          )}
           {pickingBgColor && (
             <button type="button" onClick={handleCancelPickBgColor} className={PILL_BTN_DANGER}>
               Cancelar selección
-            </button>
-          )}
-          {hasDesign && !pickingBgColor && !cropping && (
-            <button type="button" onClick={handleSegmentSubject} disabled={segmentingSubject} className={PILL_BTN}>
-              {segmentingSubject ? "Aislando (puede tardar)..." : "Aislar sujeto (IA)"}
-            </button>
-          )}
-          {hasDesign && !pickingBgColor && !cropping && (
-            <button type="button" onClick={handleRemoveDesign} className={PILL_BTN_DANGER}>
-              Quitar
             </button>
           )}
         </div>
@@ -883,7 +953,73 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
             color).
           </p>
         )}
-        <div className="flex flex-wrap items-center justify-center gap-3">
+
+        {hasDesign && !cropping && !pickingBgColor && (
+          <div className="mx-auto flex max-w-md flex-wrap items-center justify-center gap-x-5 gap-y-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3" aria-label="Ajustes del diseño">
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[11px] font-bold uppercase tracking-wide text-neutral-500">Mover</span>
+              <div className="flex gap-1.5">
+                <PadButton label="Mover a la izquierda" onStep={() => moveBy(-8, 0)}>←</PadButton>
+                <PadButton label="Mover hacia arriba" onStep={() => moveBy(0, -8)}>↑</PadButton>
+                <PadButton label="Mover hacia abajo" onStep={() => moveBy(0, 8)}>↓</PadButton>
+                <PadButton label="Mover a la derecha" onStep={() => moveBy(8, 0)}>→</PadButton>
+              </div>
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[11px] font-bold uppercase tracking-wide text-neutral-500">Tamaño</span>
+              <div className="flex gap-1.5">
+                <PadButton label="Hacer más pequeño" onStep={() => scaleBy(0.94)}>−</PadButton>
+                <PadButton label="Hacer más grande" onStep={() => scaleBy(1.06)}>+</PadButton>
+              </div>
+            </div>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[11px] font-bold uppercase tracking-wide text-neutral-500">Posición</span>
+              <button
+                type="button"
+                onClick={centerInZone}
+                className="h-11 rounded-full border-2 border-black bg-white px-4 text-xs font-bold uppercase tracking-wide text-black transition hover:border-neon hover:bg-neon"
+              >
+                Centrar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Secondary tools: collapsed by default so the phone screen stays simple */}
+        {!cropping && !pickingBgColor && (
+          <details className="mx-auto max-w-md rounded-xl border border-neutral-200 bg-white">
+            <summary className="cursor-pointer select-none px-4 py-2.5 text-center text-xs font-bold uppercase tracking-wide text-neutral-700">
+              Más herramientas (recorte, fondo, texto…)
+            </summary>
+            <div className="space-y-3 px-3 pb-3 pt-1">
+              <div className="flex flex-wrap items-center justify-center gap-2">
+          {hasDesign && !pickingBgColor && !cropping && (
+            <button type="button" onClick={handleStartCrop} className={PILL_BTN}>
+              Recortar imagen
+            </button>
+          )}
+          {hasDesign && !pickingBgColor && !cropping && (
+            <button type="button" onClick={handleRemoveWhiteBg} disabled={removingBg} className={PILL_BTN}>
+              {removingBg ? "Quitando fondo..." : "Quitar fondo blanco"}
+            </button>
+          )}
+          {hasDesign && !pickingBgColor && !cropping && (
+            <button type="button" onClick={handleStartPickBgColor} disabled={removingBg} className={PILL_BTN}>
+              Quitar fondo negro
+            </button>
+          )}
+          {hasDesign && !pickingBgColor && !cropping && (
+            <button type="button" onClick={handleSegmentSubject} disabled={segmentingSubject} className={PILL_BTN}>
+              {segmentingSubject ? "Aislando (puede tardar)..." : "Aislar sujeto (IA)"}
+            </button>
+          )}
+          {hasDesign && !pickingBgColor && !cropping && (
+            <button type="button" onClick={handleRemoveDesign} className={PILL_BTN_DANGER}>
+              Quitar
+            </button>
+          )}
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-3">
           {!hasText && !cropping && !pickingBgColor ? (
             <button type="button" onClick={handleAddText} className={PILL_BTN}>
               + Agregar texto
@@ -919,9 +1055,13 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
             </>
           ) : null}
         </div>
+
+            </div>
+          </details>
+        )}
         {error && <p className="text-center text-sm text-red-600">{error}</p>}
         <p className="text-center text-xs text-neutral-500">
-          Arrastra para mover, usa las esquinas para escalar{view.allowRotate ? " y rotar" : ""}. Doble clic sobre el
+          Arrastra para mover, usa las esquinas para escalar{view.allowRotate ? " y rotar" : ""}, o usa los botones de arriba. Doble clic sobre el
           texto para editarlo. El tamaño en cm que ves junto a tu diseño es real, según la talla elegida.
         </p>
       </div>

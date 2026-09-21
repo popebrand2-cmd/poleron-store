@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import MockupEditor, { type MockupEditorHandle, type MockupView, type PresetPosition } from "./MockupEditor";
 import TryOnEditor from "./TryOnEditor";
+import ProductInfo, { VatNote } from "./ProductInfo";
 import { useCartStore } from "@/lib/cart-store";
 import { formatCLP } from "@/lib/money";
+import { trackEvent } from "@/lib/track";
 import type { DesignPlacementMap } from "@/types";
 
 export type PersonalizerProduct = {
@@ -25,9 +27,53 @@ export type PersonalizerProduct = {
   colors: { name: string; hex: string; views: MockupView[] }[];
 };
 
+// The cart keeps a snapshot of the mockup. A full-size PNG of a photo is several hundred KB, which
+// fills the browser's localStorage quickly, so it is stored as a compact JPEG instead.
+async function compactSnapshot(dataUrl: string): Promise<string> {
+  try {
+    const img = new Image();
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error("snapshot"));
+      img.src = dataUrl;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return dataUrl;
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0);
+    return canvas.toDataURL("image/jpeg", 0.85);
+  } catch {
+    return dataUrl;
+  }
+}
+
+const STEPS = [
+  { n: "01", label: "Elige", href: "#paso-1" },
+  { n: "02", label: "Personaliza", href: "#paso-2" },
+  { n: "03", label: "Confirma", href: "#paso-3" },
+];
+
+function StepTitle({ n, title, hint }: { n: string; title: string; hint?: string }) {
+  return (
+    <div className="mb-3 flex items-end gap-3">
+      <span className="font-display text-5xl font-bold leading-[0.8] text-black">{n}</span>
+      <div>
+        <h2 className="font-display text-3xl font-bold uppercase leading-none text-black">{title}</h2>
+        {hint && <p className="mt-0.5 text-xs text-neutral-500">{hint}</p>}
+      </div>
+    </div>
+  );
+}
+
 export default function ProductPersonalizer({ product }: { product: PersonalizerProduct }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const addItem = useCartStore((s) => s.addItem);
+  const removeItem = useCartStore((s) => s.removeItem);
 
   const [colorIndex, setColorIndex] = useState(0);
   const [sizeIndex, setSizeIndex] = useState(0);
@@ -43,6 +89,11 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
   const [activatedViews, setActivatedViews] = useState<Set<string>>(
     () => new Set(color.views[0] ? [color.views[0].label] : []),
   );
+
+  // Editing a design that is already in the cart (?editar=<id>): restore its color, size and
+  // placement, and replace that cart line when the customer confirms again.
+  const [editing, setEditing] = useState<{ id: string; quantity: number; placement: DesignPlacementMap } | null>(null);
+  const [editorNonce, setEditorNonce] = useState(0);
 
   const editorRefs = useRef<Record<string, MockupEditorHandle | null>>({});
   // Guards against a rapid double-click adding the item twice: `adding`
@@ -66,6 +117,55 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
       .catch(() => setCollections([]));
   }, []);
 
+  const size = product.sizes[sizeIndex];
+  const material = product.materials[materialIndex];
+  const unitPrice = product.basePrice + (size?.priceDelta ?? 0) + (material?.priceDelta ?? 0);
+
+  // --- Measurement: only moments that really happen -------------------------------------------
+  const viewedRef = useRef(false);
+  const customizedRef = useRef(false);
+  useEffect(() => {
+    if (viewedRef.current) return;
+    viewedRef.current = true;
+    trackEvent("ViewContent", {
+      content_type: "product",
+      content_ids: [product.id],
+      content_name: product.name,
+      value: product.basePrice,
+      currency: "CLP",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleDesignAdded() {
+    if (customizedRef.current) return;
+    customizedRef.current = true;
+    trackEvent("CustomizeProduct", { content_ids: [product.id], content_name: product.name });
+  }
+
+  // --- Restore a cart line for editing ---------------------------------------------------------
+  const editId = searchParams.get("editar");
+  useEffect(() => {
+    if (!editId) return;
+    const item = useCartStore.getState().items.find((i) => i.id === editId && i.productId === product.id);
+    if (!item) return;
+    const ci = Math.max(0, product.colors.findIndex((c) => c.name === item.colorName));
+    const si = Math.max(0, product.sizes.findIndex((s) => s.label === item.sizeLabel));
+    const mi = Math.max(0, product.materials.findIndex((m) => m.label === item.materialLabel));
+    const targetColor = product.colors[ci];
+    const firstWithDesign = targetColor.views.find((v) => item.designPlacement[v.label])?.label ?? targetColor.views[0]?.label ?? "";
+    setColorIndex(ci);
+    setSizeIndex(si);
+    setMaterialIndex(mi);
+    setActiveViewLabel(firstWithDesign);
+    // mount every view that has a design so all of them are restored (and re-saved) together
+    setActivatedViews(new Set(targetColor.views.filter((v) => item.designPlacement[v.label]).map((v) => v.label).concat(firstWithDesign)));
+    setEditing({ id: item.id, quantity: item.quantity, placement: item.designPlacement });
+    setEditorNonce((n) => n + 1);
+    customizedRef.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editId]);
+
   const activePlacement = activeViewLabel === "Frente" ? "FRONT" : activeViewLabel === "Espalda" ? "BACK" : null;
   const collectionsForView = collections
     .map((c) => ({ ...c, designs: c.designs.filter((d) => d.placement === activePlacement) }))
@@ -78,10 +178,6 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     }
   }
 
-  const size = product.sizes[sizeIndex];
-  const material = product.materials[materialIndex];
-  const unitPrice = product.basePrice + (size?.priceDelta ?? 0) + (material?.priceDelta ?? 0);
-
   function handleColorChange(index: number) {
     setColorIndex(index);
     editorRefs.current = {};
@@ -90,6 +186,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     setActivatedViews(new Set(firstLabel ? [firstLabel] : []));
     setTryOnSnapshot(null);
     setPresetFront(null);
+    setEditing((e) => (e ? { ...e, placement: {} } : e));
   }
 
   function handleViewChange(label: string) {
@@ -125,9 +222,13 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
 
       if (Object.keys(placement).length === 0) {
         setFormError("Sube al menos un diseño (frente, espalda o manga) antes de agregar al carrito.");
+        document.getElementById("paso-2")?.scrollIntoView({ behavior: "smooth", block: "start" });
         return;
       }
 
+      const preview = previewImageUrl ? await compactSnapshot(previewImageUrl) : "";
+      const quantity = editing?.quantity ?? 1;
+      if (editing) removeItem(editing.id);
       addItem({
         id: uuidv4(),
         productId: product.id,
@@ -138,9 +239,16 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
         sizeLabel: size?.label ?? "",
         materialLabel: material?.label ?? "",
         unitPrice,
-        quantity: 1,
-        previewImageUrl: previewImageUrl ?? "",
+        quantity,
+        previewImageUrl: preview,
         designPlacement: placement,
+      });
+      trackEvent("AddToCart", {
+        content_type: "product",
+        content_ids: [product.id],
+        content_name: product.name,
+        value: unitPrice * quantity,
+        currency: "CLP",
       });
       router.push("/carrito");
     } finally {
@@ -149,16 +257,141 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     }
   }
 
+  const hasMeasurements = product.sizes.some((s) => s.chestCm || s.lengthCm || s.sleeveCm);
+
   return (
-    <div className="grid min-w-0 grid-cols-1 gap-10 lg:grid-cols-2">
-      <div className="min-w-0">
+    <div className="grid min-w-0 grid-cols-1 gap-8 pb-28 lg:grid-cols-2 lg:gap-x-10 lg:pb-0">
+      {/* Header + the three stages */}
+      <header className="lg:col-span-2">
+        <p className="font-script text-2xl text-black">Pope simple</p>
+        <h1 className="font-display text-5xl font-bold uppercase leading-[0.9] text-black sm:text-6xl">{product.name}</h1>
+        <p className="mt-1 text-2xl font-semibold text-black" aria-live="polite">
+          {formatCLP(unitPrice)}
+        </p>
+        <VatNote />
+        <nav aria-label="Pasos" className="mt-4 flex flex-wrap gap-2">
+          {STEPS.map((st) => (
+            <a
+              key={st.n}
+              href={st.href}
+              className="flex items-center gap-2 rounded-full border-2 border-black bg-white px-3 py-1 font-display text-xl font-bold uppercase leading-none tracking-wide text-black transition hover:bg-neon"
+            >
+              <span className="rounded-full bg-black px-2 py-0.5 text-neon">{st.n}</span>
+              {st.label}
+            </a>
+          ))}
+        </nav>
+        {editing && (
+          <p className="mt-3 rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
+            Estás editando un producto de tu carrito. Al confirmar, reemplaza al anterior.
+          </p>
+        )}
+      </header>
+
+      {/* 01 — ELIGE */}
+      <section id="paso-1" className="scroll-mt-28 lg:col-start-2 lg:row-start-2">
+        <StepTitle n="01" title="Elige" hint="Color, talla y técnica" />
+
+        <div>
+          <p className="mb-2 text-sm font-medium">Color: {color.name}</p>
+          <div className="flex flex-wrap gap-3">
+            {product.colors.map((c, i) => (
+              <button
+                key={c.name}
+                type="button"
+                onClick={() => handleColorChange(i)}
+                aria-label={`Color ${c.name}`}
+                aria-pressed={i === colorIndex}
+                className={`h-11 w-11 rounded-full border-2 ${i === colorIndex ? "border-neon ring-2 ring-black" : "border-neutral-300"}`}
+                style={{ backgroundColor: c.hex }}
+                title={c.name}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <p className="mb-2 text-sm font-medium">Talla: {size?.label}</p>
+          <div className="flex flex-wrap gap-2">
+            {product.sizes.map((s, i) => (
+              <button
+                key={s.label}
+                type="button"
+                onClick={() => setSizeIndex(i)}
+                aria-pressed={i === sizeIndex}
+                className={`min-h-11 min-w-11 rounded-md border px-4 py-2 text-sm font-medium ${
+                  i === sizeIndex ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-300"
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+
+          {hasMeasurements && (
+            <details className="mt-3 rounded-lg border border-neutral-200">
+              <summary className="cursor-pointer select-none px-3 py-2 text-xs font-bold uppercase tracking-wide text-neutral-700">
+                Guía de tallas (medidas de la prenda en cm)
+              </summary>
+              <div className="overflow-x-auto px-3 pb-3">
+                <table className="w-full text-left text-sm">
+                  <thead className="text-xs uppercase text-neutral-500">
+                    <tr>
+                      <th className="py-1 pr-3 font-semibold">Talla</th>
+                      <th className="py-1 pr-3 font-semibold">Pecho</th>
+                      <th className="py-1 pr-3 font-semibold">Largo</th>
+                      <th className="py-1 font-semibold">Manga</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {product.sizes.map((s) => (
+                      <tr key={s.label} className={s.label === size?.label ? "bg-neon/30 font-semibold" : ""}>
+                        <td className="py-1 pr-3">{s.label}</td>
+                        <td className="py-1 pr-3">{s.chestCm ?? "—"}</td>
+                        <td className="py-1 pr-3">{s.lengthCm ?? "—"}</td>
+                        <td className="py-1">{s.sleeveCm ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </details>
+          )}
+        </div>
+
+        {product.materials.length > 0 && (
+          <div className="mt-5">
+            <p className="mb-2 text-sm font-medium">Material</p>
+            <div className="flex flex-wrap gap-2">
+              {product.materials.map((m, i) => (
+                <button
+                  key={m.label}
+                  type="button"
+                  onClick={() => setMaterialIndex(i)}
+                  aria-pressed={i === materialIndex}
+                  className={`min-h-11 rounded-md border px-4 py-2 text-sm font-medium ${
+                    i === materialIndex ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-300"
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* 02 — PERSONALIZA */}
+      <section id="paso-2" className="min-w-0 scroll-mt-28 lg:col-start-1 lg:row-span-2 lg:row-start-2">
+        <StepTitle n="02" title="Personaliza" hint="Sube tu diseño, muévelo y mira cómo queda" />
+
         <div className="mb-4 flex justify-center gap-2 rounded-lg bg-neutral-100 p-1">
           {color.views.map((v) => (
             <button
               key={v.label}
               type="button"
               onClick={() => handleViewChange(v.label)}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium ${
+              className={`min-h-11 flex-1 rounded-md px-3 py-1.5 text-sm font-medium ${
                 activeViewLabel === v.label ? "bg-white shadow" : "text-neutral-500"
               }`}
             >
@@ -167,7 +400,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
           ))}
         </div>
 
-        <div key={color.name} className="relative">
+        <div key={`${color.name}-${editorNonce}`} className="relative">
           {color.views.map((v) => (
             <div key={v.label} style={{ display: activeViewLabel === v.label ? "block" : "none" }}>
               {activatedViews.has(v.label) && (
@@ -175,6 +408,8 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
                   view={v}
                   sizes={product.sizes}
                   selectedSizeLabel={size?.label ?? ""}
+                  initialPlacement={editing?.placement[v.label] ?? null}
+                  onDesignAdded={handleDesignAdded}
                   ref={(handle) => {
                     editorRefs.current[v.label] = handle;
                   }}
@@ -228,7 +463,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
                           .find((d) => d.imageUrl === presetFront.url);
                         if (design) applyPresetDesign(design, pos);
                       }}
-                      className={`rounded-md border px-3 py-1.5 text-xs font-medium ${
+                      className={`min-h-11 rounded-md border px-3 py-1.5 text-xs font-medium ${
                         presetFront.position === pos
                           ? "border-neutral-900 bg-neutral-900 text-white"
                           : "border-neutral-300"
@@ -242,91 +477,84 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
             )}
           </div>
         )}
-      </div>
+      </section>
 
-      <div>
-        <h1 className="text-2xl font-bold">{product.name}</h1>
-        <p className="mt-1 text-xl font-medium">{formatCLP(unitPrice)}</p>
+      {/* 03 — CONFIRMA */}
+      <section id="paso-3" className="scroll-mt-28 lg:col-start-2 lg:row-start-3">
+        <StepTitle n="03" title="Confirma" hint="Revisa tu prenda y compra" />
 
-        <div className="mt-6">
-          <p className="mb-2 text-sm font-medium">Color: {color.name}</p>
-          <div className="flex gap-2">
-            {product.colors.map((c, i) => (
-              <button
-                key={c.name}
-                type="button"
-                onClick={() => handleColorChange(i)}
-                className={`h-9 w-9 rounded-full border-2 ${
-                  i === colorIndex ? "border-neon" : "border-neutral-300"
-                }`}
-                style={{ backgroundColor: c.hex }}
-                title={c.name}
-              />
-            ))}
+        <dl className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 text-sm">
+          <div className="flex justify-between gap-4 px-4 py-2">
+            <dt className="text-neutral-500">Prenda</dt>
+            <dd className="text-right font-medium">{product.name}</dd>
           </div>
-        </div>
-
-        <div className="mt-6">
-          <p className="mb-2 text-sm font-medium">Material</p>
-          <div className="flex flex-wrap gap-2">
-            {product.materials.map((m, i) => (
-              <button
-                key={m.label}
-                type="button"
-                onClick={() => setMaterialIndex(i)}
-                className={`rounded-md border px-4 py-2 text-sm font-medium ${
-                  i === materialIndex ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-300"
-                }`}
-              >
-                {m.label}
-              </button>
-            ))}
+          <div className="flex justify-between gap-4 px-4 py-2">
+            <dt className="text-neutral-500">Color · Talla</dt>
+            <dd className="text-right font-medium">
+              {color.name} · {size?.label}
+              {material ? ` · ${material.label}` : ""}
+            </dd>
           </div>
-        </div>
-
-        <div className="mt-6">
-          <p className="mb-2 text-sm font-medium">Talla</p>
-          <div className="flex flex-wrap gap-2">
-            {product.sizes.map((s, i) => (
-              <button
-                key={s.label}
-                type="button"
-                onClick={() => setSizeIndex(i)}
-                className={`rounded-md border px-4 py-2 text-sm font-medium ${
-                  i === sizeIndex ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-300"
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
+          <div className="flex items-baseline justify-between gap-4 px-4 py-3">
+            <dt className="text-neutral-500">Precio</dt>
+            <dd className="text-right">
+              <span className="font-display text-4xl font-bold leading-none">{formatCLP(unitPrice)}</span>
+              <VatNote className="mt-0.5" />
+            </dd>
           </div>
-        </div>
+        </dl>
 
-        {formError && <p className="mt-4 text-sm text-red-600">{formError}</p>}
+        {formError && (
+          <p role="alert" className="mt-4 text-sm text-red-600">
+            {formError}
+          </p>
+        )}
 
         <button
           type="button"
           onClick={handleAddToCart}
           disabled={adding}
-          className="mt-8 w-full rounded-md bg-neutral-900 px-6 py-3 font-medium text-white disabled:opacity-50"
+          className="mt-5 hidden min-h-12 w-full rounded-full bg-neon px-6 py-3 text-sm font-bold uppercase tracking-wide text-black transition hover:brightness-90 disabled:opacity-50 lg:block"
         >
-          {adding ? "Agregando..." : "Agregar al carrito"}
+          {adding ? "Agregando..." : editing ? "Guardar cambios" : "Agregar al carrito"}
         </button>
 
         <button
           type="button"
           onClick={handleTryOn}
-          className="mt-3 w-full rounded-md border border-neutral-300 px-6 py-3 text-sm font-medium text-neutral-700 hover:bg-neutral-50"
+          className="mt-3 min-h-11 w-full rounded-full border-2 border-black px-6 py-2.5 text-xs font-bold uppercase tracking-wide text-black transition hover:bg-neon"
         >
           ¿Cómo se vería puesto?
         </button>
-      </div>
+
+        <ProductInfo />
+      </section>
 
       {tryOnSnapshot && (
         <div className="min-w-0 lg:col-span-2">
           <TryOnEditor garmentSnapshotUrl={tryOnSnapshot} onClose={() => setTryOnSnapshot(null)} />
         </div>
       )}
+
+      {/* Phone: price and the main button are always in reach */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t-2 border-neon bg-black px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
+        <div className="mx-auto flex max-w-md items-center gap-3">
+          <div className="leading-none">
+            <p className="text-[11px] uppercase tracking-wide text-neutral-400">Total</p>
+            <p className="font-display text-4xl font-bold text-neon" aria-live="polite">
+              {formatCLP(unitPrice)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={adding}
+            className="min-h-12 flex-1 rounded-full bg-neon px-4 py-2.5 text-sm font-bold uppercase tracking-wide text-black transition active:brightness-90 disabled:opacity-50"
+          >
+            {adding ? "Agregando..." : editing ? "Guardar cambios" : "Agregar al carrito"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

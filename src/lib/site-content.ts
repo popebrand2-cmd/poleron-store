@@ -74,6 +74,16 @@ export const SITE_TEXT_DEFAULTS: Record<string, string> = {
   "browse.tees": "Poleras",
   "collections.cta": "Personaliza aquí",
 
+  "info.production": "Cada prenda se confecciona bajo pedido con tu diseño.",
+  "info.lead": "",
+  "info.delivery": "Retiro gratis en Santiago o despacho a domicilio por comuna. El costo se calcula en el checkout, antes de pagar.",
+  "info.payment": "Pagas con Mercado Pago. Nunca almacenamos los datos de tu tarjeta.",
+  "info.warranty": "Si algo llega con falla de fábrica, lo resolvemos contigo.",
+  "info.vat": "",
+  "info.contact": "¿Dudas antes de comprar? Escríbenos por WhatsApp.",
+  "works.eyebrow": "Trabajos reales",
+  "works.heading": "Hechos por POPE",
+  "works.subtext": "Prendas que ya fueron confeccionadas para nuestros clientes.",
   "popup.enabled": "0",
   "popup.delay": "4",
   "popup.link": "/#tienda",
@@ -99,6 +109,13 @@ export const SITE_IMAGE_DEFAULTS: Record<string, string> = {
   "image.designOnBlack": "/preview/design-sample.png",
   "image.designOnWhite": "/preview/design-sample-black.png",
   "image.popup": "/preview/hoodie-after.webp",
+  // Real photos of finished garments — empty until the owner uploads them.
+  "image.work1": "",
+  "image.work2": "",
+  "image.work3": "",
+  "image.work4": "",
+  "image.work5": "",
+  "image.work6": "",
 };
 
 export const SITE_IMAGE_LABELS: Record<string, { label: string; hint: string }> = {
@@ -109,6 +126,12 @@ export const SITE_IMAGE_LABELS: Record<string, { label: string; hint: string }> 
   "image.designOnBlack": { label: "Diseño de muestra sobre el negro", hint: "PNG transparente, cuadrado." },
   "image.designOnWhite": { label: "Diseño de muestra sobre el blanco", hint: "PNG transparente, cuadrado." },
   "image.popup": { label: "Imagen del popup de oferta", hint: "PNG/WEBP con fondo transparente o negro." },
+  "image.work1": { label: "Foto real 1", hint: "Una prenda ya fabricada (vertical, 4:5)." },
+  "image.work2": { label: "Foto real 2", hint: "Una prenda ya fabricada." },
+  "image.work3": { label: "Foto real 3", hint: "Una prenda ya fabricada." },
+  "image.work4": { label: "Foto real 4", hint: "Una prenda ya fabricada." },
+  "image.work5": { label: "Foto real 5", hint: "Una prenda ya fabricada." },
+  "image.work6": { label: "Foto real 6", hint: "Una prenda ya fabricada." },
 };
 
 export function siteText(map: Record<string, string>, key: string): string {

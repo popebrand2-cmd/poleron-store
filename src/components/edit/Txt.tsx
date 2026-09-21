@@ -10,12 +10,19 @@ export default function Txt({
   as = "span",
   className,
   multiline,
+  optional,
+  placeholder,
 }: {
   k: string;
   as?: keyof React.JSX.IntrinsicElements;
   className?: string;
   multiline?: boolean;
+  // Can be left empty (and is then hidden from visitors by its parent).
+  optional?: boolean;
+  placeholder?: string;
 }) {
   const value = useSiteText(k);
-  return <EditableText value={value} siteKey={k} as={as} className={className} multiline={multiline} />;
+  return (
+    <EditableText value={value} siteKey={k} as={as} className={className} multiline={multiline} allowEmpty={optional} placeholder={placeholder} />
+  );
 }

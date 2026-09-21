@@ -18,6 +18,14 @@ export function useSiteText(key: string): string {
   return texts[key] ?? SITE_TEXT_DEFAULTS[key] ?? "";
 }
 
+export function useSiteTexts(): Record<string, string> {
+  return useContext(Ctx).texts;
+}
+
+export function useSiteImages(): Record<string, string> {
+  return useContext(Ctx).images;
+}
+
 export function useSiteImage(key: string): string {
   const { images } = useContext(Ctx);
   return images[key] || SITE_IMAGE_DEFAULTS[key] || "";

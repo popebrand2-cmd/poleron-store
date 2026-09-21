@@ -41,7 +41,7 @@ function ImageSlot({ k }: { k: string }) {
     <li className="flex items-center gap-3">
       <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-neutral-800">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={current} alt="" className="max-h-full max-w-full object-contain" />
+        {current ? <img src={current} alt="" className="max-h-full max-w-full object-contain" /> : <span className="text-lg text-neutral-500">+</span>}
       </span>
       <div className="min-w-0 flex-1">
         <p className="truncate text-xs font-semibold text-white">{meta.label}</p>
@@ -54,11 +54,11 @@ function ImageSlot({ k }: { k: string }) {
           onClick={() => input.current?.click()}
           className="rounded-full bg-neon px-3 py-1 text-[11px] font-bold uppercase text-black disabled:opacity-50"
         >
-          {busy ? "Subiendo…" : "Cambiar"}
+          {busy ? "Subiendo…" : current ? "Cambiar" : "Subir"}
         </button>
         {!isDefault && (
           <button type="button" disabled={busy} onClick={restore} className="text-[11px] text-neutral-400 underline hover:text-white">
-            Restaurar
+            {SITE_IMAGE_DEFAULTS[k] ? "Restaurar" : "Quitar"}
           </button>
         )}
       </div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useCartStore } from "@/lib/cart-store";
 import { formatCLP } from "@/lib/money";
+import { VatNote } from "@/components/ProductInfo";
 
 export default function CartPage() {
   const { items, removeItem, setQuantity } = useCartStore();
@@ -59,6 +60,12 @@ export default function CartPage() {
                   onChange={(e) => setQuantity(item.id, Number(e.target.value))}
                   className="w-16 rounded-md border border-neutral-300 px-2 py-1 text-sm"
                 />
+                <Link
+                  href={`/productos/${item.productSlug}?editar=${item.id}`}
+                  className="text-sm font-medium text-neutral-700 underline underline-offset-2 hover:text-black"
+                >
+                  Editar diseño
+                </Link>
                 <button
                   onClick={() => removeItem(item.id)}
                   className="text-sm text-red-600 hover:underline"
@@ -76,6 +83,8 @@ export default function CartPage() {
         <p className="text-lg font-semibold">Subtotal</p>
         <p className="text-lg font-semibold">{formatCLP(subtotal)}</p>
       </div>
+      <p className="mt-1 text-sm text-neutral-500">El costo de envío se calcula en el siguiente paso, según tu comuna.</p>
+      <VatNote className="mt-1" />
 
       <Link
         href="/checkout"

@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useCartStore } from "@/lib/cart-store";
 import { formatCLP } from "@/lib/money";
+import { once, trackEvent } from "@/lib/track";
+import { VatNote } from "@/components/ProductInfo";
 
 type ShippingRate = { region: string; comuna: string; priceCLP: number };
 type ShippingInfo = {
@@ -22,6 +24,22 @@ export default function CheckoutPage() {
   const items = useCartStore((s) => s.items);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+
+  // "Inicio de pago": the checkout page opened with something in the cart (once per cart).
+  useEffect(() => {
+    if (!mounted || items.length === 0) return;
+    const value = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
+    once(`checkout:${items.map((i) => i.id).join(",")}`, () =>
+      trackEvent("InitiateCheckout", {
+        content_type: "product",
+        content_ids: items.map((i) => i.productId),
+        num_items: items.reduce((sum, i) => sum + i.quantity, 0),
+        value,
+        currency: "CLP",
+      }),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted]);
 
   const [shipping, setShipping] = useState<ShippingInfo | null>(null);
   useEffect(() => {
@@ -324,6 +342,7 @@ export default function CheckoutPage() {
             <p>Total</p>
             <p>{formatCLP(total)}</p>
           </div>
+          <VatNote />
         </div>
 
         {error && <p className="text-sm text-red-600">{error}</p>}

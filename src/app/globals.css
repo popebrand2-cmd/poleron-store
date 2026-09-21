@@ -361,3 +361,7 @@ a.pope-social:active { transform: scale(0.96); }
 .pope-popup { animation: popupIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; box-shadow: 0 30px 80px -20px color-mix(in srgb, var(--neon) 35%, transparent); }
 @keyframes popupFade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes popupIn { from { opacity: 0; transform: translateY(24px) scale(0.96); } to { opacity: 1; transform: none; } }
+
+/* Empty editable text: keep it clickable and show a hint while the owner is editing */
+[contenteditable]:empty { display: inline-block; min-width: 6rem; }
+[contenteditable][data-placeholder]:empty::before { content: attr(data-placeholder); opacity: 0.55; }

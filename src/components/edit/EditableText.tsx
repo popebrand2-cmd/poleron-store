@@ -9,6 +9,9 @@ type Props = {
   as?: keyof React.JSX.IntrinsicElements;
   className?: string;
   multiline?: boolean;
+  // Optional texts may be cleared (an empty one is simply not shown to visitors).
+  allowEmpty?: boolean;
+  placeholder?: string;
   // Exactly one of these tells EditableText where a new value should be
   // saved. `siteKey`/`heroField` are plain string identifiers (not callback
   // props) so this component can be rendered from server components, which
@@ -20,7 +23,7 @@ type Props = {
   onSave?: (value: string) => void;
 };
 
-export default function EditableText({ value, as = "span", className = "", multiline = false, siteKey, heroField, onSave }: Props) {
+export default function EditableText({ value, as = "span", className = "", multiline = false, allowEmpty = false, placeholder, siteKey, heroField, onSave }: Props) {
   const { isAdmin, editMode } = useEditMode();
   const [text, setText] = useState(value);
   const Tag = as as React.ElementType;
@@ -39,11 +42,12 @@ export default function EditableText({ value, as = "span", className = "", multi
     <Tag
       className={`${className} rounded-sm outline-dashed outline-1 outline-offset-2 outline-neon/50 transition hover:bg-neon/10 focus:bg-neon/10 focus:outline-2 focus:outline-neon`}
       contentEditable
+      data-placeholder={placeholder}
       suppressContentEditableWarning
       draggable={false}
       onBlur={(e: React.FocusEvent<HTMLElement>) => {
         const next = (e.currentTarget.textContent ?? "").trim();
-        if (next && next !== text) {
+        if ((next || allowEmpty) && next !== text) {
           setText(next);
           persist(next);
         } else {
