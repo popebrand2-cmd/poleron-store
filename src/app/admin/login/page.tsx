@@ -17,23 +17,38 @@ function AdminLoginForm() {
     setLoading(true);
     setError("");
 
-    const res = await fetch("/api/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, remember }),
-    });
+    // Never leave the button spinning forever: give the request 20 seconds, and if the page
+    // does not move on after a successful login, let the person try again.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 20000);
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, remember }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
 
-    setLoading(false);
+      if (!res.ok) {
+        setLoading(false);
+        setError("Correo o contraseña incorrectos.");
+        return;
+      }
 
-    if (!res.ok) {
-      setError("Correo o contraseña incorrectos.");
-      return;
+      // A full page load (not a client-side transition) lets the browser see the login succeeded and
+      // offer to save the password.
+      const next = searchParams.get("next");
+      window.location.assign(next && next.startsWith("/") && !next.startsWith("//") ? next : "/admin");
+      setTimeout(() => {
+        setLoading(false);
+        setError("Tu sesión se inició, pero el panel tardó en abrir. Pulsa Entrar de nuevo o recarga la página.");
+      }, 15000);
+    } catch {
+      clearTimeout(timer);
+      setLoading(false);
+      setError("No hubo respuesta del servidor. Revisa tu conexión e inténtalo de nuevo.");
     }
-
-    // A full page load (not a client-side transition) lets the browser see the login succeeded and
-    // offer to save the password.
-    const next = searchParams.get("next");
-    window.location.assign(next && next.startsWith("/") && !next.startsWith("//") ? next : "/admin");
   }
 
   return (
