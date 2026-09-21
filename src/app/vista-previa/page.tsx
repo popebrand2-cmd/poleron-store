@@ -3,7 +3,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import IntroSplash from "@/components/preview/IntroSplash";
 import RevealStage from "@/components/preview/RevealStage";
-import Icon from "@/components/Icon";
+import HowItWorks from "@/components/preview/HowItWorks";
 
 export const dynamic = "force-dynamic";
 
@@ -11,30 +11,6 @@ export const metadata: Metadata = {
   title: "Vista previa — POPE",
   robots: { index: false, follow: false },
 };
-
-const STEPS = [
-  {
-    n: "01",
-    icon: "upload",
-    title: "Sube tu diseño",
-    text: "Una foto, un dibujo, un logo o un texto.",
-    image: "/preview/design-sample.png",
-  },
-  {
-    n: "02",
-    icon: "edit",
-    title: "Personaliza en vivo",
-    text: "Ajusta tu diseño y mira cómo queda en la prenda.",
-    image: "/preview/hoodie-after.webp",
-  },
-  {
-    n: "03",
-    icon: "box",
-    title: "Lo hacemos realidad",
-    text: "Finaliza tu compra y nosotros confeccionamos tu prenda personalizada.",
-    image: null,
-  },
-];
 
 const VARIANTS = [
   { id: "negro", label: "Negro", swatch: "#0b0b0b", before: "/preview/hoodie-before.webp", after: "/preview/hoodie-after.webp" },
@@ -133,60 +109,7 @@ export default async function PreviewPage() {
         </div>
       </section>
 
-      {/* Cómo funciona */}
-      <section className="border-t border-neutral-800 bg-neutral-950">
-        <div className="mx-auto max-w-6xl px-5 py-16 sm:py-20">
-          <div className="mb-12 text-center">
-            <p className="font-script text-3xl text-neon sm:text-4xl">Así de simple</p>
-            <h2 className="font-display text-5xl font-bold uppercase text-white sm:text-6xl">Cómo funciona</h2>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {STEPS.map((s) => (
-              <article key={s.n} className="glass overflow-hidden rounded-3xl p-5">
-                <div className="flex items-center justify-between">
-                  <span className="font-display text-6xl font-bold leading-none text-neon">{s.n}</span>
-                  <span className="glass-neon flex h-14 w-14 items-center justify-center rounded-full text-black">
-                    <Icon name={s.icon} className="h-7 w-7" />
-                  </span>
-                </div>
-
-                <div className="mt-4 flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-black/40">
-                  {s.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={s.image}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      className={s.n === "01" ? "h-3/4 w-auto object-contain" : "h-full w-full object-contain"}
-                    />
-                  ) : (
-                    <Icon name="box" className="h-24 w-24 text-neon" />
-                  )}
-                </div>
-
-                <h3 className="mt-5 font-display text-4xl font-bold uppercase text-white">{s.title}</h3>
-                <p className="mt-2 text-lg text-neutral-300">{s.text}</p>
-              </article>
-            ))}
-          </div>
-
-          <div className="mt-12 text-center">
-            <Link href={editorHref} className="pope-cta text-black">
-              <span className="pope-cta-bg" />
-              <span className="relative z-10 whitespace-nowrap px-6 py-3 font-display text-3xl font-bold uppercase leading-none tracking-wide sm:px-8">
-                Diseña la tuya
-              </span>
-              <span className="pope-cta-circle" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} className="h-5 w-5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-              </span>
-            </Link>
-          </div>
-        </div>
-      </section>
+      <HowItWorks editorHref={editorHref} />
     </main>
   );
 }
