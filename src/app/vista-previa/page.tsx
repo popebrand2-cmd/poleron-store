@@ -93,11 +93,11 @@ export default async function PreviewPage() {
             {/* POPE signature behind the garment */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/brand/pope-logo.png"
+              src="/brand/pope-firma.png"
               alt=""
               aria-hidden="true"
               draggable={false}
-              className="pointer-events-none absolute left-1/2 top-[42%] z-0 w-[118%] max-w-none -translate-x-1/2 -translate-y-1/2 -rotate-[8deg] opacity-40 [filter:drop-shadow(0_0_28px_rgba(182,255,0,0.35))]"
+              className="pointer-events-none absolute -right-[16%] -top-[4%] z-0 w-[96%] max-w-none opacity-[0.34] [filter:drop-shadow(0_0_26px_rgba(182,255,0,0.45))]"
             />
             <div className="relative z-10">
               <RevealStage variants={VARIANTS} alt="Polerón POPE" />
