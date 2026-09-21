@@ -97,7 +97,7 @@ export default async function PreviewPage() {
               alt=""
               aria-hidden="true"
               draggable={false}
-              className="pointer-events-none absolute -right-[16%] -top-[4%] z-0 w-[96%] max-w-none opacity-[0.34] [filter:drop-shadow(0_0_26px_rgba(182,255,0,0.45))]"
+              className="pointer-events-none absolute right-0 top-[9%] z-0 w-[44%] max-w-none opacity-[0.5] [filter:drop-shadow(0_0_18px_rgba(182,255,0,0.5))]"
             />
             <div className="relative z-10">
               <RevealStage variants={VARIANTS} alt="Polerón POPE" />
