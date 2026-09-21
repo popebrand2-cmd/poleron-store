@@ -128,7 +128,7 @@ export default async function Home() {
             <div className="mt-10">
               <Link
                 href="#tienda"
-                className="group glass-neon inline-flex items-center gap-5 rounded-full py-3 pl-9 pr-3 text-lg font-bold uppercase tracking-wide text-black transition hover:brightness-90 sm:text-xl"
+                className="group glass-neon inline-flex items-center gap-5 whitespace-nowrap rounded-full py-2.5 pl-9 pr-3 font-script text-3xl font-normal normal-case tracking-normal text-black transition hover:brightness-90 sm:text-4xl"
               >
                 <EditableText value={heroCta} heroField="heroCta" as="span" />
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-neon transition group-hover:translate-x-0.5">
@@ -294,7 +294,7 @@ export default async function Home() {
             <div className="mt-10 text-center">
               <Link
                 href="#tienda"
-                className="group glass-neon inline-flex items-center gap-4 rounded-full py-2 pl-6 pr-2 text-sm font-bold uppercase tracking-wide text-black transition hover:brightness-90"
+                className="group glass-neon inline-flex items-center gap-4 whitespace-nowrap rounded-full py-1.5 pl-7 pr-2 font-script text-2xl font-normal normal-case tracking-normal text-black transition hover:brightness-90"
               >
                 Personaliza aquí
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-neon transition group-hover:translate-x-0.5">
