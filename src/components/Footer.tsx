@@ -13,7 +13,7 @@ export default function Footer({ tagline }: { tagline: string }) {
       <div className="mx-auto max-w-6xl px-6 py-10">
         <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
           <div>
-            <p className="text-2xl font-black uppercase tracking-tight text-white">MAD</p>
+            <p className="text-2xl font-black uppercase tracking-tight text-white">POPE</p>
             <p className="mt-1 max-w-sm text-xs text-neutral-500">
               <EditableText value={tagline} siteKey="footer.tagline" as="span" multiline />
             </p>
@@ -31,7 +31,7 @@ export default function Footer({ tagline }: { tagline: string }) {
           </div>
         </div>
         <p className="mt-8 text-xs text-neutral-600">
-          © {new Date().getFullYear()} MAD. Todos los derechos reservados.
+          © {new Date().getFullYear()} POPE. Todos los derechos reservados.
         </p>
       </div>
     </footer>

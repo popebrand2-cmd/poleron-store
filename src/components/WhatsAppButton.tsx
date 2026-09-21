@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 
 const WHATSAPP_NUMBER = "56995162982";
-const DEFAULT_MESSAGE = "Hola! Tengo una consulta sobre mi personalización en MAD.";
+const DEFAULT_MESSAGE = "Hola! Tengo una consulta sobre mi personalización en POPE.";
 
 export default function WhatsAppButton() {
   const pathname = usePathname();

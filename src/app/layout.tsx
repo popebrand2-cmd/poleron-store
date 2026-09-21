@@ -13,7 +13,7 @@ import { DEFAULT_ACCENT_COLOR, siteText } from "@/lib/site-content";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "MAD — Ropa personalizada",
+  title: "POPE — Ropa personalizada",
   description: "Diseña tu propia ropa: sube tu arte y míralo en un mockup real antes de comprar.",
 };
 

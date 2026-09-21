@@ -49,7 +49,7 @@ export default function Header() {
           )}
 
           <Link href="/" className="text-3xl font-black uppercase tracking-tight text-white sm:text-4xl">
-            MAD
+            POPE
           </Link>
 
           {!isAdmin && (

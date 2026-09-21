@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 // admin form starts pre-filled with what the site is actually showing
 // even before any row exists in the database.
 const DEFAULTS = {
-  heroEyebrow: "MAD · Personalización 100% real",
+  heroEyebrow: "POPE · Personalización 100% real",
   heroHeadline: "Diseña\ntu propia\nesencia.",
   heroSubtext:
     "Sube tu diseño, personalízalo sobre la prenda real y mira el resultado antes de comprar. Sin catálogos genéricos — cada pieza sale exactamente como la imaginaste.",

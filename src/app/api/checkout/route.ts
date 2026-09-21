@@ -136,7 +136,7 @@ export async function POST(request: Request) {
   try {
     const { initPoint } = await createMercadoPagoPreference({
       orderId: order.id,
-      title: `Pedido MAD #${order.id.slice(0, 8)}`,
+      title: `Pedido POPE #${order.id.slice(0, 8)}`,
       amountCLP: totalAmount,
       email: data.customerEmail,
     });

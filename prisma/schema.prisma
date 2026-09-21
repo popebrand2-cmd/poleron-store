@@ -138,7 +138,7 @@ model StoreSettings {
   // Hero text content, admin-editable from /admin/portada. heroHeadline
   // uses literal "\n" to mark line breaks; the LAST line is always
   // rendered in the brand's neon accent color.
-  heroEyebrow    String  @default("MAD · Personalización 100% real")
+  heroEyebrow    String  @default("POPE · Personalización 100% real")
   heroHeadline   String  @default("Diseña\ntu propia\nesencia.")
   heroSubtext    String  @default("Sube tu diseño, personalízalo sobre la prenda real y mira el resultado antes de comprar. Sin catálogos genéricos — cada pieza sale exactamente como la imaginaste.")
   heroCta        String  @default("Personaliza aquí")

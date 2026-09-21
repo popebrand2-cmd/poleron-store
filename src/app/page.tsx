@@ -37,7 +37,7 @@ export default async function Home() {
   ]);
   const collectionsWithDesigns = designCollections.filter((c) => c.designs.length > 0);
   const heroImageUrl = settings?.heroImageUrl || "";
-  const heroEyebrow = settings?.heroEyebrow || "MAD · Personalización 100% real";
+  const heroEyebrow = settings?.heroEyebrow || "POPE · Personalización 100% real";
   const heroHeadlineLines = (
     settings?.heroHeadline || "Diseña\ntu propia\nesencia."
   ).split("\n");
@@ -194,7 +194,7 @@ export default async function Home() {
       <section className="bg-black">
         <div className="border-y border-neutral-800 bg-neutral-950 py-3 text-center">
           <h2 className="text-lg font-extrabold uppercase tracking-widest text-white">
-            <span className="text-neon">MAD</span> ·{" "}
+            <span className="text-neon">POPE</span> ·{" "}
             <EditableText value={t("browseTypes.heading")} siteKey="browseTypes.heading" as="span" />
           </h2>
         </div>
