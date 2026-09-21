@@ -3,8 +3,8 @@ import { prisma } from "@/lib/prisma";
 import FeaturedCarousel from "@/components/FeaturedCarousel";
 import CollectionCarousel from "@/components/CollectionCarousel";
 import EditableText from "@/components/edit/EditableText";
-import ValuesList from "@/components/edit/ValuesList";
-import HowItWorksList from "@/components/edit/HowItWorksList";
+import PopeHero from "@/components/PopeHero";
+import HowItWorks from "@/components/preview/HowItWorks";
 import TrustBadgesList from "@/components/edit/TrustBadgesList";
 import FaqList from "@/components/edit/FaqList";
 import { siteText, CONTENT_DEFAULTS, DEFAULT_ACCENT_COLOR, type ContentSection } from "@/lib/site-content";
@@ -35,20 +35,10 @@ export default async function Home() {
     prisma.contentItem.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } }),
     prisma.siteText.findMany(),
   ]);
+  // The hero and "Así funciona" buttons go straight to the real editor: the newest active hoodie.
+  const hoodie = products.find((p) => /hoodie|poler[oó]n/i.test(p.name)) ?? products[0];
+  const editorHref = hoodie ? `/productos/${hoodie.slug}` : "#tienda";
   const collectionsWithDesigns = designCollections.filter((c) => c.designs.length > 0);
-  const heroImageUrl = settings?.heroImageUrl || "";
-  const heroEyebrow = settings?.heroEyebrow || "POPE · Personalización 100% real";
-  const heroHeadlineLines = (
-    settings?.heroHeadline || "Diseña\ntu propia\nesencia."
-  ).split("\n");
-  const heroSubtext =
-    settings?.heroSubtext ||
-    "Sube tu diseño, personalízalo sobre la prenda real y mira el resultado antes de comprar. Sin catálogos genéricos — cada pieza sale exactamente como la imaginaste.";
-  const heroCta = settings?.heroCta || "Personaliza aquí";
-  const heroImageAlign = (settings?.heroImageAlign as "left" | "right") || "right";
-  const heroImagePosX = settings?.heroImagePosX ?? 50;
-  const heroImagePosY = settings?.heroImagePosY ?? 50;
-  const heroImageZoom = settings?.heroImageZoom ?? 1;
   const accentColor = settings?.accentColor || DEFAULT_ACCENT_COLOR;
 
   const textMap = Object.fromEntries(siteTextRows.map((t) => [t.key, t.value]));
@@ -62,96 +52,7 @@ export default async function Home() {
 
   return (
     <main>
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-black">
-        {heroImageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            id="hero-photo"
-            src={heroImageUrl}
-            alt="Prenda personalizada"
-            className="absolute inset-0 h-full w-full object-cover"
-            style={{
-              objectPosition: `${heroImagePosX}% ${heroImagePosY}%`,
-              transform: `scale(${heroImageZoom})`,
-              transformOrigin: `${heroImagePosX}% ${heroImagePosY}%`,
-            }}
-          />
-        )}
-
-        {/* Legibility wash: bottom-heavy on mobile (stacked layout), side-heavy on desktop (split layout) */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,_#000_0%,_rgba(0,0,0,0.6)_35%,_rgba(0,0,0,0.3)_65%,_rgba(0,0,0,0.15)_100%)] sm:hidden"
-        />
-        <div
-          aria-hidden="true"
-          className={`pointer-events-none absolute inset-0 hidden sm:block ${
-            heroImageAlign === "left"
-              ? "bg-[linear-gradient(to_right,_rgba(0,0,0,0.2)_0%,_rgba(0,0,0,0.55)_45%,_rgba(0,0,0,0.92)_100%)]"
-              : "bg-[linear-gradient(to_left,_rgba(0,0,0,0.2)_0%,_rgba(0,0,0,0.55)_45%,_rgba(0,0,0,0.92)_100%)]"
-          }`}
-        />
-
-        <div className="relative z-10 mx-auto flex min-h-[540px] max-w-6xl items-end px-6 py-16 sm:min-h-[600px] sm:items-center sm:py-20 md:min-h-[680px] md:py-28">
-          <div
-            className={`max-w-xl sm:max-w-[46%] lg:max-w-xl ${
-              heroImageAlign === "left" ? "sm:ml-auto" : ""
-            }`}
-          >
-            <span className="inline-flex items-center gap-2 rounded-full border border-neutral-700 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.15em] text-neutral-300">
-              <span className="h-1.5 w-1.5 rounded-full bg-neon" />
-              <EditableText value={heroEyebrow} heroField="heroEyebrow" as="span" />
-            </span>
-
-            <h1 className="mt-5 text-6xl font-bold uppercase leading-[0.88] text-white sm:text-7xl lg:text-8xl">
-              {heroHeadlineLines.map((line, i) =>
-                i === heroHeadlineLines.length - 1 ? (
-                  <span key={i} className="text-neon">
-                    {line}
-                  </span>
-                ) : (
-                  <span key={i}>
-                    {line}
-                    <br />
-                  </span>
-                ),
-              )}
-            </h1>
-
-            <p className="mt-6 max-w-md text-neutral-400">
-              <EditableText value={heroSubtext} heroField="heroSubtext" as="span" multiline />
-            </p>
-
-            <ValuesList initialItems={itemsFor("values")} />
-
-            <div className="mt-10">
-              <Link
-                href="#tienda"
-                className="group glass-neon inline-flex items-center gap-5 whitespace-nowrap rounded-full py-2.5 pl-9 pr-3 font-script text-3xl font-normal normal-case tracking-normal text-black transition hover:brightness-90 sm:text-4xl"
-              >
-                <EditableText value={heroCta} heroField="heroCta" as="span" />
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-neon transition group-hover:translate-x-0.5">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
-                  </svg>
-                </span>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {!heroImageUrl && (
-          <div className="absolute inset-0 hidden flex-col items-center justify-center gap-3 lg:flex">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1} className="h-20 w-20 text-neutral-800">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.5-6 3.5 4 2.5-3L20 16" />
-              <rect x="3" y="4" width="18" height="16" rx="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-            </svg>
-            <p className="text-xs uppercase tracking-widest text-neutral-700">Foto próximamente</p>
-          </div>
-        )}
-      </section>
+      <PopeHero editorHref={editorHref} />
 
       {/* Manifesto banner */}
       <section className="border-t border-neutral-800 bg-[#102200] py-14">
@@ -166,22 +67,7 @@ export default async function Home() {
         </p>
       </section>
 
-      {/* How it works */}
-      <section className="border-t border-neutral-800 bg-neutral-950">
-        <div className="mx-auto max-w-6xl px-6 py-16">
-          <div className="mb-12 text-center">
-            <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-neon">
-              <span className="h-px w-8 bg-neon" />
-              <EditableText value={t("howItWorks.eyebrow")} siteKey="howItWorks.eyebrow" as="span" />
-              <span className="h-px w-8 bg-neon" />
-            </p>
-            <h2 className="text-4xl font-bold uppercase text-white sm:text-5xl">
-              <EditableText value={t("howItWorks.heading")} siteKey="howItWorks.heading" as="span" />
-            </h2>
-          </div>
-          <HowItWorksList initialItems={itemsFor("howItWorks")} />
-        </div>
-      </section>
+      <HowItWorks editorHref={editorHref} />
 
       {/* Trust badges */}
       <section className="border-t border-neutral-800 bg-neutral-950">
