@@ -1,16 +1,16 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 function AdminLoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -20,7 +20,7 @@ function AdminLoginForm() {
     const res = await fetch("/api/admin/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, remember }),
     });
 
     setLoading(false);
@@ -30,8 +30,10 @@ function AdminLoginForm() {
       return;
     }
 
-    router.push(searchParams.get("next") || "/admin");
-    router.refresh();
+    // A full page load (not a client-side transition) lets the browser see the login succeeded and
+    // offer to save the password.
+    const next = searchParams.get("next");
+    window.location.assign(next && next.startsWith("/") && !next.startsWith("//") ? next : "/admin");
   }
 
   return (
@@ -43,8 +45,12 @@ function AdminLoginForm() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/brand/pope-logo.png" alt="POPE Brand" className="h-20 w-auto" />
       <p className="mb-8 mt-1 text-xs font-bold uppercase tracking-[0.2em] text-neon">Panel de administración</p>
-      <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">Correo</label>
+      <label htmlFor="admin-email" className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">Correo</label>
       <input
+        id="admin-email"
+        name="email"
+        autoComplete="username"
+        inputMode="email"
         type="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
@@ -52,9 +58,12 @@ function AdminLoginForm() {
         autoFocus
         className="mb-4 w-full rounded-lg border border-neutral-300 px-3 py-2.5 outline-none focus:border-neutral-900"
       />
-      <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">Contraseña</label>
+      <label htmlFor="admin-password" className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">Contraseña</label>
       <div className="relative mb-4">
         <input
+          id="admin-password"
+          name="password"
+          autoComplete="current-password"
           type={showPassword ? "text" : "password"}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -68,6 +77,10 @@ function AdminLoginForm() {
           {showPassword ? "Ocultar" : "Mostrar"}
         </button>
       </div>
+      <label className="mb-4 flex cursor-pointer items-center gap-2 text-sm text-neutral-600">
+        <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="h-4 w-4 accent-[var(--neon)]" />
+        Mantener sesión iniciada por 30 días en este dispositivo
+      </label>
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
       <button
         type="submit"

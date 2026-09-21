@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import {
   ADMIN_COOKIE_NAME,
   ADMIN_USER_COOKIE,
+  REMEMBER_SESSION_SECONDS,
   USER_SESSION_SECONDS,
   adminAuthToken,
   isAdminPasswordCorrect,
@@ -19,7 +20,8 @@ const cookieBase = {
 };
 
 export async function POST(request: Request) {
-  const { email, password } = (await request.json()) as { email?: string; password?: string };
+  const { email, password, remember } = (await request.json()) as { email?: string; password?: string; remember?: boolean };
+  // "Mantener sesión iniciada": a 30-day session instead of the short default.
   if (!password) return NextResponse.json({ error: "Contraseña incorrecta." }, { status: 401 });
 
   // No email -> the owner's master password.
@@ -28,7 +30,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Contraseña incorrecta." }, { status: 401 });
     }
     const response = NextResponse.json({ ok: true });
-    response.cookies.set(ADMIN_COOKIE_NAME, await adminAuthToken(), { ...cookieBase, maxAge: 60 * 60 * 24 * 7 });
+    response.cookies.set(ADMIN_COOKIE_NAME, await adminAuthToken(), {
+      ...cookieBase,
+      maxAge: remember ? REMEMBER_SESSION_SECONDS : 60 * 60 * 24 * 7,
+    });
     response.cookies.delete(ADMIN_USER_COOKIE);
     return response;
   }
@@ -38,14 +43,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Correo o contraseña incorrectos." }, { status: 401 });
   }
 
-  const token = await signUserToken({
-    id: user.id,
-    name: user.name,
-    role: user.role === "PARTNER" ? "PARTNER" : "EMPLOYEE",
-    perms: permsFor(user.role, user.permissions),
-  });
+  const seconds = remember ? REMEMBER_SESSION_SECONDS : USER_SESSION_SECONDS;
+  const token = await signUserToken(
+    {
+      id: user.id,
+      name: user.name,
+      role: user.role === "PARTNER" ? "PARTNER" : "EMPLOYEE",
+      perms: permsFor(user.role, user.permissions),
+    },
+    seconds,
+  );
   const response = NextResponse.json({ ok: true });
-  response.cookies.set(ADMIN_USER_COOKIE, token, { ...cookieBase, maxAge: USER_SESSION_SECONDS });
+  response.cookies.set(ADMIN_USER_COOKIE, token, { ...cookieBase, maxAge: seconds });
   response.cookies.delete(ADMIN_COOKIE_NAME);
   return response;
 }

@@ -28,6 +28,8 @@ export function isAdminPasswordCorrect(candidate: string): boolean {
 
 export const ADMIN_USER_COOKIE = "admin_user";
 export const USER_SESSION_SECONDS = 60 * 60 * 12;
+// "Mantener sesión iniciada" on the login form
+export const REMEMBER_SESSION_SECONDS = 60 * 60 * 24 * 30;
 
 export const SECTIONS = [
   { key: "pedidos", label: "Pedidos", href: "/admin/pedidos" },
@@ -71,8 +73,8 @@ function fromB64Url(s: string): string {
   return decodeURIComponent(escape(atob(b64)));
 }
 
-export async function signUserToken(s: Omit<UserSession, "exp">): Promise<string> {
-  const session: UserSession = { ...s, exp: Math.floor(Date.now() / 1000) + USER_SESSION_SECONDS };
+export async function signUserToken(s: Omit<UserSession, "exp">, seconds = USER_SESSION_SECONDS): Promise<string> {
+  const session: UserSession = { ...s, exp: Math.floor(Date.now() / 1000) + seconds };
   const payload = toB64Url(JSON.stringify(session));
   return `${payload}.${await hmacHex(payload)}`;
 }
