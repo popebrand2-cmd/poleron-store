@@ -10,6 +10,7 @@ function AdminLoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -51,12 +52,21 @@ function AdminLoginForm() {
         className="mb-4 w-full rounded-lg border border-neutral-300 px-3 py-2.5 outline-none focus:border-neutral-900"
       />
       <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">Contraseña</label>
-      <input
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="mb-4 w-full rounded-lg border border-neutral-300 px-3 py-2.5 outline-none focus:border-neutral-900"
-      />
+      <div className="relative mb-4">
+        <input
+          type={showPassword ? "text" : "password"}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full rounded-lg border border-neutral-300 py-2.5 pl-3 pr-20 outline-none focus:border-neutral-900"
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword((v) => !v)}
+          className="absolute inset-y-0 right-3 text-xs font-bold uppercase tracking-wide text-neutral-500 hover:text-neon"
+        >
+          {showPassword ? "Ocultar" : "Mostrar"}
+        </button>
+      </div>
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
       <button
         type="submit"

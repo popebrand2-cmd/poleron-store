@@ -68,7 +68,8 @@ export default function Header() {
                 Ver tienda
               </Link>
             )}
-            <Link href="/carrito" className="relative text-white" aria-label="Carrito">
+            {!isAdmin && (
+              <Link href="/carrito" className="relative text-white" aria-label="Carrito">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -87,6 +88,7 @@ export default function Header() {
                 </span>
               )}
             </Link>
+            )}
           </div>
         </div>
 
