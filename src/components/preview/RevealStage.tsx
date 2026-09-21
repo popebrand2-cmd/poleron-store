@@ -59,7 +59,7 @@ export default function RevealStage({ variants, alt }: { variants: HoodieVariant
   }
 
   useEffect(() => {
-    const fine = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const fine = window.matchMedia("(any-hover: hover) and (any-pointer: fine)").matches;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const m: Mode = fine ? "spotlight" : "slider";
     setMode(m);
@@ -108,7 +108,9 @@ export default function RevealStage({ variants, alt }: { variants: HoodieVariant
     const el = stageRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    if (mode === "spotlight" && e.pointerType !== "touch") {
+    // A real mouse always gets the soft spotlight, even if the device also has a touchscreen.
+    if (e.pointerType === "mouse" && mode !== "spotlight") setMode("spotlight");
+    if ((mode === "spotlight" || e.pointerType === "mouse") && e.pointerType !== "touch") {
       markInteracted();
       const c = s.current;
       const first = c.r < 1;
@@ -127,7 +129,8 @@ export default function RevealStage({ variants, alt }: { variants: HoodieVariant
   }
 
   function onPointerDown(e: React.PointerEvent) {
-    if (mode !== "slider") return;
+    if (e.pointerType === "touch" && mode !== "slider") setMode("slider");
+    else if (mode !== "slider") return;
     const el = stageRef.current;
     if (!el) return;
     markInteracted();
