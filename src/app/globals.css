@@ -8,11 +8,11 @@
      personalizer, cart, checkout) opt back into light colors explicitly
      rather than relying on these globals, so their already-tested internals
      don't need to change. */
-  --ink: #f5f5f4;
+  --ink: #f5f5f0;
   --paper: #0a0a0a;
   /* Brand accent, admin-editable from the homepage edit mode (falls back to
      this default until StoreSettings.accentColor is set — see layout.tsx). */
-  --neon: #39ff14;
+  --neon: #b6ff00;
 }
 
 body {

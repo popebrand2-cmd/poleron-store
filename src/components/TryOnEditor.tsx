@@ -84,7 +84,7 @@ export default function TryOnEditor({
                 top: 0,
                 scaleX: scale,
                 scaleY: scale,
-                cornerColor: "#39FF14",
+                cornerColor: "#B6FF00",
                 cornerStyle: "circle",
                 transparentCorners: false,
               });
@@ -111,7 +111,7 @@ export default function TryOnEditor({
             originY: "center",
             scaleX: targetScale,
             scaleY: targetScale,
-            cornerColor: "#39FF14",
+            cornerColor: "#B6FF00",
             cornerStyle: "circle",
             transparentCorners: false,
           });

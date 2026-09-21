@@ -334,7 +334,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           scaleY: targetScale,
           angle: targetAngle,
           lockRotation: !view.allowRotate,
-          cornerColor: "#39FF14",
+          cornerColor: "#B6FF00",
           cornerStyle: "circle",
           transparentCorners: false,
         });
@@ -368,7 +368,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         fontFamily,
         fontSize: Math.max(14, Math.round(zone.height * 0.18)),
         fill: textColor,
-        cornerColor: "#39FF14",
+        cornerColor: "#B6FF00",
         cornerStyle: "circle",
         transparentCorners: false,
       });
@@ -458,7 +458,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         originX: "center",
         originY: "center",
         lockRotation: !view.allowRotate,
-        cornerColor: "#39FF14",
+        cornerColor: "#B6FF00",
         cornerStyle: "circle",
         transparentCorners: false,
       });
@@ -532,10 +532,10 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         width: bounds.width,
         height: bounds.height,
         fill: "rgba(217,70,239,0.15)",
-        stroke: "#39FF14",
+        stroke: "#B6FF00",
         strokeWidth: 1.5,
         strokeDashArray: [6, 4],
-        cornerColor: "#39FF14",
+        cornerColor: "#B6FF00",
         cornerStyle: "circle",
         transparentCorners: false,
         lockRotation: true,
@@ -626,7 +626,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           scaleY: cropBounds.height / (newImg.height ?? 1),
           angle: 0,
           lockRotation: !view.allowRotate,
-          cornerColor: "#39FF14",
+          cornerColor: "#B6FF00",
           cornerStyle: "circle",
           transparentCorners: false,
         });

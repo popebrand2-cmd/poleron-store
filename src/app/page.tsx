@@ -154,7 +154,7 @@ export default async function Home() {
       </section>
 
       {/* Manifesto banner */}
-      <section className="border-t border-neutral-800 bg-black py-14">
+      <section className="border-t border-neutral-800 bg-[#102200] py-14">
         <p className="mx-auto max-w-4xl px-6 text-center text-3xl font-black uppercase leading-[1.05] tracking-tight text-white sm:text-4xl lg:text-5xl">
           <EditableText value={t("manifesto.title")} siteKey="manifesto.title" as="span" />{" "}
           <span className="text-neon">

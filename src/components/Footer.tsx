@@ -13,7 +13,9 @@ export default function Footer({ tagline }: { tagline: string }) {
       <div className="mx-auto max-w-6xl px-6 py-10">
         <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-center">
           <div>
-            <p className="text-2xl font-black uppercase tracking-tight text-white">POPE</p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/pope-logo.png" alt="POPE Brand" className="h-16 w-auto" />
+            <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.3em] text-neon">Personaliza / Crea / Viste</p>
             <p className="mt-1 max-w-sm text-xs text-neutral-500">
               <EditableText value={tagline} siteKey="footer.tagline" as="span" multiline />
             </p>

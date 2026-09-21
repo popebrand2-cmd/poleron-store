@@ -40,7 +40,8 @@ function AdminLoginForm() {
       className="relative w-full max-w-sm overflow-hidden rounded-2xl border border-neutral-200 bg-white p-8 shadow-xl"
     >
       <div className="absolute inset-x-0 top-0 h-1.5 bg-neon" />
-      <p className="text-4xl font-black uppercase tracking-tight text-white">POPE</p>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/brand/pope-logo.png" alt="POPE Brand" className="h-20 w-auto" />
       <p className="mb-8 mt-1 text-xs font-bold uppercase tracking-[0.2em] text-neon">Panel de administración</p>
       <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">Correo</label>
       <input

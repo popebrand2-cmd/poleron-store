@@ -48,8 +48,9 @@ export default function Header() {
             </button>
           )}
 
-          <Link href="/" className="text-3xl font-black uppercase tracking-tight text-white sm:text-4xl">
-            POPE
+          <Link href="/" aria-label="POPE Brand — inicio" className="flex items-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/pope-logo.png" alt="POPE Brand" className="h-12 w-auto sm:h-16" />
           </Link>
 
           {!isAdmin && (

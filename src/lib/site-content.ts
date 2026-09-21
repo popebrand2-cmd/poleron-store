@@ -87,4 +87,4 @@ export const CONTENT_DEFAULTS: Record<ContentSection, { icon: string; title: str
   ],
 };
 
-export const DEFAULT_ACCENT_COLOR = "#39FF14";
+export const DEFAULT_ACCENT_COLOR = "#B6FF00";
