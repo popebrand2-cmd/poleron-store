@@ -336,13 +336,8 @@ h1, h2, h3 {
 .hiw-float { animation: hiwFloat 3.4s ease-in-out infinite; }
 @keyframes hiwFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
+/* The step animations are short and play once, so they stay on with "reduce motion";
+   only the endless loops (floating chips, pulsing handles) are switched off. */
 @media (prefers-reduced-motion: reduce) {
-  .hiw-armed .hiw-reveal:not(.is-in) { opacity: 1; transform: none; }
-  .hiw-reveal, .hiw-card, .hiw-ico, .hiw-scene img.hiw-hoodie { transition: none; }
-  .hiw-file, .hiw-bar, .hiw-loaded, .hiw-drop, .hiw-adjust, .hiw-guides, .hiw-handle, .hiw-float,
-  .hiw-conn .hiw-arrow-path, .hiw-conn .hiw-arrow-head, .hiw-conn .hiw-vline { animation: none !important; }
-  .hiw-arrow-path { stroke-dashoffset: 0; }
-  .hiw-arrow-head { opacity: 1; }
-  .hiw-vline { transform: none; }
-  .hiw-file, .hiw-drop { opacity: 0; }
+  .hiw-handle, .hiw-float { animation: none !important; }
 }
