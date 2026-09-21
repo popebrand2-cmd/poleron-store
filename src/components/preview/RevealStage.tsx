@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { setHoodieColor, useHoodieColor, type HoodieColor } from "@/lib/hoodie-color";
 
 export type HoodieVariant = { id: string; label: string; swatch: string; before: string; after: string };
 
@@ -14,7 +15,7 @@ const radius = (w: number, touch: boolean) => (touch ? clamp(w * 0.36, 100, 190)
 // above the fingertip so the hand doesn't cover it). Only CSS variables change
 // per frame — no canvas and no base64 images.
 export default function RevealStage({ variants, alt }: { variants: HoodieVariant[]; alt: string }) {
-  const [active, setActive] = useState(variants[0].id);
+  const active = useHoodieColor();
   const stageRef = useRef<HTMLDivElement>(null);
   const [touchUI, setTouchUI] = useState(false);
   const [touched, setTouched] = useState(false);
@@ -228,7 +229,7 @@ export default function RevealStage({ variants, alt }: { variants: HoodieVariant
                 type="button"
                 role="radio"
                 aria-checked={on}
-                onClick={() => setActive(v.id)}
+                onClick={() => setHoodieColor(v.id as HoodieColor)}
                 className={`flex items-center gap-2 rounded-full px-4 py-2 font-display text-2xl uppercase leading-none tracking-wide transition-colors ${
                   on ? "glass-neon text-black" : "text-white hover:text-neon"
                 }`}

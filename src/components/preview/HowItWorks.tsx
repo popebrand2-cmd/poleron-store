@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useRef, type CSSProperties, type ReactNode } from "react";
+import { useHoodieColor, type HoodieColor } from "@/lib/hoodie-color";
 
 // Position of the design on the chest, as a share of the 1200x990 garment photo.
 const CHEST = { left: "41.67%", top: "30.4%", width: "17.9%", height: "21.7%" };
 
-const HOODIE = "/preview/hoodie-before.webp";
+const HOODIE = { negro: "/preview/hoodie-before.webp", blanco: "/preview/hoodie-white-before.webp" };
+// Neon design on the black hoodie, black design on the white one (same as the hero).
 const DESIGN = "/preview/design-sample.png";
+const DESIGN_BY_COLOR = { negro: DESIGN, blanco: "/preview/design-sample-black.png" };
 
 const Svg = ({ children, className }: { children: ReactNode; className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
@@ -84,11 +87,23 @@ function StepText({ title, text }: { title: string; text: string }) {
 }
 
 // The garment with the design on the chest — identical in steps 2 and 3.
-function Garment({ children, design }: { children?: ReactNode; design: ReactNode }) {
+function Garment({ color, children, design }: { color: HoodieColor; children?: ReactNode; design: ReactNode }) {
   return (
     <div className="relative aspect-[1200/990] w-full">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={HOODIE} alt="" width={1200} height={990} loading="lazy" decoding="async" draggable={false} className="hiw-hoodie absolute inset-0 h-full w-full object-contain" />
+      {(Object.keys(HOODIE) as HoodieColor[]).map((c) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={c}
+          src={HOODIE[c]}
+          alt=""
+          width={1200}
+          height={990}
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className={`hiw-hoodie absolute inset-0 h-full w-full object-contain transition-opacity duration-500 ${c === color ? "opacity-100" : "opacity-0"}`}
+        />
+      ))}
       <div className="absolute" style={CHEST}>
         {design}
       </div>
@@ -97,8 +112,30 @@ function Garment({ children, design }: { children?: ReactNode; design: ReactNode
   );
 }
 
+// The design: neon on the black hoodie, black on the white one.
+function DesignImg({ color }: { color: HoodieColor }) {
+  return (
+    <>
+      {(Object.keys(DESIGN_BY_COLOR) as HoodieColor[]).map((c) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={c}
+          src={DESIGN_BY_COLOR[c]}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-500 ${c === color ? "opacity-100" : "opacity-0"}`}
+        />
+      ))}
+    </>
+  );
+}
+
 export default function HowItWorks({ editorHref }: { editorHref: string }) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const color = useHoodieColor();
+  const ink = color === "blanco" ? "#102200" : "var(--neon)";
 
   useEffect(() => {
     const root = rootRef.current;
@@ -200,14 +237,14 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
 
               <div className="hiw-scene relative -mx-3 mt-4 overflow-hidden rounded-2xl sm:mx-0 bg-[radial-gradient(60%_60%_at_50%_45%,color-mix(in_srgb,var(--neon)_16%,transparent),transparent_75%)] bg-black/60">
                 <Garment
+                  color={color}
                   design={
                     <div className="hiw-adjust relative h-full w-full">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={DESIGN} alt="" loading="lazy" decoding="async" draggable={false} className="h-full w-full object-contain" />
+                      <DesignImg color={color} />
                       {/* selection frame + corner handles */}
-                      <div className="absolute -inset-[7%] border border-dashed [border-color:var(--neon)]" aria-hidden="true">
+                      <div className="absolute -inset-[7%] border border-dashed" style={{ borderColor: ink }} aria-hidden="true">
                         {["-left-1.5 -top-1.5", "-right-1.5 -top-1.5", "-bottom-1.5 -left-1.5", "-bottom-1.5 -right-1.5"].map((p) => (
-                          <span key={p} className={`hiw-handle absolute h-3 w-3 rounded-[3px] bg-neon ${p}`} />
+                          <span key={p} className={`hiw-handle absolute h-3 w-3 rounded-[3px] border border-[#102200] bg-neon ${p}`} />
                         ))}
                       </div>
                     </div>
@@ -215,8 +252,8 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
                 >
                   {/* alignment guides */}
                   <div aria-hidden="true" className="hiw-guides pointer-events-none absolute inset-0">
-                    <span className="absolute inset-x-[6%] h-px [background:color-mix(in_srgb,var(--neon)_45%,transparent)]" style={{ top: "41.25%" }} />
-                    <span className="absolute inset-y-[4%] w-px [background:color-mix(in_srgb,var(--neon)_45%,transparent)]" style={{ left: "50.6%" }} />
+                    <span className="absolute inset-x-[6%] h-px " style={{ top: "41.25%", background: color === "blanco" ? "rgba(16,34,0,0.5)" : "color-mix(in srgb, var(--neon) 45%, transparent)" }} />
+                    <span className="absolute inset-y-[4%] w-px " style={{ left: "50.6%", background: color === "blanco" ? "rgba(16,34,0,0.5)" : "color-mix(in srgb, var(--neon) 45%, transparent)" }} />
                   </div>
 
                   {/* floating controls (visual only) */}
@@ -243,12 +280,7 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
               <StepHead n="03" label="Creamos" icon={<ShirtIcon className="h-6 w-6" />} />
 
               <div className="hiw-scene relative -mx-2 mt-4 overflow-hidden rounded-2xl sm:mx-0 bg-[radial-gradient(55%_55%_at_50%_50%,color-mix(in_srgb,var(--neon)_10%,transparent),transparent_75%)] bg-black/50">
-                <Garment
-                  design={
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={DESIGN} alt="" loading="lazy" decoding="async" draggable={false} className="h-full w-full object-contain" />
-                  }
-                >
+                <Garment color={color} design={<DesignImg color={color} />}>
                   <div className="glass-neon absolute bottom-[10%] left-[4%] flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold uppercase tracking-wide text-black">
                     <CheckIcon className="h-4 w-4" />
                     Hecha para ti
