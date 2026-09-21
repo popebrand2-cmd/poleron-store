@@ -366,10 +366,13 @@ a.pope-social:active { transform: scale(0.96); }
 [contenteditable]:empty { display: inline-block; min-width: 6rem; }
 [contenteditable][data-placeholder]:empty::before { content: attr(data-placeholder); opacity: 0.55; }
 
-/* ---------- Videos verticales: mano de cartas ---------- */
-.pope-card { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
-@media (min-width: 1024px) {
-  .pope-card { transform: translateY(var(--y, 0px)) rotate(var(--r, 0deg)); }
-  .pope-card:hover, .pope-card:focus-within { transform: translateY(-16px) rotate(0deg) scale(1.04); z-index: 5; }
+/* ---------- Videos verticales: cartas que se abren ---------- */
+.pope-accordion { --h: 26rem; }
+@media (min-width: 640px) { .pope-accordion { --h: 32rem; } }
+.pope-strip {
+  height: var(--h); width: 4.25rem; flex-shrink: 0;
+  transition: width 0.65s cubic-bezier(0.22, 1, 0.36, 1);
 }
-@media (prefers-reduced-motion: reduce) { .pope-card { transition: none; } }
+.pope-strip.is-open { width: calc(var(--h) * 9 / 16); }
+@media (min-width: 640px) { .pope-strip { width: 5.25rem; } }
+@media (prefers-reduced-motion: reduce) { .pope-strip { transition: none; } }

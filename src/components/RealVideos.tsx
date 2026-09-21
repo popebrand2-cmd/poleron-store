@@ -169,14 +169,21 @@ function Player({ cards, index, onIndex, onClose }: { cards: Card[]; index: numb
   );
 }
 
-// Vertical videos of finished garments, laid out like a hand of cards: pick one and it opens in a
-// full-screen player. Nothing is shown until the owner uploads a video (edit mode →
+// Vertical videos of finished garments as a row of cards: the one you point at (or tap) opens
+// up, playing its video, while the others fold into slim strips. Tapping the open card plays it
+// full screen with sound. Nothing is shown until the owner uploads a video (edit mode →
 // «Imágenes y contacto»).
 export default function RealVideos() {
   const { editMode } = useEditMode();
   const texts = useSiteTexts();
   const [filter, setFilter] = useState("");
+  const [active, setActive] = useState(0);
   const [open, setOpen] = useState<number | null>(null);
+  const [inView, setInView] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
 
   const all: Card[] = useMemo(() => {
     const out: Card[] = [];
@@ -190,6 +197,40 @@ export default function RealVideos() {
   const tags = useMemo(() => Array.from(new Set(all.map((c) => c.tag).filter(Boolean))), [all]);
   const cards = filter ? all.filter((c) => c.tag === filter) : all;
   const close = useCallback(() => setOpen(null), []);
+  const hasVideos = all.length > 0;
+  const current = Math.min(active, Math.max(0, cards.length - 1));
+
+  useEffect(() => {
+    setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    const el = sectionRef.current;
+    if (!el || !("IntersectionObserver" in window)) {
+      setInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.25 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasVideos]);
+
+  // Only the open card plays (muted, looping) and only while the section is on screen —
+  // the other strips stay on their first frame, which keeps phones light. This is the point of
+  // the section, so it also plays with "reduce motion" on (a single small muted video).
+  useEffect(() => {
+    cards.forEach((_, i) => {
+      const v = videoRefs.current[i];
+      if (!v) return;
+      if (i === current && inView && open === null) v.play().catch(() => {});
+      else v.pause();
+    });
+  }, [cards, current, inView, open]);
+
+  // On phones the row scrolls sideways: keep the open card in view.
+  useEffect(() => {
+    const li = listRef.current?.children[current] as HTMLElement | undefined;
+    const ul = listRef.current;
+    if (!li || !ul || ul.scrollWidth <= ul.clientWidth + 1) return;
+    ul.scrollTo({ left: li.offsetLeft - (ul.clientWidth - li.offsetWidth) / 2, behavior: reduceMotion ? "auto" : "smooth" });
+  }, [current, reduceMotion]);
 
   if (all.length === 0) {
     if (!editMode) return null;
@@ -205,12 +246,9 @@ export default function RealVideos() {
     );
   }
 
-  const mid = (cards.length - 1) / 2;
-  const fan = cards.length <= 6;
-
   return (
-    <section className="overflow-hidden border-t border-neutral-800 bg-black">
-      <div className="mx-auto max-w-6xl px-6 pb-6 pt-16">
+    <section ref={sectionRef} className="overflow-hidden border-t border-neutral-800 bg-black">
+      <div className="mx-auto max-w-6xl px-6 pb-4 pt-16">
         <div className="text-center">
           <Txt k="videos.eyebrow" as="p" className="mb-1 block font-script text-3xl text-neon" />
           <Txt k="videos.heading" as="h2" className="block text-4xl font-bold uppercase text-white sm:text-5xl" />
@@ -227,7 +265,10 @@ export default function RealVideos() {
                   type="button"
                   role="tab"
                   aria-selected={on}
-                  onClick={() => setFilter(t)}
+                  onClick={() => {
+                    setFilter(t);
+                    setActive(0);
+                  }}
                   className={`min-h-11 rounded-full px-5 py-2 font-display text-2xl uppercase leading-none tracking-wide transition ${
                     on ? "glass-neon text-black" : "glass-dark text-white hover:text-neon"
                   }`}
@@ -240,44 +281,70 @@ export default function RealVideos() {
         )}
       </div>
 
-      {/* The hand of cards: a swipeable row on phones, a slightly fanned hand on wide screens */}
       <ul
-        className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-12 pt-8 [scrollbar-width:none] lg:justify-center lg:gap-0 lg:overflow-visible [&::-webkit-scrollbar]:hidden"
+        ref={listRef}
+        className="pope-accordion flex items-stretch gap-2 overflow-x-auto px-6 pb-14 pt-8 [scrollbar-width:none] lg:justify-center [&::-webkit-scrollbar]:hidden"
         aria-label="Videos de prendas hechas"
       >
         {cards.map((c, i) => {
-          const off = i - mid;
+          const on = i === current;
           return (
-            <li
-              key={c.n}
-              className="pope-card w-[58vw] max-w-[15rem] shrink-0 snap-center sm:w-56 lg:-mx-2"
-              style={
-                {
-                  "--r": fan ? `${off * 4}deg` : "0deg",
-                  "--y": fan ? `${Math.abs(off) * 8}px` : "0px",
-                } as React.CSSProperties
-              }
-            >
+            <li key={c.n} className={`pope-strip ${on ? "is-open" : ""}`}>
               <button
                 type="button"
-                onClick={() => setOpen(i)}
-                aria-label={`Ver video${c.caption ? `: ${c.caption}` : ""}`}
-                className="group relative block aspect-[9/16] w-full overflow-hidden rounded-3xl border border-white/15 bg-neutral-900 text-left shadow-[0_18px_40px_-18px_rgba(0,0,0,0.9)]"
+                onMouseEnter={() => setActive(i)}
+                onFocus={() => setActive(i)}
+                onClick={() => (on ? setOpen(i) : setActive(i))}
+                aria-label={`${on ? "Ver con sonido" : "Abrir"}${c.caption ? `: ${c.caption}` : ""}`}
+                aria-current={on}
+                className={`group relative block h-full w-full overflow-hidden rounded-3xl border-2 bg-neutral-900 text-left transition-[border-color,box-shadow,filter] duration-500 ${
+                  on
+                    ? "border-neon shadow-[0_0_38px_-6px_color-mix(in_srgb,var(--neon)_65%,transparent)]"
+                    : "border-white/10 brightness-[0.55] hover:brightness-90"
+                }`}
               >
-                <video src={`${c.src}#t=0.1`} muted playsInline preload="metadata" tabIndex={-1} aria-hidden="true" className="pointer-events-none h-full w-full object-cover" />
-                <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-black/30" />
-                {c.tag && (
-                  <span className="glass-neon absolute left-3 top-3 rounded-full px-3 py-0.5 font-display text-lg font-bold uppercase leading-none tracking-wide text-black">
-                    {c.tag}
+                <video
+                  ref={(el) => {
+                    videoRefs.current[i] = el;
+                  }}
+                  src={`${c.src}#t=0.1`}
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  className="pointer-events-none h-full w-full object-cover"
+                />
+                <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/5 to-black/35" />
+
+                {/* Folded strip: the title runs vertically */}
+                {!on && (
+                  <span className="pointer-events-none absolute inset-x-0 bottom-5 flex justify-center">
+                    <span className="font-display text-2xl font-bold uppercase leading-none tracking-wide text-white [text-orientation:mixed] [writing-mode:vertical-rl] rotate-180">
+                      {c.caption || c.tag || `Video ${i + 1}`}
+                    </span>
                   </span>
                 )}
-                <span className="glass-dark absolute right-3 top-3 flex h-11 w-11 items-center justify-center rounded-full text-neon transition group-hover:bg-neon group-hover:text-black">
-                  <PlayIcon className="h-5 w-5" />
-                </span>
-                {c.caption && (
-                  <span className="pointer-events-none absolute inset-x-3 bottom-4 font-display text-3xl font-bold uppercase leading-none text-white">
-                    {c.caption}
-                  </span>
+
+                {/* Open card: chip, title and the invitation to play with sound */}
+                {on && (
+                  <>
+                    {c.tag && (
+                      <span className="glass-neon pointer-events-none absolute left-3 top-3 rounded-full px-3 py-0.5 font-display text-lg font-bold uppercase leading-none tracking-wide text-black">
+                        {c.tag}
+                      </span>
+                    )}
+                    <span className="pointer-events-none absolute inset-x-4 bottom-4 flex flex-col gap-2">
+                      {c.caption && <span className="font-display text-4xl font-bold uppercase leading-[0.9] text-white">{c.caption}</span>}
+                      <span className="glass-dark inline-flex w-fit items-center gap-2 rounded-full py-1.5 pl-2 pr-4 text-xs font-bold uppercase tracking-wide text-white transition group-hover:bg-neon group-hover:text-black">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-neon text-black">
+                          <PlayIcon className="h-3.5 w-3.5" />
+                        </span>
+                        Ver con sonido
+                      </span>
+                    </span>
+                  </>
                 )}
               </button>
             </li>
