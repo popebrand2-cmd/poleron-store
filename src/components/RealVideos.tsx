@@ -102,7 +102,7 @@ function Player({ cards, index, onIndex, onClose }: { cards: Card[]; index: numb
             setProgress(v.duration ? v.currentTime / v.duration : 0);
           }}
           onEnded={() => (cards.length > 1 ? go(1) : setPaused(true))}
-          className="h-full w-full cursor-pointer object-cover"
+          className="pope-player-video h-full w-full cursor-pointer object-cover"
         />
 
         {paused && (
@@ -183,6 +183,7 @@ export default function RealVideos() {
   const sectionRef = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const all: Card[] = useMemo(() => {
     const out: Card[] = [];
@@ -265,12 +266,18 @@ export default function RealVideos() {
             <li key={c.n} className={`pope-strip ${on ? "is-open" : ""}`}>
               <button
                 type="button"
-                onMouseEnter={() => setActive(i)}
+                onMouseEnter={() => {
+                  if (hoverTimer.current) clearTimeout(hoverTimer.current);
+                  hoverTimer.current = setTimeout(() => setActive(i), 110);
+                }}
+                onMouseLeave={() => {
+                  if (hoverTimer.current) clearTimeout(hoverTimer.current);
+                }}
                 onFocus={() => setActive(i)}
                 onClick={() => (on ? setOpen(i) : setActive(i))}
                 aria-label={`${on ? "Ver con sonido" : "Abrir"}${c.caption ? `: ${c.caption}` : ""}`}
                 aria-current={on}
-                className={`group relative block h-full w-full overflow-hidden rounded-3xl border-2 bg-neutral-900 text-left transition-[border-color,box-shadow,filter] duration-500 ${
+                className={`group relative block h-full w-full overflow-hidden rounded-3xl border-2 bg-neutral-900 text-left transition-[border-color,box-shadow,filter] duration-[900ms] ease-in-out ${
                   on
                     ? "border-neon shadow-[0_0_38px_-6px_color-mix(in_srgb,var(--neon)_65%,transparent)]"
                     : "border-white/10 brightness-[0.55] hover:brightness-90"
@@ -287,13 +294,15 @@ export default function RealVideos() {
                   preload="metadata"
                   tabIndex={-1}
                   aria-hidden="true"
-                  className="pointer-events-none h-full w-full object-cover"
+                  className={`pointer-events-none h-full w-full object-cover transition-transform duration-[1400ms] ease-out ${
+                    on ? "scale-100" : "scale-[1.12]"
+                  }`}
                 />
                 <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/5 to-black/35" />
 
                 {/* Folded strip: the title runs vertically */}
                 {!on && (
-                  <span className="pointer-events-none absolute inset-x-0 bottom-5 flex justify-center">
+                  <span className="pope-strip-fade pointer-events-none absolute inset-x-0 bottom-5 flex justify-center">
                     <span className="font-display text-2xl font-bold uppercase leading-none tracking-wide text-white [text-orientation:mixed] [writing-mode:vertical-rl] rotate-180">
                       {c.caption || c.tag || `Video ${i + 1}`}
                     </span>
@@ -304,13 +313,13 @@ export default function RealVideos() {
                 {on && (
                   <>
                     {c.tag && (
-                      <span className="glass-neon pointer-events-none absolute left-3 top-3 rounded-full px-3 py-0.5 font-display text-lg font-bold uppercase leading-none tracking-wide text-black">
+                      <span className="pope-strip-fade glass-neon pointer-events-none absolute left-3 top-3 rounded-full px-3 py-0.5 font-display text-lg font-bold uppercase leading-none tracking-wide text-black">
                         {c.tag}
                       </span>
                     )}
                     <span className="pointer-events-none absolute inset-x-4 bottom-4 flex flex-col gap-2">
-                      {c.caption && <span className="font-display text-4xl font-bold uppercase leading-[0.9] text-white">{c.caption}</span>}
-                      <span className="glass-dark inline-flex w-fit items-center gap-2 rounded-full py-1.5 pl-2 pr-4 text-xs font-bold uppercase tracking-wide text-white transition group-hover:bg-neon group-hover:text-black">
+                      {c.caption && <span className="pope-strip-in font-display text-4xl font-bold uppercase leading-[0.9] text-white">{c.caption}</span>}
+                      <span className="pope-strip-in-late glass-dark inline-flex w-fit items-center gap-2 rounded-full py-1.5 pl-2 pr-4 text-xs font-bold uppercase tracking-wide text-white transition group-hover:bg-neon group-hover:text-black">
                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-neon text-black">
                           <PlayIcon className="h-3.5 w-3.5" />
                         </span>
