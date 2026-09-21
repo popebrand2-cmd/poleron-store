@@ -35,8 +35,11 @@ export default async function Home() {
     prisma.contentItem.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } }),
     prisma.siteText.findMany(),
   ]);
-  // The hero and "Así funciona" buttons go straight to the real editor: the newest active hoodie.
-  const hoodie = products.find((p) => /hoodie|poler[oó]n/i.test(p.name)) ?? products[0];
+  // The hero and "Así funciona" buttons go straight to the real editor: the Oversize hoodie
+  // (falling back to any other hoodie, then any product).
+  const isHoodie = (p: { name: string; slug: string }) => /hoodie|poler[oó]n/i.test(`${p.name} ${p.slug}`);
+  const hoodie =
+    products.find((p) => isHoodie(p) && /oversize/i.test(`${p.name} ${p.slug}`)) ?? products.find(isHoodie) ?? products[0];
   const editorHref = hoodie ? `/productos/${hoodie.slug}` : "#tienda";
   const collectionsWithDesigns = designCollections.filter((c) => c.designs.length > 0);
   const accentColor = settings?.accentColor || DEFAULT_ACCENT_COLOR;
