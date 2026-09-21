@@ -77,7 +77,7 @@ export default function HeroImageControls({
   }
 
   return (
-    <div className="w-64 rounded-2xl bg-neutral-900 p-4 shadow-lg ring-1 ring-neutral-700">
+    <div className="w-64 glass-dark rounded-2xl p-4">
       <p className="mb-3 text-xs font-bold uppercase tracking-wide text-neutral-300">Foto de portada</p>
 
       <button

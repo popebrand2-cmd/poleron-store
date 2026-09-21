@@ -42,7 +42,7 @@ export default function EditModeToggle({
         />
       )}
       {editMode && (
-        <div className="flex items-center gap-2 rounded-full bg-neutral-900 px-4 py-2 shadow-lg ring-1 ring-neutral-700">
+        <div className="flex items-center gap-2 glass-dark rounded-full px-4 py-2">
           <label htmlFor="accent-color-input" className="text-xs font-medium text-neutral-300">
             Color de marca
           </label>
@@ -59,7 +59,7 @@ export default function EditModeToggle({
         type="button"
         onClick={() => setEditMode(!editMode)}
         className={`rounded-full px-5 py-3 text-sm font-bold uppercase tracking-wide shadow-lg transition ${
-          editMode ? "bg-neon text-black" : "bg-neutral-900 text-white ring-1 ring-neutral-700 hover:ring-neon"
+          editMode ? "glass-neon text-black" : "glass-dark text-white hover:border-neon"
         }`}
       >
         {editMode ? "Listo — salir de edición" : "✏️ Editar página"}

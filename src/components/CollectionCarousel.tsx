@@ -22,8 +22,8 @@ export default function CollectionCarousel({ designs }: { designs: CollectionDes
       >
         {designs.map((d) => (
           <div key={d.id} className="w-36 shrink-0 snap-start sm:w-44">
-            <div className="relative overflow-hidden rounded-2xl bg-white p-3">
-              <span className="absolute left-2 top-2 z-10 rounded-full bg-neon px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-black">
+            <div className="glass glass-hover relative overflow-hidden rounded-2xl p-2.5">
+              <span className="absolute left-2 top-2 z-10 glass-neon rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-black">
                 Personalizable
               </span>
               <div className="aspect-square overflow-hidden rounded-xl bg-neutral-100">

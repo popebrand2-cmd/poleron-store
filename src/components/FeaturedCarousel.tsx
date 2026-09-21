@@ -55,9 +55,9 @@ function ProductCard({ p }: { p: FeaturedProduct }) {
       href={`/productos/${p.slug}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="group relative w-[220px] shrink-0 snap-start overflow-hidden rounded-xl border border-neutral-800 bg-neutral-900 transition hover:border-neon sm:w-[260px]"
+      className="group relative w-[220px] shrink-0 snap-start glass glass-hover overflow-hidden rounded-2xl sm:w-[260px]"
     >
-      <span className="absolute left-3 top-3 z-10 rounded bg-neon px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-black">
+      <span className="absolute left-3 top-3 z-10 glass-neon rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-black">
         Personalizable
       </span>
       <div className={`aspect-square overflow-hidden p-3 transition-colors ${backdropClass}`}>

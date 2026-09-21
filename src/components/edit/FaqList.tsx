@@ -13,7 +13,7 @@ export default function FaqList({ initialItems }: { initialItems: ContentItemRow
 
   return (
     <>
-      <div className="divide-y divide-neutral-800 rounded-xl border border-neutral-800">
+      <div className="glass divide-y divide-white/10 overflow-hidden rounded-2xl">
         {items.map((item, i) => (
           <details
             key={item.id}

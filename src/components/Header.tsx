@@ -28,7 +28,7 @@ export default function Header() {
   return (
     <div className="sticky top-0 z-20">
       {!isAdmin && <AnnouncementBar />}
-      <header className="border-b border-neutral-800 bg-black">
+      <header className="glass-dark border-x-0 border-t-0">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           {!isAdmin && (
             <button
@@ -50,7 +50,7 @@ export default function Header() {
 
           <Link href="/" aria-label="POPE Brand — inicio" className="flex items-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/pope-logo.png" alt="POPE Brand" className="h-12 w-auto sm:h-16" />
+            <img src="/brand/pope-logo.png" alt="POPE Brand" className="h-11 w-auto sm:h-14" />
           </Link>
 
           {!isAdmin && (
@@ -94,7 +94,7 @@ export default function Header() {
         </div>
 
         {!isAdmin && menuOpen && (
-          <nav className="flex flex-col border-t border-neutral-800 py-2 text-sm font-semibold uppercase tracking-wide text-neutral-300 sm:hidden">
+          <nav className="flex flex-col border-t border-white/10 py-2 text-sm font-semibold uppercase tracking-wide text-neutral-300 sm:hidden">
             {NAV_LINKS.map((link) => (
               <Link
                 key={link.href}
