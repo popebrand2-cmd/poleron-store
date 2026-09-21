@@ -1,4 +1,4 @@
-import { createReadStream } from "fs";
+import { createReadStream, existsSync } from "fs";
 import { readFile, stat } from "fs/promises";
 import path from "path";
 import { Readable } from "stream";
@@ -33,7 +33,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ file
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const filePath = path.join(uploadsDir(), filename);
+  // Customer/owner uploads live on the persistent volume; the videos that ship with the site
+  // (folder /media in the repository) are served from here too.
+  const uploaded = path.join(uploadsDir(), filename);
+  const filePath = existsSync(uploaded) ? uploaded : path.join(process.cwd(), "media", filename);
   const cache = "public, max-age=31536000, immutable";
 
   // Videos are streamed with HTTP Range support: phones (iOS Safari in particular) refuse to
