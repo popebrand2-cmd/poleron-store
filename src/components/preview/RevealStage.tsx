@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 type Mode = "spotlight" | "slider";
 
+export type HoodieVariant = { id: string; label: string; swatch: string; before: string; after: string };
+
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 const radius = (w: number) => clamp(w * 0.3, 90, 190);
@@ -12,7 +14,8 @@ const radius = (w: number) => clamp(w * 0.3, 90, 190);
 // image with a design composited on it). Desktop: a soft spotlight follows the
 // cursor. Touch: a draggable divider. Only CSS variables change per frame — no
 // canvas and no base64 images.
-export default function RevealStage({ before, after, alt }: { before: string; after: string; alt: string }) {
+export default function RevealStage({ variants, alt }: { variants: HoodieVariant[]; alt: string }) {
+  const [active, setActive] = useState(variants[0].id);
   const stageRef = useRef<HTMLDivElement>(null);
   const rangeRef = useRef<HTMLInputElement>(null);
   const [mode, setMode] = useState<Mode>("slider");
@@ -153,27 +156,37 @@ export default function RevealStage({ before, after, alt }: { before: string; af
           mode === "spotlight" ? "reveal-spot cursor-crosshair" : "reveal-slide touch-pan-y"
         }`}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={before}
-          alt={`${alt} sin diseño`}
-          width={1200}
-          height={990}
-          fetchPriority="high"
-          decoding="async"
-          draggable={false}
-          className="pointer-events-none absolute inset-0 h-full w-full object-contain"
-        />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={after}
-          alt={`${alt} con un diseño personalizado`}
-          width={1200}
-          height={990}
-          decoding="async"
-          draggable={false}
-          className="reveal-after pointer-events-none absolute inset-0 h-full w-full object-contain"
-        />
+        {variants.map((v, i) => (
+          <div
+            key={v.id}
+            aria-hidden={v.id !== active}
+            className={`pointer-events-none absolute inset-0 transition-[opacity,transform] duration-500 ease-out ${
+              v.id === active ? "scale-100 opacity-100" : "scale-[0.97] opacity-0"
+            }`}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={v.before}
+              alt={`${alt} ${v.label.toLowerCase()} sin diseño`}
+              width={1200}
+              height={990}
+              fetchPriority={i === 0 ? "high" : "auto"}
+              decoding="async"
+              draggable={false}
+              className="absolute inset-0 h-full w-full object-contain"
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={v.after}
+              alt={`${alt} ${v.label.toLowerCase()} con un diseño personalizado`}
+              width={1200}
+              height={990}
+              decoding="async"
+              draggable={false}
+              className="reveal-after absolute inset-0 h-full w-full object-contain"
+            />
+          </div>
+        ))}
 
         <span className="glass-dark pointer-events-none absolute left-2 top-2 rounded-full px-3 py-1 font-display text-xl uppercase tracking-wide text-white">
           Antes
@@ -198,6 +211,34 @@ export default function RevealStage({ before, after, alt }: { before: string; af
             {mode === "slider" ? "Desliza para ver el después" : "Pasa el cursor sobre la prenda"}
           </p>
         )}
+      </div>
+
+      <div className="mt-4 flex flex-col items-center gap-2">
+        <p className="font-script text-2xl text-neon">Elige el color</p>
+        <div role="radiogroup" aria-label="Color del polerón" className="glass-dark flex gap-1 rounded-full p-1.5">
+          {variants.map((v) => {
+            const on = v.id === active;
+            return (
+              <button
+                key={v.id}
+                type="button"
+                role="radio"
+                aria-checked={on}
+                onClick={() => setActive(v.id)}
+                className={`flex items-center gap-2 rounded-full px-4 py-2 font-display text-2xl uppercase leading-none tracking-wide transition-colors ${
+                  on ? "glass-neon text-black" : "text-white hover:text-neon"
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className="h-5 w-5 rounded-full border border-white/40"
+                  style={{ background: v.swatch }}
+                />
+                {v.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <label className="sr-only" htmlFor="pope-compare">

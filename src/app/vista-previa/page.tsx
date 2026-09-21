@@ -36,6 +36,11 @@ const STEPS = [
   },
 ];
 
+const VARIANTS = [
+  { id: "negro", label: "Negro", swatch: "#0b0b0b", before: "/preview/hoodie-before.webp", after: "/preview/hoodie-after.webp" },
+  { id: "blanco", label: "Blanco", swatch: "#f5f5f0", before: "/preview/hoodie-white-before.webp", after: "/preview/hoodie-white-after.webp" },
+];
+
 function Words({ text, start, className }: { text: string; start: number; className?: string }) {
   return (
     <>
@@ -74,19 +79,10 @@ export default async function PreviewPage() {
           className="absolute inset-0 -z-10"
           style={{ background: "radial-gradient(60% 55% at 70% 58%, #102200 0%, rgba(16,34,0,0.35) 45%, transparent 75%)" }}
         />
-        <div
-          aria-hidden="true"
-          className="pope-bgtext pointer-events-none absolute -bottom-[0.12em] left-1/2 -z-10 -translate-x-1/2 whitespace-nowrap font-display text-[34vw] font-bold uppercase leading-[0.8] text-white/[0.04] lg:text-[22vw]"
-        >
-          POPE
-        </div>
 
         <div className="mx-auto grid min-h-[calc(100svh-7rem)] max-w-6xl items-center gap-6 px-5 py-8 lg:grid-cols-2 lg:gap-10 lg:py-12">
           <div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/brand/pope-logo.png" alt="POPE Brand" className="pope-rise h-16 w-auto sm:h-20" style={{ animationDelay: "0.9s" }} />
-
-            <h1 className="mt-4 font-display text-[5.2rem] font-bold uppercase leading-[0.82] text-white sm:text-[7rem] lg:text-[8.5rem]">
+            <h1 className="font-display text-[5.2rem] font-bold uppercase leading-[0.82] text-white sm:text-[7rem] lg:text-[8.5rem]">
               <span className="block">
                 <Words text="TU IDEA." start={1.1} />
               </span>
@@ -117,8 +113,19 @@ export default async function PreviewPage() {
             </div>
           </div>
 
-          <div className="pope-rise" style={{ animationDelay: "1s" }}>
-            <RevealStage before="/preview/hoodie-before.webp" after="/preview/hoodie-after.webp" alt="Polerón POPE" />
+          <div className="pope-rise relative" style={{ animationDelay: "1s" }}>
+            {/* POPE signature behind the garment */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/brand/pope-logo.png"
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              className="pointer-events-none absolute left-1/2 top-[42%] z-0 w-[118%] max-w-none -translate-x-1/2 -translate-y-1/2 -rotate-[8deg] opacity-40 [filter:drop-shadow(0_0_28px_rgba(182,255,0,0.35))]"
+            />
+            <div className="relative z-10">
+              <RevealStage variants={VARIANTS} alt="Polerón POPE" />
+            </div>
             <p className="mt-2 text-center text-sm text-neutral-400">
               Vista previa ilustrativa: el resultado final puede variar según el diseño y la prenda.
             </p>
