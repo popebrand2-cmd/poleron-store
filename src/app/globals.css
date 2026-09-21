@@ -152,3 +152,9 @@ body {
   .glass { background: rgba(38, 38, 38, 0.92); }
   .glass-dark { background: rgba(8, 10, 6, 0.95); }
 }
+
+/* POPE typography: Teko for titles, Yellowtail for brand accents. */
+h1, h2, h3 {
+  font-family: var(--font-teko), Impact, sans-serif;
+  letter-spacing: 0.01em !important;
+}

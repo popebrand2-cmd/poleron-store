@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Inter, Teko, Yellowtail } from "next/font/google";
 import { cookies } from "next/headers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -11,6 +12,12 @@ import { getAdminAccess } from "@/lib/admin-session";
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_ACCENT_COLOR, siteText } from "@/lib/site-content";
 import "./globals.css";
+
+// POPE brand typography (guía tipográfica): Inter = texto informativo,
+// Teko = títulos de impacto, Yellowtail = acentos y frases de marca.
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
+const teko = Teko({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-teko", display: "swap" });
+const yellowtail = Yellowtail({ subsets: ["latin"], weight: "400", variable: "--font-yellowtail", display: "swap" });
 
 export const metadata: Metadata = {
   title: "POPE — Ropa personalizada",
@@ -34,7 +41,7 @@ export default async function RootLayout({
   const footerTagline = siteText(textMap, "footer.tagline");
 
   return (
-    <html lang="es" style={{ ["--neon" as string]: accentColor }}>
+    <html lang="es" className={`${inter.variable} ${teko.variable} ${yellowtail.variable}`} style={{ ["--neon" as string]: accentColor }}>
       <head>
         {/* Fonts customers can pick for their design text (src/components/MockupEditor.tsx FONT_OPTIONS) */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

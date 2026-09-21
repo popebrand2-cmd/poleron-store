@@ -104,7 +104,7 @@ export default async function Home() {
               <EditableText value={heroEyebrow} heroField="heroEyebrow" as="span" />
             </span>
 
-            <h1 className="mt-5 text-4xl font-extrabold uppercase leading-[0.95] tracking-tight text-white sm:text-5xl lg:text-7xl">
+            <h1 className="mt-5 text-6xl font-bold uppercase leading-[0.88] text-white sm:text-7xl lg:text-8xl">
               {heroHeadlineLines.map((line, i) =>
                 i === heroHeadlineLines.length - 1 ? (
                   <span key={i} className="text-neon">
@@ -155,9 +155,9 @@ export default async function Home() {
 
       {/* Manifesto banner */}
       <section className="border-t border-neutral-800 bg-[#102200] py-14">
-        <p className="mx-auto max-w-4xl px-6 text-center text-3xl font-black uppercase leading-[1.05] tracking-tight text-white sm:text-4xl lg:text-5xl">
+        <p className="mx-auto max-w-4xl px-6 text-center font-display text-4xl font-bold uppercase leading-[1] text-white sm:text-5xl lg:text-6xl">
           <EditableText value={t("manifesto.title")} siteKey="manifesto.title" as="span" />{" "}
-          <span className="text-neon">
+          <span className="font-script text-[1.15em] font-normal normal-case text-neon">
             <EditableText value={t("manifesto.titleAccent")} siteKey="manifesto.titleAccent" as="span" />
           </span>
         </p>
@@ -175,7 +175,7 @@ export default async function Home() {
               <EditableText value={t("howItWorks.eyebrow")} siteKey="howItWorks.eyebrow" as="span" />
               <span className="h-px w-8 bg-neon" />
             </p>
-            <h2 className="text-3xl font-extrabold uppercase tracking-tight text-white sm:text-4xl">
+            <h2 className="text-4xl font-bold uppercase text-white sm:text-5xl">
               <EditableText value={t("howItWorks.heading")} siteKey="howItWorks.heading" as="span" />
             </h2>
           </div>
@@ -236,7 +236,7 @@ export default async function Home() {
               <EditableText value={t("featured.eyebrow")} siteKey="featured.eyebrow" as="span" />
               <span className="h-px w-8 bg-neon" />
             </p>
-            <h2 className="text-3xl font-extrabold uppercase tracking-tight text-white sm:text-4xl">
+            <h2 className="text-4xl font-bold uppercase text-white sm:text-5xl">
               <EditableText value={t("featured.heading")} siteKey="featured.heading" as="span" />
             </h2>
             <p className="mt-2 text-neutral-400">
@@ -274,7 +274,7 @@ export default async function Home() {
                 <EditableText value={t("collections.eyebrow")} siteKey="collections.eyebrow" as="span" />
                 <span className="h-px w-8 bg-neon" />
               </p>
-              <h2 className="text-3xl font-extrabold uppercase tracking-tight text-white sm:text-4xl">
+              <h2 className="text-4xl font-bold uppercase text-white sm:text-5xl">
                 <EditableText value={t("collections.heading")} siteKey="collections.heading" as="span" />
               </h2>
               <p className="mt-2 text-neutral-400">
@@ -317,7 +317,7 @@ export default async function Home() {
               <EditableText value={t("faq.eyebrow")} siteKey="faq.eyebrow" as="span" />
               <span className="h-px w-8 bg-neon" />
             </p>
-            <h2 className="text-3xl font-extrabold uppercase tracking-tight text-white sm:text-4xl">
+            <h2 className="text-4xl font-bold uppercase text-white sm:text-5xl">
               <EditableText value={t("faq.heading")} siteKey="faq.heading" as="span" />
             </h2>
           </div>

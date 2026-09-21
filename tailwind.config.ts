@@ -8,6 +8,11 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        display: ["var(--font-teko)", "Impact", "sans-serif"],
+        script: ["var(--font-yellowtail)", "cursive"],
+      },
       colors: {
         ink: "#111111",
         paper: "#fafaf9",

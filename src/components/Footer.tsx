@@ -15,7 +15,8 @@ export default function Footer({ tagline }: { tagline: string }) {
           <div>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/brand/pope-logo.png" alt="POPE Brand" className="h-16 w-auto" />
-            <p className="mt-3 text-[11px] font-bold uppercase tracking-[0.3em] text-neon">Personaliza / Crea / Viste</p>
+            <p className="mt-3 font-script text-2xl text-neon">Tu idea, tu estilo, tu esencia.</p>
+            <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.3em] text-neutral-500">Personaliza / Crea / Viste</p>
             <p className="mt-1 max-w-sm text-xs text-neutral-500">
               <EditableText value={tagline} siteKey="footer.tagline" as="span" multiline />
             </p>
