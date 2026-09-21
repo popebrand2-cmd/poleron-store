@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SITE_IMAGE_DEFAULTS, SITE_IMAGE_LABELS } from "@/lib/site-content";
-import { saveSiteText, uploadSiteImage } from "@/lib/site-edit-client";
+import { saveSiteText, uploadSiteImage, uploadSiteVideo } from "@/lib/site-edit-client";
 import { useSiteImage, useSiteText } from "@/components/SiteContentProvider";
 import { setPopupPreview } from "@/lib/popup-preview";
 
@@ -73,6 +73,85 @@ function ImageSlot({ k }: { k: string }) {
           if (file) replace(file);
         }}
       />
+    </li>
+  );
+}
+
+function VideoSlot({ n }: { n: number }) {
+  const router = useRouter();
+  const src = useSiteText(`video.${n}.src`);
+  const input = useRef<HTMLInputElement>(null);
+  const [pct, setPct] = useState<number | null>(null);
+  const [error, setError] = useState("");
+
+  async function upload(file: File) {
+    setError("");
+    setPct(0);
+    try {
+      const url = await uploadSiteVideo(file, setPct);
+      await saveSiteText(`video.${n}.src`, url);
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo subir el video.");
+    } finally {
+      setPct(null);
+    }
+  }
+
+  async function remove() {
+    await saveSiteText(`video.${n}.src`, "");
+    router.refresh();
+  }
+
+  return (
+    <li className="space-y-2 rounded-xl border border-white/10 p-2.5">
+      <div className="flex items-center gap-3">
+        <span className="flex h-16 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-neutral-800">
+          {src ? (
+            <video src={`${src}#t=0.1`} muted playsInline preload="metadata" className="h-full w-full object-cover" />
+          ) : (
+            <span className="text-lg text-neutral-500">+</span>
+          )}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-semibold text-white">Video {n}</p>
+          <p className="text-[11px] leading-tight text-neutral-400">
+            {error || (pct !== null ? `Subiendo… ${pct}%` : "Vertical (9:16), MP4, hasta 60 MB.")}
+          </p>
+        </div>
+        <div className="flex shrink-0 flex-col gap-1">
+          <button
+            type="button"
+            disabled={pct !== null}
+            onClick={() => input.current?.click()}
+            className="rounded-full bg-neon px-3 py-1 text-[11px] font-bold uppercase text-black disabled:opacity-50"
+          >
+            {src ? "Cambiar" : "Subir"}
+          </button>
+          {src && pct === null && (
+            <button type="button" onClick={remove} className="text-[11px] text-neutral-400 underline hover:text-white">
+              Quitar
+            </button>
+          )}
+        </div>
+        <input
+          ref={input}
+          type="file"
+          accept="video/mp4,video/webm,video/quicktime"
+          className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            e.target.value = "";
+            if (file) upload(file);
+          }}
+        />
+      </div>
+      {src && (
+        <div className="grid grid-cols-2 gap-2">
+          <SettingField k={`video.${n}.tag`} label="Sección" optional placeholder="Polerones" />
+          <SettingField k={`video.${n}.caption`} label="Título" optional placeholder="Polerón Oversize" />
+        </div>
+      )}
     </li>
   );
 }
@@ -156,6 +235,17 @@ export default function SiteAssetsPanel({ defaultOpen = false }: { defaultOpen?:
             <ImageSlot key={k} k={k} />
           ))}
         </ul>
+        <div className="space-y-3 border-t border-white/10 pt-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-neon">Videos verticales (pruebas reales)</p>
+          <p className="text-[11px] leading-tight text-neutral-400">
+            Aparecen en la portada como cartas. «Sección» agrupa las cartas (por ejemplo Polerones o Poleras): si escribes secciones, se crean filtros solos.
+          </p>
+          <ul className="space-y-2">
+            {Array.from({ length: 8 }, (_, i) => (
+              <VideoSlot key={i} n={i + 1} />
+            ))}
+          </ul>
+        </div>
         <div className="space-y-3 border-t border-white/10 pt-3">
           <SettingField k="setting.instagramUrl" label="Enlace de Instagram" optional placeholder="https://instagram.com/tu_usuario" />
           <SettingField k="setting.facebookUrl" label="Enlace de Facebook" optional placeholder="https://facebook.com/tu_pagina" />

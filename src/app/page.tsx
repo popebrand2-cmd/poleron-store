@@ -6,29 +6,22 @@ import EditableLink from "@/components/edit/EditableLink";
 import Txt from "@/components/edit/Txt";
 import PopeHero from "@/components/PopeHero";
 import RealWorks from "@/components/RealWorks";
+import RealVideos from "@/components/RealVideos";
 import HowItWorks from "@/components/preview/HowItWorks";
 import TrustBadgesList from "@/components/edit/TrustBadgesList";
 import FaqList from "@/components/edit/FaqList";
-import { siteText, CONTENT_DEFAULTS, DEFAULT_ACCENT_COLOR, type ContentSection } from "@/lib/site-content";
+import { siteText, CONTENT_DEFAULTS, type ContentSection } from "@/lib/site-content";
 
 export const dynamic = "force-dynamic";
 
-// Only two garment types exist today, so this maps straight to a slug each
-// — once there's more than one product per type this should point at a
-// real category listing instead of a single product.
-const BROWSE_TYPES = [
-  { labelKey: "browse.hoodies", match: (name: string) => /hoodie|poler[oó]n/i.test(name) },
-  { labelKey: "browse.tees", match: (name: string) => /tee|polera/i.test(name) },
-];
 
 export default async function Home() {
-  const [products, settings, designCollections, contentItems, siteTextRows] = await Promise.all([
+  const [products, designCollections, contentItems, siteTextRows] = await Promise.all([
     prisma.product.findMany({
       where: { active: true },
       orderBy: { createdAt: "desc" },
       include: { colors: { include: { views: true } } },
     }),
-    prisma.storeSettings.findUnique({ where: { id: "singleton" } }),
     prisma.designCollection.findMany({
       where: { active: true },
       orderBy: { sortOrder: "asc" },
@@ -44,7 +37,6 @@ export default async function Home() {
     products.find((p) => isHoodie(p) && /oversize/i.test(`${p.name} ${p.slug}`)) ?? products.find(isHoodie) ?? products[0];
   const editorHref = hoodie ? `/productos/${hoodie.slug}` : "#tienda";
   const collectionsWithDesigns = designCollections.filter((c) => c.designs.length > 0);
-  const accentColor = settings?.accentColor || DEFAULT_ACCENT_COLOR;
 
   const textMap = Object.fromEntries(siteTextRows.map((t) => [t.key, t.value]));
   const t = (key: string) => siteText(textMap, key);
@@ -78,46 +70,6 @@ export default async function Home() {
       <section className="border-t border-neutral-800 bg-neutral-950">
         <div className="mx-auto max-w-6xl px-6 py-12">
           <TrustBadgesList initialItems={itemsFor("trustBadges")} />
-        </div>
-      </section>
-
-      {/* Browse by garment type */}
-      <section className="bg-black">
-        <div className="border-y border-neutral-800 bg-neutral-950 py-3 text-center">
-          <h2 className="text-lg font-extrabold uppercase tracking-widest text-white">
-            <span className="text-neon">
-              <Txt k="browseTypes.prefix" />
-            </span>{" "}
-            ·{" "}
-            <EditableText value={t("browseTypes.heading")} siteKey="browseTypes.heading" as="span" />
-          </h2>
-        </div>
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-5 px-6 py-10 sm:grid-cols-2">
-          {BROWSE_TYPES.map((tp) => {
-            const product = products.find((p) => tp.match(p.name));
-            if (!product) return null;
-            const cover = product.colors[0]?.views[0]?.imageUrl;
-            return (
-              <EditableLink
-                key={tp.labelKey}
-                href={`/productos/${product.slug}`}
-                style={{ backgroundColor: `${accentColor}b3` }}
-                className="group relative aspect-[16/10] overflow-hidden rounded-xl border-2 border-transparent p-6 transition hover:border-neon"
-              >
-                {cover && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={cover}
-                    alt={t(tp.labelKey)}
-                    className="h-full w-full object-contain transition duration-300 group-hover:scale-105"
-                  />
-                )}
-                <span className="absolute bottom-4 left-4 rounded bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-black shadow">
-                  <Txt k={tp.labelKey} /> →
-                </span>
-              </EditableLink>
-            );
-          })}
         </div>
       </section>
 
@@ -157,6 +109,9 @@ export default async function Home() {
           )}
         </div>
       </section>
+
+      {/* Vertical videos of finished garments, as a hand of cards (hidden until the owner uploads some) */}
+      <RealVideos />
 
       {/* Photos of real, finished garments (hidden until the owner uploads some) */}
       <RealWorks />

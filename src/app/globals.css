@@ -365,3 +365,11 @@ a.pope-social:active { transform: scale(0.96); }
 /* Empty editable text: keep it clickable and show a hint while the owner is editing */
 [contenteditable]:empty { display: inline-block; min-width: 6rem; }
 [contenteditable][data-placeholder]:empty::before { content: attr(data-placeholder); opacity: 0.55; }
+
+/* ---------- Videos verticales: mano de cartas ---------- */
+.pope-card { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+@media (min-width: 1024px) {
+  .pope-card { transform: translateY(var(--y, 0px)) rotate(var(--r, 0deg)); }
+  .pope-card:hover, .pope-card:focus-within { transform: translateY(-16px) rotate(0deg) scale(1.04); z-index: 5; }
+}
+@media (prefers-reduced-motion: reduce) { .pope-card { transition: none; } }

@@ -49,7 +49,7 @@ export function sectionForPath(pathname: string): SectionKey | "owner" | null {
   if (p.startsWith("/admin/usuarios") || p.startsWith("/api/admin/users")) return "owner";
   if (p.startsWith("/admin/pedidos") || p.startsWith("/api/admin/orders")) return "pedidos";
   if (p.startsWith("/admin/envios") || p.startsWith("/api/admin/shipping")) return "envios";
-  if (p.startsWith("/admin/portada") || p.startsWith("/api/admin/hero") || p.startsWith("/api/admin/site-text") || p.startsWith("/api/admin/content-items")) return "portada";
+  if (p.startsWith("/admin/portada") || p.startsWith("/api/admin/hero") || p.startsWith("/api/admin/site-text") || p.startsWith("/api/admin/upload-video") || p.startsWith("/api/admin/content-items")) return "portada";
   if (p.startsWith("/admin/colecciones") || p.startsWith("/api/admin/collections") || p.startsWith("/api/admin/designs")) return "colecciones";
   if (p.startsWith("/admin/estadisticas")) return "estadisticas";
   if (p === "/admin" || p.startsWith("/admin/productos") || p.startsWith("/api/admin/products")) return "productos";
