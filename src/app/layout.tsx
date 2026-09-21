@@ -52,6 +52,15 @@ export default async function RootLayout({
         />
       </head>
       <body className="flex min-h-screen flex-col antialiased">
+        {/* Liquid "drop" filter used by the .pope-cta buttons */}
+        <svg aria-hidden="true" focusable="false" width="0" height="0" className="pointer-events-none absolute">
+          <defs>
+            <filter id="pope-goo" x="-10%" y="-40%" width="120%" height="180%" colorInterpolationFilters="sRGB">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur" />
+              <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 20 -9" />
+            </filter>
+          </defs>
+        </svg>
         <EditModeProvider isAdmin={isAdmin}>
           <Header />
           <div className="flex-1">{children}</div>
