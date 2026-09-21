@@ -192,7 +192,6 @@ h1, h2, h3 {
 
 .pope-cta {
   --cta-ease: cubic-bezier(0.45, 0.05, 0.25, 1);
-  --cta-splash: cubic-bezier(0.34, 1.5, 0.64, 1); /* overshoots a little: the drop "lands" and settles */
   position: relative; display: inline-flex; align-items: center; gap: 0.75rem; border-radius: 9999px; padding: 0.5rem;
   filter: drop-shadow(0 0 0 transparent);
   transition: filter 0.7s ease, transform 0.25s ease;
@@ -207,8 +206,8 @@ h1, h2, h3 {
   transition: width 0.7s var(--cta-ease); /* leaving: the pill pulls back first... */
 }
 .pope-cta-drop {
-  position: absolute; top: 0.25rem; right: 0.25rem; width: 3.75rem; height: 3.75rem; border-radius: 9999px; background: var(--neon);
-  transform: translateX(-3.6rem) scale(0.55);
+  position: absolute; top: 0.3rem; right: 0.5rem; width: 3.65rem; height: 3.65rem; border-radius: 9999px; background: var(--neon);
+  transform: translateX(-3.4rem) scale(0.55);
   transition: transform 0.7s var(--cta-ease) 0.14s; /* ...then the drop returns into it */
 }
 .pope-cta-label { position: relative; z-index: 10; }
@@ -224,20 +223,20 @@ h1, h2, h3 {
 
 @keyframes ctaGulp {
   0%   { transform: translateX(0) scale(1); }
-  45%  { transform: translateX(-2px) scale(0.93); }
-  75%  { transform: translateX(-7px) scale(1.05); }
+  45%  { transform: translateX(-2px) scale(0.96); }
+  75%  { transform: translateX(-7px) scale(1.02); }
   100% { transform: translateX(-6px) scale(1); }
 }
 @keyframes ctaRipple { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.9); opacity: 0; } }
 @keyframes ctaDrip {
-  0%, 60%, 100% { transform: translateX(-3.6rem) scale(0.55); }
+  0%, 60%, 100% { transform: translateX(-3.4rem) scale(0.55); }
   76%, 86% { transform: translateX(0) scale(1); }
 }
 
 @media (hover: hover) {
   .pope-cta:hover { filter: drop-shadow(0 6px 18px color-mix(in srgb, var(--neon) 30%, transparent)); }
   /* entering: the drop leads, the pill follows, the circle gulps on impact */
-  .pope-cta:hover .pope-cta-drop { transform: translateX(0) scale(1); transition: transform 0.85s var(--cta-splash); }
+  .pope-cta:hover .pope-cta-drop { transform: translateX(0) scale(1); transition: transform 0.75s var(--cta-ease); }
   .pope-cta:hover .pope-cta-bg { width: calc(100% - 1rem); transition: width 0.9s var(--cta-ease) 0.2s; }
   .pope-cta:hover .pope-cta-circle { transform: translateX(-6px); animation: ctaGulp 0.9s ease-out 0.5s both; }
   .pope-cta:hover .pope-cta-circle::after { animation: ctaRipple 0.9s ease-out 0.55s both; }
@@ -259,7 +258,9 @@ h1, h2, h3 {
 @media (prefers-reduced-motion: reduce) {
   .pope-word, .pope-rise, .pope-bgtext { animation: none !important; opacity: 1 !important; transform: none !important; filter: none !important; }
   .pope-nudge { animation: none; }
-  .pope-cta, .pope-cta-bg, .pope-cta-drop, .pope-cta-circle, .pope-cta-circle svg { transition: none !important; animation: none !important; }
+  /* The button's hover is short and user-initiated, so it keeps its liquid transition;
+     only the looping drip, the ripple and the gulp are switched off. */
+  .pope-cta-drop, .pope-cta-circle, .pope-cta-circle::after { animation: none !important; }
   .pope-cta-circle::after { display: none; }
 }
 
