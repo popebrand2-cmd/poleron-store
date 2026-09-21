@@ -2,27 +2,26 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
-type Mode = "spotlight" | "slider";
-
 export type HoodieVariant = { id: string; label: string; swatch: string; before: string; after: string };
 
 const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
-const radius = (w: number) => clamp(w * 0.3, 90, 190);
+const radius = (w: number, touch: boolean) => (touch ? clamp(w * 0.36, 100, 190) : clamp(w * 0.3, 90, 190));
 
-// Before/after comparison of the SAME garment photo (the "after" is that
-// image with a design composited on it). Desktop: a soft spotlight follows the
-// cursor. Touch: a draggable divider. Only CSS variables change per frame — no
-// canvas and no base64 images.
+// Before/after comparison of the SAME garment photo (the "after" is that image
+// with a design composited on it). A soft spotlight reveals the design: it
+// follows the cursor on desktop and the finger on touch screens (held slightly
+// above the fingertip so the hand doesn't cover it). Only CSS variables change
+// per frame — no canvas and no base64 images.
 export default function RevealStage({ variants, alt }: { variants: HoodieVariant[]; alt: string }) {
   const [active, setActive] = useState(variants[0].id);
   const stageRef = useRef<HTMLDivElement>(null);
-  const rangeRef = useRef<HTMLInputElement>(null);
-  const [mode, setMode] = useState<Mode>("slider");
+  const [touchUI, setTouchUI] = useState(false);
   const [touched, setTouched] = useState(false);
   const interacted = useRef(false);
   const loop = useRef(0);
   const demo = useRef(0);
+  const release = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const s = useRef({ x: 0, y: 0, r: 0, tx: 0, ty: 0, tr: 0 });
 
   function apply() {
@@ -35,8 +34,8 @@ export default function RevealStage({ variants, alt }: { variants: HoodieVariant
 
   function tick() {
     const c = s.current;
-    c.x += (c.tx - c.x) * 0.14;
-    c.y += (c.ty - c.y) * 0.14;
+    c.x += (c.tx - c.x) * 0.16;
+    c.y += (c.ty - c.y) * 0.16;
     c.r += (c.tr - c.r) * 0.14;
     apply();
     const moving = Math.abs(c.tx - c.x) > 0.4 || Math.abs(c.ty - c.y) > 0.4 || Math.abs(c.tr - c.r) > 0.4;
@@ -47,11 +46,6 @@ export default function RevealStage({ variants, alt }: { variants: HoodieVariant
     if (!loop.current) loop.current = requestAnimationFrame(tick);
   }
 
-  function setSlider(v: number) {
-    stageRef.current?.style.setProperty("--p", `${v}%`);
-    if (rangeRef.current) rangeRef.current.value = String(Math.round(100 - v));
-  }
-
   function markInteracted() {
     interacted.current = true;
     cancelAnimationFrame(demo.current);
@@ -59,12 +53,16 @@ export default function RevealStage({ variants, alt }: { variants: HoodieVariant
   }
 
   useEffect(() => {
-    const fine = window.matchMedia("(any-hover: hover) and (any-pointer: fine)").matches;
+    const canHover = window.matchMedia("(any-hover: hover) and (any-pointer: fine)").matches;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const m: Mode = fine ? "spotlight" : "slider";
-    setMode(m);
+    setTouchUI(!canHover);
     if (reduce) {
-      setSlider(50);
+      // No motion: show the finished design (a spotlight big enough to cover the garment).
+      const el = stageRef.current;
+      if (el) {
+        s.current = { x: el.clientWidth / 2, y: el.clientHeight / 2, r: el.clientWidth, tx: 0, ty: 0, tr: 0 };
+        apply();
+      }
       return;
     }
     // One short automatic demo so the visitor sees what the effect does.
@@ -78,74 +76,85 @@ export default function RevealStage({ variants, alt }: { variants: HoodieVariant
       const step = (now: number) => {
         if (interacted.current) return;
         const t = clamp((now - t0) / total, 0, 1);
-        if (m === "slider") {
-          const v = t < 0.6 ? 100 - ease(t / 0.6) * 100 : ease((t - 0.6) / 0.4) * 50;
-          setSlider(v);
-        } else {
-          const c = s.current;
-          c.tx = w * (0.2 + 0.6 * ease(Math.min(1, t / 0.85)));
-          c.ty = h * (0.45 + 0.1 * Math.sin(t * Math.PI * 2));
-          c.tr = t < 0.85 ? radius(w) : 0;
-          if (t === 0) {
-            c.x = c.tx;
-            c.y = c.ty;
-          }
-          kick();
+        const c = s.current;
+        c.tx = w * (0.2 + 0.6 * ease(Math.min(1, t / 0.85)));
+        c.ty = h * (0.45 + 0.1 * Math.sin(t * Math.PI * 2));
+        c.tr = t < 0.85 ? radius(w, !canHover) : 0;
+        if (t === 0) {
+          c.x = c.tx;
+          c.y = c.ty;
         }
+        kick();
         if (t < 1) demo.current = requestAnimationFrame(step);
       };
       demo.current = requestAnimationFrame(step);
     }, 1900);
     return () => {
       clearTimeout(startDelay);
+      clearTimeout(release.current);
       cancelAnimationFrame(demo.current);
       cancelAnimationFrame(loop.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function onPointerMove(e: React.PointerEvent) {
+  function aim(e: React.PointerEvent) {
     const el = stageRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    // A real mouse always gets the soft spotlight, even if the device also has a touchscreen.
-    if (e.pointerType === "mouse" && mode !== "spotlight") setMode("spotlight");
-    if ((mode === "spotlight" || e.pointerType === "mouse") && e.pointerType !== "touch") {
-      markInteracted();
-      const c = s.current;
-      const first = c.r < 1;
-      c.tx = e.clientX - rect.left;
-      c.ty = e.clientY - rect.top;
-      c.tr = radius(rect.width);
-      if (first) {
-        c.x = c.tx;
-        c.y = c.ty;
-      }
-      kick();
-    } else if (mode === "slider" && e.buttons > 0) {
-      markInteracted();
-      setSlider(clamp(((e.clientX - rect.left) / rect.width) * 100, 0, 100));
-    }
-  }
-
-  function onPointerDown(e: React.PointerEvent) {
-    if (e.pointerType === "touch" && mode !== "slider") setMode("slider");
-    else if (mode !== "slider") return;
-    const el = stageRef.current;
-    if (!el) return;
+    const touch = e.pointerType === "touch" || e.pointerType === "pen";
+    if (touch !== touchUI) setTouchUI(touch);
     markInteracted();
-    el.setPointerCapture(e.pointerId);
-    const rect = el.getBoundingClientRect();
-    setSlider(clamp(((e.clientX - rect.left) / rect.width) * 100, 0, 100));
+    clearTimeout(release.current);
+    const c = s.current;
+    const first = c.r < 1;
+    c.tx = e.clientX - rect.left;
+    c.ty = e.clientY - rect.top - (touch ? clamp(rect.height * 0.1, 30, 60) : 0);
+    c.tr = radius(rect.width, touch);
+    if (first) {
+      c.x = c.tx;
+      c.y = c.ty;
+    }
+    kick();
   }
 
-  function onPointerLeave() {
-    if (mode !== "spotlight") return;
+  function onPointerMove(e: React.PointerEvent) {
+    // A mouse hovers; a finger only reports moves while it is touching.
+    aim(e);
+  }
+
+  function onPointerUp(e: React.PointerEvent) {
+    if (e.pointerType === "mouse") return;
+    // Let the design linger for a moment after the finger lifts, then fade it.
+    clearTimeout(release.current);
+    release.current = setTimeout(() => {
+      s.current.tr = 0;
+      kick();
+    }, 1400);
+  }
+
+  function onPointerLeave(e: React.PointerEvent) {
+    if (e.pointerType !== "mouse") return;
     s.current.tr = 0;
     kick();
   }
 
-  const style = { "--p": "100%", "--x": "50%", "--y": "50%", "--r": "0px" } as CSSProperties;
+  function fromKeyboard(v: number) {
+    const el = stageRef.current;
+    if (!el) return;
+    markInteracted();
+    const c = s.current;
+    c.tx = (el.clientWidth * v) / 100;
+    c.ty = el.clientHeight * 0.45;
+    c.tr = radius(el.clientWidth, false);
+    if (c.r < 1) {
+      c.x = c.tx;
+      c.y = c.ty;
+    }
+    kick();
+  }
+
+  const style = { "--x": "50%", "--y": "50%", "--r": "0px" } as CSSProperties;
 
   return (
     <div className="relative mx-auto w-full max-w-[680px]">
@@ -153,11 +162,11 @@ export default function RevealStage({ variants, alt }: { variants: HoodieVariant
         ref={stageRef}
         style={style}
         onPointerMove={onPointerMove}
-        onPointerDown={onPointerDown}
+        onPointerDown={aim}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
         onPointerLeave={onPointerLeave}
-        className={`relative aspect-[1200/990] w-full select-none ${
-          mode === "spotlight" ? "reveal-spot cursor-crosshair" : "reveal-slide touch-pan-y"
-        }`}
+        className="reveal-spot relative aspect-[1200/990] w-full cursor-crosshair select-none touch-pan-y"
       >
         {variants.map((v, i) => (
           <div
@@ -198,20 +207,12 @@ export default function RevealStage({ variants, alt }: { variants: HoodieVariant
           Después
         </span>
 
-        {mode === "slider" && (
-          <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-neon" style={{ left: "var(--p)" }} aria-hidden="true">
-            <span className="glass-neon absolute left-1/2 top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-lg text-black">
-              ↔
-            </span>
-          </div>
-        )}
-
         {!touched && (
           <p className="glass-dark pointer-events-none absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium text-white">
             <span className="pope-nudge text-neon" aria-hidden="true">
-              {mode === "slider" ? "↔" : "◎"}
+              ◎
             </span>
-            {mode === "slider" ? "Desliza para ver el después" : "Pasa el cursor sobre la prenda"}
+            {touchUI ? "Toca y arrastra sobre la prenda" : "Pasa el cursor sobre la prenda"}
           </p>
         )}
       </div>
@@ -245,18 +246,16 @@ export default function RevealStage({ variants, alt }: { variants: HoodieVariant
       </div>
 
       <label className="sr-only" htmlFor="pope-compare">
-        Comparar antes y después
+        Mover el foco que revela el diseño
       </label>
       <input
         id="pope-compare"
-        ref={rangeRef}
         type="range"
         min={0}
         max={100}
-        defaultValue={0}
+        defaultValue={50}
         onChange={(e) => {
-          markInteracted();
-          setSlider(100 - Number(e.target.value));
+          fromKeyboard(Number(e.target.value));
         }}
         className="sr-only"
       />
