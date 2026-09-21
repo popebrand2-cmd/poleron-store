@@ -176,7 +176,6 @@ function Player({ cards, index, onIndex, onClose }: { cards: Card[]; index: numb
 export default function RealVideos() {
   const { editMode } = useEditMode();
   const texts = useSiteTexts();
-  const [filter, setFilter] = useState("");
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState<number | null>(null);
   const [inView, setInView] = useState(false);
@@ -194,8 +193,7 @@ export default function RealVideos() {
     return out;
   }, [texts]);
 
-  const tags = useMemo(() => Array.from(new Set(all.map((c) => c.tag).filter(Boolean))), [all]);
-  const cards = filter ? all.filter((c) => c.tag === filter) : all;
+  const cards = all;
   const close = useCallback(() => setOpen(null), []);
   const hasVideos = all.length > 0;
   const current = Math.min(active, Math.max(0, cards.length - 1));
@@ -254,31 +252,6 @@ export default function RealVideos() {
           <Txt k="videos.heading" as="h2" className="block text-4xl font-bold uppercase text-white sm:text-5xl" />
           <Txt k="videos.subtext" as="p" multiline className="mx-auto mt-2 block max-w-xl text-neutral-400" />
         </div>
-
-        {tags.length > 0 && (
-          <div role="tablist" aria-label="Filtrar videos" className="mt-6 flex flex-wrap justify-center gap-2">
-            {["", ...tags].map((t) => {
-              const on = filter === t;
-              return (
-                <button
-                  key={t || "all"}
-                  type="button"
-                  role="tab"
-                  aria-selected={on}
-                  onClick={() => {
-                    setFilter(t);
-                    setActive(0);
-                  }}
-                  className={`min-h-11 rounded-full px-5 py-2 font-display text-2xl uppercase leading-none tracking-wide transition ${
-                    on ? "glass-neon text-black" : "glass-dark text-white hover:text-neon"
-                  }`}
-                >
-                  {t || <Txt k="videos.all" />}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       <ul

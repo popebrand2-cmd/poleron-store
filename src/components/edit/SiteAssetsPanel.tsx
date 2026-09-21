@@ -238,7 +238,7 @@ export default function SiteAssetsPanel({ defaultOpen = false }: { defaultOpen?:
         <div className="space-y-3 border-t border-white/10 pt-3">
           <p className="text-xs font-bold uppercase tracking-wide text-neon">Videos verticales (pruebas reales)</p>
           <p className="text-[11px] leading-tight text-neutral-400">
-            Aparecen en la portada como cartas. «Sección» agrupa las cartas (por ejemplo Polerones o Poleras): si escribes secciones, se crean filtros solos.
+            Aparecen en la portada como cartas que se abren. «Sección» es la etiqueta verde de la carta abierta (por ejemplo Polerones o Poleras).
           </p>
           <ul className="space-y-2">
             {Array.from({ length: 8 }, (_, i) => (
