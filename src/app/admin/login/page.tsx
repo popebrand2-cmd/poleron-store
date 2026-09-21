@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,13 +19,13 @@ function AdminLoginForm() {
     const res = await fetch("/api/admin/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ password }),
+      body: JSON.stringify({ email, password }),
     });
 
     setLoading(false);
 
     if (!res.ok) {
-      setError("Contraseña incorrecta.");
+      setError("Correo o contraseña incorrectos.");
       return;
     }
 
@@ -40,12 +41,20 @@ function AdminLoginForm() {
       <div className="absolute inset-x-0 top-0 h-1.5 bg-neon" />
       <p className="text-4xl font-black uppercase tracking-tight text-white">POPE</p>
       <p className="mb-8 mt-1 text-xs font-bold uppercase tracking-[0.2em] text-neon">Panel de administración</p>
+      <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">Correo</label>
+      <input
+        type="email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        placeholder="(la dueña lo deja vacío)"
+        autoFocus
+        className="mb-4 w-full rounded-lg border border-neutral-300 px-3 py-2.5 outline-none focus:border-neutral-900"
+      />
       <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-neutral-600">Contraseña</label>
       <input
         type="password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
-        autoFocus
         className="mb-4 w-full rounded-lg border border-neutral-300 px-3 py-2.5 outline-none focus:border-neutral-900"
       />
       {error && <p className="mb-4 text-sm text-red-600">{error}</p>}

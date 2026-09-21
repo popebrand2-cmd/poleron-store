@@ -7,7 +7,7 @@ import MetaPixel from "@/components/MetaPixel";
 import VisitTracker from "@/components/VisitTracker";
 import { EditModeProvider } from "@/components/edit/EditModeContext";
 import EditModeToggle from "@/components/edit/EditModeToggle";
-import { ADMIN_COOKIE_NAME, adminAuthToken } from "@/lib/admin-auth";
+import { getAdminAccess } from "@/lib/admin-session";
 import { prisma } from "@/lib/prisma";
 import { DEFAULT_ACCENT_COLOR, siteText } from "@/lib/site-content";
 import "./globals.css";
@@ -27,7 +27,8 @@ export default async function RootLayout({
     prisma.storeSettings.findUnique({ where: { id: "singleton" } }),
     prisma.siteText.findMany(),
   ]);
-  const isAdmin = cookieStore.get(ADMIN_COOKIE_NAME)?.value === (await adminAuthToken());
+  const access = cookieStore.get("admin_auth") || cookieStore.get("admin_user") ? await getAdminAccess() : null;
+  const isAdmin = !!access && access.perms.includes("portada");
   const accentColor = settings?.accentColor || DEFAULT_ACCENT_COLOR;
   const textMap = Object.fromEntries(siteTextRows.map((t) => [t.key, t.value]));
   const footerTagline = siteText(textMap, "footer.tagline");

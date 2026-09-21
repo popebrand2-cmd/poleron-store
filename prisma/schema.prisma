@@ -241,3 +241,25 @@ model OrderItem {
   designPlacement String
   previewImageUrl String // rendered mockup thumbnail shown in the cart/order
 }
+
+// Team member who logs into /admin with their own email + password. The owner is not stored here (she uses ADMIN_PASSWORD). role PARTNER = every section; EMPLOYEE = only the sections listed in `permissions` (comma-separated keys from SECTIONS in lib/admin-auth.ts).
+
+model AdminUser {
+
+  id           String   @id @default(cuid())
+
+  name         String
+
+  email        String   @unique
+
+  passwordHash String
+
+  role         String   @default("EMPLOYEE")
+
+  permissions  String   @default("pedidos")
+
+  active       Boolean  @default(true)
+
+  createdAt    DateTime @default(now())
+
+}

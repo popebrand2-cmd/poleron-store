@@ -1,20 +1,51 @@
 import { NextResponse } from "next/server";
-import { ADMIN_COOKIE_NAME, adminAuthToken, isAdminPasswordCorrect } from "@/lib/admin-auth";
+import { prisma } from "@/lib/prisma";
+import {
+  ADMIN_COOKIE_NAME,
+  ADMIN_USER_COOKIE,
+  USER_SESSION_SECONDS,
+  adminAuthToken,
+  isAdminPasswordCorrect,
+  signUserToken,
+} from "@/lib/admin-auth";
+import { verifyPassword } from "@/lib/password";
+import { permsFor } from "@/lib/admin-session";
+
+const cookieBase = {
+  httpOnly: true,
+  sameSite: "lax" as const,
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+};
 
 export async function POST(request: Request) {
-  const { password } = (await request.json()) as { password?: string };
+  const { email, password } = (await request.json()) as { email?: string; password?: string };
+  if (!password) return NextResponse.json({ error: "Contraseña incorrecta." }, { status: 401 });
 
-  if (!password || !isAdminPasswordCorrect(password)) {
-    return NextResponse.json({ error: "Contraseña incorrecta." }, { status: 401 });
+  // No email -> the owner's master password.
+  if (!email?.trim()) {
+    if (!isAdminPasswordCorrect(password)) {
+      return NextResponse.json({ error: "Contraseña incorrecta." }, { status: 401 });
+    }
+    const response = NextResponse.json({ ok: true });
+    response.cookies.set(ADMIN_COOKIE_NAME, await adminAuthToken(), { ...cookieBase, maxAge: 60 * 60 * 24 * 7 });
+    response.cookies.delete(ADMIN_USER_COOKIE);
+    return response;
   }
 
-  const response = NextResponse.json({ ok: true });
-  response.cookies.set(ADMIN_COOKIE_NAME, await adminAuthToken(), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
+  const user = await prisma.adminUser.findUnique({ where: { email: email.trim().toLowerCase() } });
+  if (!user || !user.active || !verifyPassword(password, user.passwordHash)) {
+    return NextResponse.json({ error: "Correo o contraseña incorrectos." }, { status: 401 });
+  }
+
+  const token = await signUserToken({
+    id: user.id,
+    name: user.name,
+    role: user.role === "PARTNER" ? "PARTNER" : "EMPLOYEE",
+    perms: permsFor(user.role, user.permissions),
   });
+  const response = NextResponse.json({ ok: true });
+  response.cookies.set(ADMIN_USER_COOKIE, token, { ...cookieBase, maxAge: USER_SESSION_SECONDS });
+  response.cookies.delete(ADMIN_COOKIE_NAME);
   return response;
 }

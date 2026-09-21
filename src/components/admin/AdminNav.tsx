@@ -1,23 +1,28 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { SECTIONS } from "@/lib/admin-auth";
+import { getAdminAccess } from "@/lib/admin-session";
+import LogoutButton from "./LogoutButton";
 
-const ADMIN_LINKS = [
-  { href: "/admin", label: "Productos" },
-  { href: "/admin/pedidos", label: "Pedidos" },
-  { href: "/admin/envios", label: "Envíos" },
-  { href: "/admin/portada", label: "Portada" },
-  { href: "/admin/colecciones", label: "Colecciones" },
-  { href: "/admin/estadisticas", label: "Estadísticas" },
-];
+export default async function AdminNav({ current, pendingOrders }: { current: string; pendingOrders?: number }) {
+  const access = await getAdminAccess();
+  // Session revoked (person deactivated) or cookie gone: back to login.
+  if (!access) redirect("/admin/login");
 
-export default function AdminNav({ current, pendingOrders }: { current: string; pendingOrders?: number }) {
+  const links: { href: string; label: string }[] = SECTIONS.filter((s) => access.perms.includes(s.key)).map((s) => ({ href: s.href, label: s.label.split(" ")[0] }));
+  if (access.kind === "owner") links.push({ href: "/admin/usuarios", label: "Usuarios" });
+
   return (
     <nav className="flex flex-wrap items-center gap-4">
-      {ADMIN_LINKS.filter((l) => l.href !== current).map((l) => (
-        <Link key={l.href} href={l.href} className="text-sm font-medium text-neutral-700 hover:underline">
-          {l.label}
-          {l.href === "/admin/pedidos" && !!pendingOrders && ` (${pendingOrders})`}
-        </Link>
-      ))}
+      {links
+        .filter((l) => l.href !== current)
+        .map((l) => (
+          <Link key={l.href} href={l.href} className="text-sm font-medium text-neutral-700 hover:underline">
+            {l.label}
+            {l.href === "/admin/pedidos" && !!pendingOrders && ` (${pendingOrders})`}
+          </Link>
+        ))}
+      <LogoutButton name={access.name} />
     </nav>
   );
 }

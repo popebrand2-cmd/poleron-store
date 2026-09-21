@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { ADMIN_COOKIE_NAME, adminAuthToken } from "@/lib/admin-auth";
+import { ADMIN_COOKIE_NAME, ADMIN_USER_COOKIE, adminAuthToken, verifyUserToken } from "@/lib/admin-auth";
 
 const VISITOR_COOKIE = "visitor_id";
 
@@ -12,7 +12,9 @@ export async function POST(request: Request) {
   const cookieStore = await cookies();
 
   // Don't let the store owner's own logged-in browsing inflate their stats.
-  const isAdmin = cookieStore.get(ADMIN_COOKIE_NAME)?.value === (await adminAuthToken());
+  const isAdmin =
+    cookieStore.get(ADMIN_COOKIE_NAME)?.value === (await adminAuthToken()) ||
+    !!(await verifyUserToken(cookieStore.get(ADMIN_USER_COOKIE)?.value));
 
   let visitorId = cookieStore.get(VISITOR_COOKIE)?.value;
   const response = NextResponse.json({ ok: true });
