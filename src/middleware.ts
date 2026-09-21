@@ -14,17 +14,22 @@ import {
 // calls) doesn't hit the database each time.
 const permCache = new Map<string, { at: number; active: boolean; perms: SectionKey[] }>();
 
-async function livePerms(request: NextRequest, token: string) {
+async function livePerms(request: NextRequest, token: string, fallback: SectionKey[]) {
   const hit = permCache.get(token);
   if (hit && Date.now() - hit.at < 5000) return hit;
   try {
-    const res = await fetch(new URL("/api/session-perms", request.nextUrl.origin), { headers: { "x-admin-token": token } });
+    // Call the app on the local port so this works behind Railway's proxy
+    // without depending on the public hostname/protocol.
+    const base = process.env.PORT ? `http://127.0.0.1:${process.env.PORT}` : request.nextUrl.origin;
+    const res = await fetch(new URL("/api/session-perms", base), { headers: { "x-admin-token": token } });
     const data = (await res.json()) as { active: boolean; perms: SectionKey[] };
     const entry = { at: Date.now(), active: data.active, perms: data.perms };
     permCache.set(token, entry);
     return entry;
   } catch {
-    return { at: 0, active: false, perms: [] as SectionKey[] };
+    // If the lookup itself fails, trust the signed token's permissions
+    // rather than locking everybody out (pages still re-check the database).
+    return { at: 0, active: true, perms: fallback };
   }
 }
 
@@ -44,7 +49,7 @@ export async function middleware(request: NextRequest) {
   // Team members: signed token with per-section permissions.
   const userToken = request.cookies.get(ADMIN_USER_COOKIE)?.value;
   const user = await verifyUserToken(userToken);
-  const live = user && userToken ? await livePerms(request, userToken) : null;
+  const live = user && userToken ? await livePerms(request, userToken, user.perms) : null;
   if (user && live?.active) {
     const section = sectionForPath(pathname);
     if (section === "owner") return deny(request, pathname, live.perms);
