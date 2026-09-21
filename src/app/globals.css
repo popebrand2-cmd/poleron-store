@@ -190,16 +190,61 @@ h1, h2, h3 {
   mask-image: radial-gradient(circle var(--r, 0px) at var(--x, 50%) var(--y, 50%), #000 0%, #000 55%, transparent 100%);
 }
 
-.pope-cta { position: relative; display: inline-flex; align-items: center; gap: 0.75rem; border-radius: 9999px; padding: 0.5rem; overflow: hidden; }
-.pope-cta-bg { position: absolute; top: 0.3rem; bottom: 0.3rem; left: 0.5rem; width: calc(100% - 4.6rem); border-radius: 9999px; background: var(--neon); transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-.pope-cta:hover .pope-cta-bg, .pope-cta:focus-visible .pope-cta-bg { width: calc(100% - 1rem); }
-.pope-cta-circle { position: relative; z-index: 1; display: flex; height: 3.25rem; width: 3.25rem; flex-shrink: 0; align-items: center; justify-content: center; border-radius: 9999px; background: #000; color: var(--neon); border: 1px solid rgba(255, 255, 255, 0.25); transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
-.pope-cta:hover .pope-cta-circle { transform: translateX(-6px); }
+.pope-cta {
+  --cta-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative; display: inline-flex; align-items: center; gap: 0.75rem; border-radius: 9999px; padding: 0.5rem;
+  filter: drop-shadow(0 0 0 transparent);
+  transition: filter 0.5s var(--cta-ease), transform 0.25s var(--cta-ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.pope-cta-bg {
+  position: absolute; top: 0.3rem; bottom: 0.3rem; left: 0.5rem; width: calc(100% - 4.6rem); overflow: hidden;
+  border-radius: 9999px; background: var(--neon);
+  transition: width 0.6s var(--cta-ease);
+}
+/* light streak that sweeps across the pill */
+.pope-cta-bg::after {
+  content: ""; position: absolute; inset: -20% auto -20% 0; width: 38%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: translateX(-140%) skewX(-18deg);
+}
+.pope-cta-label { position: relative; z-index: 10; transition: transform 0.6s var(--cta-ease), letter-spacing 0.6s var(--cta-ease); }
+.pope-cta-circle {
+  position: relative; z-index: 1; display: flex; height: 3.25rem; width: 3.25rem; flex-shrink: 0; align-items: center; justify-content: center; overflow: hidden;
+  border-radius: 9999px; background: #000; color: var(--neon); border: 1px solid rgba(255, 255, 255, 0.25);
+  transition: transform 0.6s var(--cta-ease), border-color 0.4s ease, box-shadow 0.5s ease;
+}
+.pope-cta-circle svg { transition: transform 0.3s ease; }
+
+@keyframes ctaSweep { to { transform: translateX(380%) skewX(-18deg); } }
+@keyframes ctaArrow { 0% { transform: translateX(0); } 45% { transform: translateX(150%); opacity: 0; } 46% { transform: translateX(-150%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+@keyframes ctaNudge { 0%, 70%, 100% { transform: translateX(0); } 82% { transform: translateX(4px); } 92% { transform: translateX(0); } }
+
+@media (hover: hover) {
+  .pope-cta:hover { filter: drop-shadow(0 8px 22px color-mix(in srgb, var(--neon) 42%, transparent)); }
+  .pope-cta:hover .pope-cta-bg { width: calc(100% - 1rem); }
+  .pope-cta:hover .pope-cta-bg::after { animation: ctaSweep 0.9s ease-out 0.05s both; }
+  .pope-cta:hover .pope-cta-label { transform: translateX(-4px); letter-spacing: 0.06em; }
+  .pope-cta:hover .pope-cta-circle { transform: translateX(-8px) scale(1.06); border-color: var(--neon); box-shadow: 0 0 0 3px color-mix(in srgb, var(--neon) 30%, transparent); }
+  .pope-cta:hover .pope-cta-circle svg { animation: ctaArrow 0.55s ease-in-out 0.1s; }
+}
+.pope-cta:focus-visible { outline: 2px solid #fff; outline-offset: 3px; filter: drop-shadow(0 8px 22px color-mix(in srgb, var(--neon) 42%, transparent)); }
+.pope-cta:focus-visible .pope-cta-bg { width: calc(100% - 1rem); }
+.pope-cta:focus-visible .pope-cta-circle { transform: translateX(-8px) scale(1.06); }
+.pope-cta:active { transform: scale(0.97); }
+.pope-cta:active .pope-cta-bg { width: calc(100% - 1rem); }
+.pope-cta:active .pope-cta-circle { transform: translateX(-8px) scale(1.06); }
+/* touch screens have no hover: a small periodic nudge keeps the arrow inviting */
+@media (hover: none) {
+  .pope-cta-circle svg { animation: ctaNudge 3.2s ease-in-out 2.5s infinite; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .pope-word, .pope-rise, .pope-bgtext { animation: none !important; opacity: 1 !important; transform: none !important; filter: none !important; }
   .pope-nudge { animation: none; }
-  .pope-cta-bg, .pope-cta-circle { transition: none; }
+  .pope-cta, .pope-cta-bg, .pope-cta-label, .pope-cta-circle, .pope-cta-circle svg { transition: none; animation: none !important; }
+  .pope-cta-bg::after { display: none; }
+  .pope-cta:hover .pope-cta-circle svg, .pope-cta-circle svg { animation: none !important; }
 }
 
 /* ---------- "Así funciona" (vista previa) ---------- */

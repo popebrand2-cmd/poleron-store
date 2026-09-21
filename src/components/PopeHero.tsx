@@ -53,7 +53,7 @@ export default function PopeHero({ editorHref }: { editorHref: string }) {
             <div className="pope-rise mt-7" style={{ animationDelay: "2s" }}>
               <Link href={editorHref} className="pope-cta text-black">
                 <span className="pope-cta-bg" />
-                <span className="relative z-10 whitespace-nowrap px-6 py-3 font-display text-3xl font-bold uppercase leading-none tracking-wide sm:px-8 sm:text-4xl">
+                <span className="pope-cta-label whitespace-nowrap px-6 py-3 font-display text-3xl font-bold uppercase leading-none tracking-wide sm:px-8 sm:text-4xl">
                   Diseña la tuya
                 </span>
                 <span className="pope-cta-circle" aria-hidden="true">
