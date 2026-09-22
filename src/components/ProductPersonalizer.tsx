@@ -244,6 +244,15 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
         currency: "CLP",
       });
       router.push("/carrito");
+    } catch (e) {
+      // A plain Error we (or MockupEditor's getPlacement) threw on purpose is already in Spanish
+      // and safe to show; anything else (a native browser exception) gets a generic fallback
+      // instead of leaking raw, English error text to the customer.
+      setFormError(
+        e instanceof Error && e.name === "Error" && e.message
+          ? e.message
+          : "No se pudo agregar al carrito. Revisa tu conexión e intenta de nuevo.",
+      );
     } finally {
       addingRef.current = false;
       setAdding(false);

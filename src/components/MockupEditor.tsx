@@ -881,12 +881,18 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         });
         canvas.renderAll();
 
-        const blob = await (await fetch(dataUrl)).blob();
-        const body = new FormData();
-        body.append("file", new File([blob], "diseno-con-texto.png", { type: "image/png" }));
-        const res = await fetch("/api/upload", { method: "POST", body });
-        const data = await res.json();
-        if (!res.ok) return null;
+        let data: { url?: string; error?: string };
+        try {
+          const blob = await (await fetch(dataUrl)).blob();
+          const body = new FormData();
+          body.append("file", new File([blob], "diseno-con-texto.png", { type: "image/png" }));
+          const res = await fetch("/api/upload", { method: "POST", body });
+          const isJson = (res.headers.get("content-type") || "").includes("application/json");
+          data = isJson ? await res.json() : {};
+          if (!res.ok || !data.url) throw new Error(data.error ?? "No se pudo preparar tu diseño con texto.");
+        } catch (e) {
+          throw new Error(friendlyMessage(e, "No se pudo preparar tu diseño con texto. Intenta de nuevo."));
+        }
 
         return {
           designUrl: data.url,
