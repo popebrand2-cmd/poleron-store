@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Teko, Yellowtail } from "next/font/google";
 import { cookies } from "next/headers";
 import Header from "@/components/Header";
+import InAppBrowserNotice from "@/components/InAppBrowserNotice";
 import Footer from "@/components/Footer";
 import SocialDock from "@/components/SocialDock";
 import OfferPopup from "@/components/OfferPopup";
@@ -68,6 +69,7 @@ export default async function RootLayout({
         </svg>
         <SiteContentProvider texts={texts} images={images}>
         <EditModeProvider isAdmin={isAdmin}>
+          <InAppBrowserNotice />
           <Header />
           <div className="flex-1">{children}</div>
           <Footer />
