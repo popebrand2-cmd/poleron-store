@@ -11,7 +11,9 @@ const ALLOWED_TYPES: Record<string, string> = {
   "image/svg+xml": "svg",
 };
 
-const MAX_BYTES = 15 * 1024 * 1024; // 15MB
+// Modern phone cameras (even after iOS converts HEIC to JPEG on the way out of the picker)
+// routinely produce 15-25MB photos, so 15MB was rejecting ordinary customer uploads.
+const MAX_BYTES = 30 * 1024 * 1024; // 30MB
 
 export async function POST(request: Request) {
   const formData = await request.formData();
@@ -30,7 +32,7 @@ export async function POST(request: Request) {
   }
 
   if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: "El archivo supera los 15MB." }, { status: 400 });
+    return NextResponse.json({ error: "El archivo supera los 30MB." }, { status: 400 });
   }
 
   const dir = uploadsDir();

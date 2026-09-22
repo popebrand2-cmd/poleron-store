@@ -10,6 +10,27 @@ import { zoneScaleFactor, type SizeMeasurements } from "@/lib/size-scale";
 
 export type PresetPosition = "left" | "center" | "right";
 
+// Error messages we throw ourselves are always plain `Error`s with a Spanish, actionable message
+// (e.g. "El archivo supera los 15MB."). Anything else — a native DOMException from the browser's
+// canvas/File/URL machinery, which comes out in English and means nothing to a customer — falls
+// back to `fallback` instead of being shown raw. This is what was leaking messages like "The
+// string did not match the expected pattern." (a WebKit-only error) straight into the UI.
+function friendlyMessage(e: unknown, fallback: string): string {
+  if (e instanceof Error && e.name === "Error" && e.message) return e.message;
+  return fallback;
+}
+
+// Some phones/apps (seen from Instagram's in-app browser, which is WebKit) hand over a File whose
+// name trips up FormData/multipart encoding — accented characters, spaces, even stray control
+// characters from the photo picker. Re-wrapping the file under a plain ASCII name sidesteps that
+// entirely; nothing about the image data changes.
+function withSafeFileName(file: File): File {
+  const ext = (file.name.match(/\.[a-z0-9]+$/i)?.[0] || "").toLowerCase();
+  const safeExt = /^\.(png|jpe?g|webp|svg|heic|heif)$/.test(ext) ? ext : "";
+  const name = `upload-${Date.now()}${safeExt}`;
+  return new File([file], name, { type: file.type });
+}
+
 // Fixed placement recipes for preset (ready-made) designs — front designs
 // let the customer choose which of these three to use; back designs always
 // use "back" with no choice, sitting just below the hood.
@@ -321,7 +342,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
 
         if (placement) {
           originalDesignUrlRef.current = placement.originalDesignUrl ?? placement.designUrl;
-          loadDesign(canvas, placement.designUrl, placement);
+          loadDesign(canvas, placement.designUrl, placement)?.catch(() => setError("No se pudo mostrar tu diseño guardado. Súbelo de nuevo."));
         }
 
         canvas.renderAll();
@@ -348,7 +369,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
     }, [selectedSizeLabel, JSON.stringify(sizes), view.label]);
 
     function loadDesign(canvas: fabric.Canvas, url: string, placement?: ViewPlacement) {
-      fabric.FabricImage.fromURL(url, { crossOrigin: "anonymous" }).then((img) => {
+      return fabric.FabricImage.fromURL(url, { crossOrigin: "anonymous" }).then((img) => {
         if (designRef.current) {
           canvas.remove(designRef.current);
         }
@@ -517,15 +538,20 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       setError("");
       try {
         const body = new FormData();
-        body.append("file", file);
+        body.append("file", withSafeFileName(file));
         const res = await fetch("/api/upload", { method: "POST", body });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Error al subir el diseño.");
+        // A proxy/host error page (e.g. a request rejected before reaching our code) comes back
+        // as HTML, not JSON — parsing that as JSON is exactly the kind of native exception this
+        // whole function now shields the customer from.
+        const isJson = (res.headers.get("content-type") || "").includes("application/json");
+        const data = isJson ? await res.json() : null;
+        if (!res.ok) throw new Error(data?.error ?? "No se pudo subir el archivo. Intenta de nuevo.");
+        if (!data?.url) throw new Error("No se pudo subir el archivo. Intenta de nuevo.");
         originalDesignUrlRef.current = data.url;
         const canvas = fabricCanvasRef.current;
-        if (canvas) loadDesign(canvas, data.url);
+        if (canvas) await loadDesign(canvas, data.url);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Error al subir el diseño.");
+        setError(friendlyMessage(e, "No se pudo subir tu diseño. Revisa tu conexión e intenta de nuevo, o prueba con otra foto."));
       } finally {
         setUploading(false);
       }
@@ -580,7 +606,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         if (!res.ok) throw new Error(data.error ?? "Error al quitar el fondo.");
         await swapDesignImage(data.url);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Error al quitar el fondo.");
+        setError(friendlyMessage(e, "No se pudo quitar el fondo. Intenta con otra foto."));
       } finally {
         setRemovingBg(false);
       }
@@ -601,7 +627,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         if (!res.ok) throw new Error(data.error ?? "Error al aislar el sujeto.");
         await swapDesignImage(data.url);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Error al aislar el sujeto. Intenta con otra foto.");
+        setError(friendlyMessage(e, "No se pudo aislar el sujeto. Intenta con otra foto."));
       } finally {
         setSegmentingSubject(false);
       }
@@ -735,7 +761,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         canvas.renderAll();
         setCropping(false);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Error al recortar la imagen.");
+        setError(friendlyMessage(e, "No se pudo recortar la imagen. Intenta de nuevo."));
       } finally {
         setApplyingCrop(false);
       }
@@ -782,7 +808,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         if (!res.ok) throw new Error(data.error ?? "Error al quitar el fondo.");
         await swapDesignImage(data.url);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Error al procesar el fondo.");
+        setError(friendlyMessage(e, "No se pudo quitar ese color. Intenta con otra foto o toca otro punto."));
       } finally {
         setRemovingBg(false);
       }
