@@ -1,4 +1,4 @@
-import { readdir, stat, unlink } from "fs/promises";
+import { readdir, stat, statfs, unlink } from "fs/promises";
 import path from "path";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
@@ -75,6 +75,16 @@ async function scan() {
   return { dir, files: valid, totalBytes: valid.reduce((s, f) => s + f.bytes, 0) };
 }
 
+// Size and free space of the whole volume (database + uploads live on it), not just the uploads folder.
+async function diskInfo(dir: string) {
+  try {
+    const s = await statfs(dir);
+    return { totalBytes: s.blocks * s.bsize, freeBytes: s.bavail * s.bsize };
+  } catch {
+    return null;
+  }
+}
+
 export async function GET() {
   const { dir, files, totalBytes } = await scan();
   const deletable = files.filter((f) => f.deletable);
@@ -86,6 +96,7 @@ export async function GET() {
     deletableBytes: deletable.reduce((s, f) => s + f.bytes, 0),
     oldestMtimeMs: files.length ? Math.min(...files.map((f) => f.mtimeMs)) : null,
     keepDays: KEEP_DAYS,
+    disk: await diskInfo(dir),
   });
 }
 

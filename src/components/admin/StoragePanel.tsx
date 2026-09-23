@@ -9,6 +9,7 @@ type Stats = {
   deletableBytes: number;
   oldestMtimeMs: number | null;
   keepDays: number;
+  disk: { totalBytes: number; freeBytes: number } | null;
 };
 
 function formatBytes(bytes: number): string {
@@ -71,6 +72,20 @@ export default function StoragePanel() {
 
   return (
     <div className="space-y-6">
+      {stats.disk && (
+        <div className={`rounded-xl border p-5 ${stats.disk.freeBytes < 100 * 1024 * 1024 ? "border-red-500" : "border-neutral-200"}`}>
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Disco del servidor</p>
+          <p className="text-2xl font-bold">
+            {formatBytes(stats.disk.freeBytes)} libres <span className="text-base font-normal text-neutral-500">de {formatBytes(stats.disk.totalBytes)}</span>
+          </p>
+          {stats.disk.freeBytes < 100 * 1024 * 1024 && (
+            <p className="mt-1 text-sm text-red-600">
+              Queda muy poco espacio: nadie puede subir archivos. Borra lo que no se usa aquí abajo o amplía el volumen en Railway.
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-4 rounded-xl border border-neutral-200 p-5 sm:grid-cols-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Archivos guardados</p>
