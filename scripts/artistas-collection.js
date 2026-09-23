@@ -10,6 +10,7 @@ const ARTISTS = [
   { slug: "karol-g", name: "Karol G", imageUrl: "/collections/karol-g.jpg" },
   { slug: "bad-bunny", name: "Bad Bunny", imageUrl: "/collections/bad-bunny.jpg" },
   { slug: "kidd-voodoo", name: "Kidd Voodoo", imageUrl: "/collections/kidd-voodoo.jpg" },
+  { slug: "cris-mj", name: "Cris MJ", imageUrl: "/collections/cris-mj.jpg" },
 ];
 
 (async () => {
