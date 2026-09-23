@@ -175,8 +175,8 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
 
       <div className="mx-auto max-w-7xl px-5 py-16 sm:py-24">
         <div data-hiw className="hiw-reveal mb-12 text-center sm:mb-16">
-          <Txt k="how.title" as="h2" className="block font-display text-[4.5rem] font-bold uppercase leading-[0.85] text-white sm:text-[7rem]" />
-          <Txt k="how.subtitle" as="p" className="-mt-1 block font-script text-4xl text-neon sm:text-5xl" />
+          <Txt k="how.title" as="h2" className="block font-display text-[3rem] font-bold uppercase leading-[0.85] text-white sm:text-[4.75rem]" />
+          <Txt k="how.subtitle" as="p" className="-mt-1 block font-script text-2xl text-neon sm:text-3xl" />
         </div>
 
         <div className="flex flex-col gap-0 lg:grid lg:grid-cols-[1fr_auto_1.3fr_auto_1fr] lg:items-center lg:gap-2">
