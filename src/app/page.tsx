@@ -53,13 +53,6 @@ export default async function Home() {
 
       <HowItWorks editorHref={editorHref} />
 
-      {/* Trust badges */}
-      <section className="border-t border-neutral-800 bg-neutral-950">
-        <div className="mx-auto max-w-6xl px-6 py-12">
-          <TrustBadgesList initialItems={itemsFor("trustBadges")} />
-        </div>
-      </section>
-
       {/* Featured */}
       <section id="tienda" className="bg-black">
         <div className="mx-auto max-w-6xl px-6 py-16">
@@ -161,6 +154,13 @@ export default async function Home() {
             </h2>
           </div>
           <FaqList initialItems={itemsFor("faq")} />
+        </div>
+      </section>
+
+      {/* Trust badges */}
+      <section className="border-t border-neutral-800 bg-black">
+        <div className="mx-auto max-w-6xl px-6 py-12">
+          <TrustBadgesList initialItems={itemsFor("trustBadges")} />
         </div>
       </section>
     </main>
