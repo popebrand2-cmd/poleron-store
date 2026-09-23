@@ -49,7 +49,7 @@ export type UserSession = { id: string; name: string; role: "PARTNER" | "EMPLOYE
 export function sectionForPath(pathname: string): SectionKey | "owner" | null {
   const p = pathname;
   if (p.startsWith("/admin/usuarios") || p.startsWith("/api/admin/users")) return "owner";
-  if (p.startsWith("/admin/almacenamiento") || p.startsWith("/api/admin/storage")) return "owner";
+  if (p.startsWith("/admin/almacenamiento") || p.startsWith("/api/admin/storage") || p.startsWith("/api/admin/backup")) return "owner";
   if (p.startsWith("/admin/pedidos") || p.startsWith("/api/admin/orders")) return "pedidos";
   if (p.startsWith("/admin/envios") || p.startsWith("/api/admin/shipping")) return "envios";
   if (p.startsWith("/admin/portada") || p.startsWith("/api/admin/hero") || p.startsWith("/api/admin/site-text") || p.startsWith("/api/admin/upload-video") || p.startsWith("/api/admin/content-items")) return "portada";
