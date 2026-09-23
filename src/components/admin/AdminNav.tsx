@@ -10,7 +10,10 @@ export default async function AdminNav({ current, pendingOrders }: { current: st
   if (!access) redirect("/admin/login");
 
   const links: { href: string; label: string }[] = SECTIONS.filter((s) => access.perms.includes(s.key)).map((s) => ({ href: s.href, label: s.label.split(" ")[0] }));
-  if (access.kind === "owner") links.push({ href: "/admin/usuarios", label: "Usuarios" });
+  if (access.kind === "owner") {
+    links.push({ href: "/admin/usuarios", label: "Usuarios" });
+    links.push({ href: "/admin/almacenamiento", label: "Almacenamiento" });
+  }
 
   return (
     <nav className="flex flex-wrap items-center gap-4">
