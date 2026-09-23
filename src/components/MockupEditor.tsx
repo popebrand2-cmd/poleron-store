@@ -20,15 +20,23 @@ function friendlyMessage(e: unknown, fallback: string): string {
   return fallback;
 }
 
-// Some phones/apps (seen from Instagram's in-app browser, which is WebKit) hand over a File whose
-// name trips up FormData/multipart encoding — accented characters, spaces, even stray control
-// characters from the photo picker. Re-wrapping the file under a plain ASCII name sidesteps that
-// entirely; nothing about the image data changes.
-function withSafeFileName(file: File): File {
-  const ext = (file.name.match(/\.[a-z0-9]+$/i)?.[0] || "").toLowerCase();
-  const safeExt = /^\.(png|jpe?g|webp|svg|heic|heif)$/.test(ext) ? ext : "";
-  const name = `upload-${Date.now()}${safeExt}`;
-  return new File([file], name, { type: file.type });
+// Uploads a file/blob as a raw binary POST body (Content-Type: the image's MIME type) instead of
+// wrapping it in FormData/multipart. Restricted in-app browsers (Instagram, Facebook, TikTok — all
+// WKWebView-based on iOS) have well-documented bugs encoding multipart/form-data, especially the
+// Content-Disposition header WebKit builds from the file's name; that's what was throwing "The
+// string did not match the expected pattern." A raw body has no filename, no boundary, no headers
+// to build — it's the simplest POST a browser can make, so it doesn't hit that code path at all.
+async function uploadBlob(blob: Blob, mimeType: string): Promise<string> {
+  let res: Response;
+  try {
+    res = await fetch("/api/upload", { method: "POST", headers: { "Content-Type": mimeType }, body: blob });
+  } catch (e) {
+    throw new Error(friendlyMessage(e, "No se pudo conectar para subir el archivo. Revisa tu conexión e intenta de nuevo."));
+  }
+  const isJson = (res.headers.get("content-type") || "").includes("application/json");
+  const data: { url?: string; error?: string } = isJson ? await res.json().catch(() => ({})) : {};
+  if (!res.ok || !data.url) throw new Error(data.error ?? "No se pudo subir el archivo. Intenta de nuevo.");
+  return data.url;
 }
 
 // Fixed placement recipes for preset (ready-made) designs — front designs
@@ -537,19 +545,10 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       setUploading(true);
       setError("");
       try {
-        const body = new FormData();
-        body.append("file", withSafeFileName(file));
-        const res = await fetch("/api/upload", { method: "POST", body });
-        // A proxy/host error page (e.g. a request rejected before reaching our code) comes back
-        // as HTML, not JSON — parsing that as JSON is exactly the kind of native exception this
-        // whole function now shields the customer from.
-        const isJson = (res.headers.get("content-type") || "").includes("application/json");
-        const data = isJson ? await res.json() : null;
-        if (!res.ok) throw new Error(data?.error ?? "No se pudo subir el archivo. Intenta de nuevo.");
-        if (!data?.url) throw new Error("No se pudo subir el archivo. Intenta de nuevo.");
-        originalDesignUrlRef.current = data.url;
+        const url = await uploadBlob(file, file.type);
+        originalDesignUrlRef.current = url;
         const canvas = fabricCanvasRef.current;
-        if (canvas) await loadDesign(canvas, data.url);
+        if (canvas) await loadDesign(canvas, url);
       } catch (e) {
         setError(friendlyMessage(e, "No se pudo subir tu diseño. Revisa tu conexión e intenta de nuevo, o prueba con otra foto."));
       } finally {
@@ -599,12 +598,8 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       setError("");
       try {
         const blob = await removeWhiteBackground(design.getSrc());
-        const body = new FormData();
-        body.append("file", new File([blob], "diseno-sin-fondo.png", { type: "image/png" }));
-        const res = await fetch("/api/upload", { method: "POST", body });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Error al quitar el fondo.");
-        await swapDesignImage(data.url);
+        const url = await uploadBlob(blob, "image/png");
+        await swapDesignImage(url);
       } catch (e) {
         setError(friendlyMessage(e, "No se pudo quitar el fondo. Intenta con otra foto."));
       } finally {
@@ -620,12 +615,8 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       setError("");
       try {
         const blob = await segmentSubject(design.getSrc());
-        const body = new FormData();
-        body.append("file", new File([blob], "diseno-aislado.png", { type: "image/png" }));
-        const res = await fetch("/api/upload", { method: "POST", body });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Error al aislar el sujeto.");
-        await swapDesignImage(data.url);
+        const url = await uploadBlob(blob, "image/png");
+        await swapDesignImage(url);
       } catch (e) {
         setError(friendlyMessage(e, "No se pudo aislar el sujeto. Intenta con otra foto."));
       } finally {
@@ -726,16 +717,12 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           );
         });
 
-        const body = new FormData();
-        body.append("file", new File([blob], "diseno-recortado.png", { type: "image/png" }));
-        const res = await fetch("/api/upload", { method: "POST", body });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Error al recortar la imagen.");
+        const croppedUrl = await uploadBlob(blob, "image/png");
 
         canvas.remove(rect);
         cropRectRef.current = null;
 
-        const newImg = await fabric.FabricImage.fromURL(data.url, { crossOrigin: "anonymous" });
+        const newImg = await fabric.FabricImage.fromURL(croppedUrl, { crossOrigin: "anonymous" });
         canvas.remove(design);
         newImg.set({
           left: cropBounds.left + cropBounds.width / 2,
@@ -801,12 +788,8 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       setError("");
       try {
         const blob = await removeColorBackground(design.getSrc(), color);
-        const body = new FormData();
-        body.append("file", new File([blob], "diseno-sin-fondo.png", { type: "image/png" }));
-        const res = await fetch("/api/upload", { method: "POST", body });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? "Error al quitar el fondo.");
-        await swapDesignImage(data.url);
+        const url = await uploadBlob(blob, "image/png");
+        await swapDesignImage(url);
       } catch (e) {
         setError(friendlyMessage(e, "No se pudo quitar ese color. Intenta con otra foto o toca otro punto."));
       } finally {
@@ -881,21 +864,16 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         });
         canvas.renderAll();
 
-        let data: { url?: string; error?: string };
+        let designUrl: string;
         try {
           const blob = await (await fetch(dataUrl)).blob();
-          const body = new FormData();
-          body.append("file", new File([blob], "diseno-con-texto.png", { type: "image/png" }));
-          const res = await fetch("/api/upload", { method: "POST", body });
-          const isJson = (res.headers.get("content-type") || "").includes("application/json");
-          data = isJson ? await res.json() : {};
-          if (!res.ok || !data.url) throw new Error(data.error ?? "No se pudo preparar tu diseño con texto.");
+          designUrl = await uploadBlob(blob, "image/png");
         } catch (e) {
           throw new Error(friendlyMessage(e, "No se pudo preparar tu diseño con texto. Intenta de nuevo."));
         }
 
         return {
-          designUrl: data.url,
+          designUrl,
           originalDesignUrl: originalDesignUrlRef.current ?? undefined,
           xPct: 50,
           yPct: 50,
