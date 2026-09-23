@@ -1,26 +1,27 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import EditableLink from "@/components/edit/EditableLink";
+import { useEditMode } from "@/components/edit/EditModeContext";
 
-export type ShowcaseDesign = { id: string; name: string; imageUrl: string };
-export type ShowcaseCollection = { id: string; name: string; designs: ShowcaseDesign[] };
-
-type Item = ShowcaseDesign & { collection: string };
+export type ShowcaseArtist = { id: string; slug: string; name: string; imageUrl: string; count: number };
 
 export default function CollectionsShowcase({
-  collections,
+  artists,
   eyebrow,
   heading,
   subtext,
-  cta,
+  ctaLabel,
 }: {
-  collections: ShowcaseCollection[];
+  artists: ShowcaseArtist[];
   eyebrow: ReactNode;
   heading: ReactNode;
   subtext: ReactNode;
-  cta: ReactNode;
+  ctaLabel: ReactNode;
 }) {
-  const [catIndex, setCatIndex] = useState(0);
+  const router = useRouter();
+  const { editMode } = useEditMode();
   const [active, setActive] = useState(0);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -33,16 +34,10 @@ export default function CollectionsShowcase({
   const suppressClick = useRef(false);
   const wheelLock = useRef(0);
 
-  const items: Item[] = useMemo(() => {
+  const items = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (q) {
-      return collections
-        .flatMap((c) => c.designs.map((d) => ({ ...d, collection: c.name })))
-        .filter((d) => `${d.name} ${d.collection}`.toLowerCase().includes(q));
-    }
-    const c = collections[catIndex] ?? collections[0];
-    return c ? c.designs.map((d) => ({ ...d, collection: c.name })) : [];
-  }, [collections, catIndex, query]);
+    return q ? artists.filter((a) => a.name.toLowerCase().includes(q)) : artists;
+  }, [artists, query]);
 
   const n = items.length;
   const current = items[Math.min(active, Math.max(0, n - 1))];
@@ -78,11 +73,6 @@ export default function CollectionsShowcase({
   }
   function move(delta: number) {
     go(active + delta);
-  }
-  function pickCategory(i: number) {
-    setCatIndex(i);
-    setActive(0);
-    setQuery("");
   }
   function signedDistance(i: number) {
     let d = i - active;
@@ -150,14 +140,16 @@ export default function CollectionsShowcase({
 
       {current && (
         <div className="pcol-artist" aria-live="polite">
-          <span className="pcol-artist-type">{current.collection}</span>
+          <span className="pcol-artist-type">
+            {current.count} {current.count === 1 ? "diseño" : "diseños"}
+          </span>
           <strong>{current.name}</strong>
         </div>
       )}
 
       <div
         className="pcol-stage"
-        aria-label="Carrusel de diseños"
+        aria-label="Carrusel de artistas"
         onPointerDown={onPointerDown}
         onWheel={onWheel}
         onMouseEnter={() => setHovering(true)}
@@ -184,14 +176,17 @@ export default function CollectionsShowcase({
                 style={style}
                 tabIndex={ad > 3 ? -1 : 0}
                 aria-hidden={ad > 3}
-                aria-label={`${item.name} — ${item.collection}`}
+                aria-label={`${item.name} — ${item.count} ${item.count === 1 ? "diseño" : "diseños"}`}
                 onClick={() => {
-                  if (!suppressClick.current) go(i);
+                  if (suppressClick.current) return;
+                  if (d === 0 && !editMode) router.push(`/artistas/${item.slug}`);
+                  else go(i);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    go(i);
+                    if (d === 0 && !editMode) router.push(`/artistas/${item.slug}`);
+                    else go(i);
                   }
                 }}
               >
@@ -201,34 +196,45 @@ export default function CollectionsShowcase({
                 </div>
                 <div className="pcol-meta">
                   <b>{item.name}</b>
-                  <span>Personalizable</span>
+                  <span>
+                    {item.count} {item.count === 1 ? "diseño" : "diseños"}
+                  </span>
                 </div>
               </article>
             );
           })}
         </div>
-        {n === 0 && <div className="pcol-empty">No encontramos ese diseño.</div>}
+        {n === 0 && <div className="pcol-empty">No encontramos ese artista.</div>}
       </div>
 
       <div className="pcol-controls">
-        <button type="button" className="pcol-round" onClick={() => move(-1)} aria-label="Diseño anterior">
+        <button type="button" className="pcol-round" onClick={() => move(-1)} aria-label="Artista anterior">
           ←
         </button>
-        {cta}
-        <button type="button" className="pcol-round" onClick={() => move(1)} aria-label="Diseño siguiente">
+        {current ? (
+          <EditableLink href={`/artistas/${current.slug}`} className="pcol-view">
+            {ctaLabel}
+            <span aria-hidden="true">↗</span>
+          </EditableLink>
+        ) : (
+          <span className="pcol-view" aria-hidden="true" style={{ opacity: 0.4 }}>
+            {ctaLabel}
+          </span>
+        )}
+        <button type="button" className="pcol-round" onClick={() => move(1)} aria-label="Artista siguiente">
           →
         </button>
       </div>
 
-      <aside className="pcol-rail" aria-label="Buscar por sección">
+      <aside className="pcol-rail" aria-label="Buscar artista">
         <div className={`pcol-search-wrap${searchOpen ? " open" : ""}`}>
           <input
             ref={searchRef}
             className="pcol-search"
             type="search"
-            placeholder="Buscar diseño…"
+            placeholder="Buscar artista…"
             autoComplete="off"
-            aria-label="Buscar diseño"
+            aria-label="Buscar artista"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -251,17 +257,6 @@ export default function CollectionsShowcase({
             </svg>
           </button>
         </div>
-        {collections.length > 1 &&
-          collections.map((c, i) => (
-            <button
-              key={c.id}
-              type="button"
-              className={`pcol-category${!query && i === catIndex ? " active" : ""}`}
-              onClick={() => pickCategory(i)}
-            >
-              {c.name}
-            </button>
-          ))}
       </aside>
     </section>
   );

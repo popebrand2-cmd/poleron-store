@@ -159,6 +159,33 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId]);
 
+  // Arriving from an artist catalog (?diseno=<id>): once the editor canvas is ready, drop that
+  // ready-made design onto the garment (front designs go to the Frente view, back ones to Espalda).
+  const presetId = searchParams.get("diseno");
+  const presetAppliedRef = useRef(false);
+  useEffect(() => {
+    if (!presetId || presetAppliedRef.current || editId || collections.length === 0) return;
+    const design = collections.flatMap((c) => c.designs).find((d) => d.id === presetId);
+    if (!design) return;
+    const label = design.placement === "BACK" ? "Espalda" : "Frente";
+    if (!color.views.some((v) => v.label === label)) return;
+    if (activeViewLabel !== label) {
+      handleViewChange(label);
+      return;
+    }
+    let tries = 0;
+    const timer = setInterval(() => {
+      tries++;
+      if (editorRefs.current[label]?.applyPresetDesign(design.imageUrl, design.placement === "BACK" ? "back" : "center")) {
+        presetAppliedRef.current = true;
+        if (design.placement === "FRONT") setPresetFront({ url: design.imageUrl, position: "center" });
+        clearInterval(timer);
+      } else if (tries > 40) clearInterval(timer);
+    }, 250);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [presetId, collections, activeViewLabel]);
+
   const activePlacement = activeViewLabel === "Frente" ? "FRONT" : activeViewLabel === "Espalda" ? "BACK" : null;
   const collectionsForView = collections
     .map((c) => ({ ...c, designs: c.designs.filter((d) => d.placement === activePlacement) }))

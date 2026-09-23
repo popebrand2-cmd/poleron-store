@@ -10,6 +10,7 @@ import RealVideos from "@/components/RealVideos";
 import HowItWorks from "@/components/preview/HowItWorks";
 import TrustBadgesList from "@/components/edit/TrustBadgesList";
 import FaqList from "@/components/edit/FaqList";
+import { getEditorHref } from "@/lib/editor-product";
 import { siteText, CONTENT_DEFAULTS, type ContentSection } from "@/lib/site-content";
 
 export const dynamic = "force-dynamic";
@@ -30,12 +31,7 @@ export default async function Home() {
     prisma.contentItem.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } }),
     prisma.siteText.findMany(),
   ]);
-  // The hero and "Así funciona" buttons go straight to the real editor: the Oversize hoodie
-  // (falling back to any other hoodie, then any product).
-  const isHoodie = (p: { name: string; slug: string }) => /hoodie|poler[oó]n/i.test(`${p.name} ${p.slug}`);
-  const hoodie =
-    products.find((p) => isHoodie(p) && /oversize/i.test(`${p.name} ${p.slug}`)) ?? products.find(isHoodie) ?? products[0];
-  const editorHref = hoodie ? `/productos/${hoodie.slug}` : "#tienda";
+  const editorHref = await getEditorHref();
   const collectionsWithDesigns = designCollections.filter((c) => c.designs.length > 0);
 
   const textMap = Object.fromEntries(siteTextRows.map((t) => [t.key, t.value]));
@@ -51,23 +47,20 @@ export default async function Home() {
     <main>
       <PopeHero editorHref={editorHref} />
 
-      {/* Preset design collections: 3D carousel */}
+      {/* Artist collections: 3D carousel (each card opens its own catalog page) */}
       {collectionsWithDesigns.length > 0 && (
         <CollectionsShowcase
-          collections={collectionsWithDesigns.map((c) => ({
+          artists={collectionsWithDesigns.map((c) => ({
             id: c.id,
+            slug: c.slug,
             name: c.name,
-            designs: c.designs.map((d) => ({ id: d.id, name: d.name, imageUrl: d.imageUrl })),
+            imageUrl: c.designs[0].imageUrl,
+            count: c.designs.length,
           }))}
           eyebrow={<EditableText value={t("collections.eyebrow")} siteKey="collections.eyebrow" as="span" />}
           heading={<EditableText value={t("collections.heading")} siteKey="collections.heading" as="span" />}
           subtext={<EditableText value={t("collections.subtext")} siteKey="collections.subtext" as="span" multiline />}
-          cta={
-            <EditableLink href={editorHref} className="pcol-view">
-              <Txt k="collections.cta" />
-              <span aria-hidden="true">↗</span>
-            </EditableLink>
-          }
+          ctaLabel={<Txt k="collections.cta" />}
         />
       )}
 

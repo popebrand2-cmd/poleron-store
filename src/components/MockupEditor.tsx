@@ -91,7 +91,7 @@ const PRESET_POSITIONS: Record<PresetPosition | "back", { xPct: number; yPct: nu
 export type MockupEditorHandle = {
   getPlacement: () => Promise<ViewPlacement | null>;
   getSnapshot: () => string | null;
-  applyPresetDesign: (url: string, position: PresetPosition | "back") => void;
+  applyPresetDesign: (url: string, position: PresetPosition | "back") => boolean;
   // True when the design still has an opaque white background AND the garment itself is white —
   // the print would be essentially invisible, so the caller should block checkout on this view.
   hasWhiteOnWhiteRisk: () => boolean;
@@ -1031,7 +1031,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       },
       applyPresetDesign(url, position) {
         const canvas = fabricCanvasRef.current;
-        if (!canvas) return;
+        if (!canvas) return false;
         const p = PRESET_POSITIONS[position];
         originalDesignUrlRef.current = url;
         loadDesign(canvas, url, {
@@ -1043,6 +1043,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           zoneWidthCm: 0,
           zoneHeightCm: 0,
         });
+        return true;
       },
       hasWhiteOnWhiteRisk() {
         return isWhiteGarment && whiteRiskRef.current;
