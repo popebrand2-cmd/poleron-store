@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "prisma db push --skip-generate && node scripts/rebrand-texts.js && next start",
+    "start": "prisma db push --skip-generate && node scripts/rebrand-texts.js && node scripts/artistas-collection.js && next start",
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
