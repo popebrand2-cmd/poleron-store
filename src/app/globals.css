@@ -338,13 +338,11 @@ h1, h2, h3 {
 .hiw-float { animation: hiwFloat 3.4s ease-in-out infinite; }
 @keyframes hiwFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
-/* These now loop forever like a GIF, which is exactly what "reduce motion" asks pages to avoid —
-   so unlike before, all of them (not just the floating chips) stop and hold their settled frame. */
+/* Only the small ambient pulses (corner handles, floating chips) respect "reduce motion" — the
+   upload/adjust demo itself is the whole point of this section and must always loop, since that's
+   what was explicitly asked for ("como un gif infinito"), regardless of the visitor's OS setting. */
 @media (prefers-reduced-motion: reduce) {
-  .hiw-handle, .hiw-float, .hiw-file, .hiw-bar, .hiw-loaded, .hiw-adjust, .hiw-guides { animation: none !important; }
-  .hiw-bar { transform: scaleX(1); }
-  .hiw-loaded { opacity: 1; transform: scale(1); }
-  .hiw-drop { animation: none !important; opacity: 0; }
+  .hiw-handle, .hiw-float { animation: none !important; }
 }
 
 /* ---------- Redes sociales (dock + pie) ---------- */
