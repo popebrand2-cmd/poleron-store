@@ -481,29 +481,6 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
 
       {/* 03 — CONFIRMA */}
       <section id="paso-3" className="scroll-mt-28 lg:col-start-2 lg:row-start-3">
-        <StepTitle title="Confirma" hint="Revisa tu prenda y compra" />
-
-        <dl className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 text-sm">
-          <div className="flex justify-between gap-4 px-4 py-2">
-            <dt className="text-neutral-500">Prenda</dt>
-            <dd className="text-right font-medium">{product.name}</dd>
-          </div>
-          <div className="flex justify-between gap-4 px-4 py-2">
-            <dt className="text-neutral-500">Color · Talla</dt>
-            <dd className="text-right font-medium">
-              {color.name} · {size?.label}
-              {material ? ` · ${material.label}` : ""}
-            </dd>
-          </div>
-          <div className="flex items-baseline justify-between gap-4 px-4 py-3">
-            <dt className="text-neutral-500">Precio</dt>
-            <dd className="text-right">
-              <span className="font-display text-4xl font-bold leading-none">{formatCLP(unitPrice)}</span>
-              <VatNote className="mt-0.5" />
-            </dd>
-          </div>
-        </dl>
-
         {formError && (
           <p role="alert" className="mt-4 text-sm text-red-600">
             {formError}
