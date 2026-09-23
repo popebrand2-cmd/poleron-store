@@ -328,11 +328,18 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
           </div>
 
           {hasMeasurements && (
-            <details className="mt-3 rounded-lg border border-neutral-200">
-              <summary className="cursor-pointer select-none px-3 py-2 text-xs font-bold uppercase tracking-wide text-neutral-700">
-                Guía de tallas (medidas de la prenda en cm)
+            <details className="group mt-3">
+              <summary className="flex w-fit cursor-pointer select-none list-none items-center gap-2 rounded-full border-2 border-black bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-black transition hover:border-neon hover:bg-neon [&::-webkit-details-marker]:hidden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                  <path d="M4 9h16v6H4z" />
+                  <path d="M8 9v2.5M12 9v3.5M16 9v2.5" />
+                </svg>
+                Guía de tallas
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 transition group-open:rotate-180">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
               </summary>
-              <div className="overflow-x-auto px-3 pb-3">
+              <div className="mt-2 overflow-x-auto rounded-lg border border-neutral-200 px-3 pb-3 pt-2">
                 <table className="w-full text-left text-sm">
                   <thead className="text-xs uppercase text-neutral-500">
                     <tr>
