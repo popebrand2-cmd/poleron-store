@@ -35,11 +35,19 @@ async function tryUpload(body: BodyInit, headers: Record<string, string>): Promi
   } finally {
     clearTimeout(timer);
   }
+  const rawText = await res.text().catch(() => "");
   const isJson = (res.headers.get("content-type") || "").includes("application/json");
-  const data: { url?: string; error?: string } = isJson ? await res.json().catch(() => ({})) : {};
+  let data: { url?: string; error?: string } = {};
+  if (isJson) {
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      // fall through: data stays {}, the raw text below still gets shown
+    }
+  }
   if (!res.ok || !data.url) {
     if (data.error) throw new Error(data.error);
-    const snippet = isJson ? "" : (await res.text().catch(() => "")).slice(0, 80).replace(/\s+/g, " ").trim();
+    const snippet = rawText.slice(0, 80).replace(/\s+/g, " ").trim();
     throw new Error(`No se pudo subir el archivo (código ${res.status}${snippet ? `: ${snippet}` : ""}).`);
   }
   return data.url;

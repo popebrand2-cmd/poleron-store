@@ -23,7 +23,7 @@ async function saveBytes(bytes: Buffer, ext: string): Promise<string> {
   return filename;
 }
 
-export async function POST(request: Request) {
+async function handlePost(request: Request): Promise<NextResponse> {
   const contentType = (request.headers.get("content-type") || "").split(";")[0].trim();
 
   // The customer-facing uploader (MockupEditor) posts the file as a raw binary body — no
@@ -71,4 +71,27 @@ export async function POST(request: Request) {
   const bytes = Buffer.from(await file.arrayBuffer());
   const filename = await saveBytes(bytes, ext);
   return NextResponse.json({ url: `/uploads/${filename}` });
+}
+
+export async function POST(request: Request) {
+  try {
+    return await handlePost(request);
+  } catch (e) {
+    // Next.js masks an uncaught exception here behind a bare, bodyless 500 in production — the
+    // customer then sees a dead end with zero information, and so do we. Reading the request body
+    // (arrayBuffer()/formData()) is the one step here that can genuinely fail mid-stream — a phone
+    // losing signal, or an in-app browser's own network layer cutting the upload short — so this
+    // always answers with a real, readable reason instead of ever going silent.
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error("upload failed:", msg);
+    const looksLikeConnectionDrop = /aborted|network|socket|ECONNRESET|premature close|terminated/i.test(msg);
+    return NextResponse.json(
+      {
+        error: looksLikeConnectionDrop
+          ? "La conexión se interrumpió mientras subíamos tu foto. Intenta de nuevo con mejor señal o wifi."
+          : `No se pudo subir el archivo (error del servidor: ${msg.slice(0, 120)}).`,
+      },
+      { status: 500 },
+    );
+  }
 }
