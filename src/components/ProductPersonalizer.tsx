@@ -199,6 +199,16 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     setFormError("");
     setAdding(true);
     try {
+      for (const view of color.views) {
+        if (editorRefs.current[view.label]?.hasWhiteOnWhiteRisk()) {
+          setFormError(
+            `Tu diseño en "${view.label}" tiene fondo blanco sobre un polerón blanco: la estampa no se vería. Quita el fondo blanco antes de continuar.`,
+          );
+          document.getElementById("paso-2")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+      }
+
       const placement: DesignPlacementMap = {};
       let previewImageUrl: string | null = null;
 
@@ -397,6 +407,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
                   view={v}
                   sizes={product.sizes}
                   selectedSizeLabel={size?.label ?? ""}
+                  colorHex={color.hex}
                   initialPlacement={editing?.placement[v.label] ?? null}
                   onDesignAdded={handleDesignAdded}
                   ref={(handle) => {

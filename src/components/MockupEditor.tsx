@@ -7,6 +7,7 @@ import { removeWhiteBackground } from "@/lib/remove-white-bg";
 import { removeColorBackground } from "@/lib/remove-color-bg";
 import { segmentSubject, preloadSubjectSegmenter } from "@/lib/segment-subject";
 import { zoneScaleFactor, type SizeMeasurements } from "@/lib/size-scale";
+import { isNearWhiteHex, looksLikeOpaqueWhiteBackground } from "@/lib/white-bg-detect";
 
 export type PresetPosition = "left" | "center" | "right";
 
@@ -91,7 +92,21 @@ export type MockupEditorHandle = {
   getPlacement: () => Promise<ViewPlacement | null>;
   getSnapshot: () => string | null;
   applyPresetDesign: (url: string, position: PresetPosition | "back") => void;
+  // True when the design still has an opaque white background AND the garment itself is white —
+  // the print would be essentially invisible, so the caller should block checkout on this view.
+  hasWhiteOnWhiteRisk: () => boolean;
 };
+
+// Fabric doesn't track "which of my objects is the design vs. the caption text" on its own, and
+// canvas.toJSON()/loadFromJSON() (used for undo) only round-trip properties we explicitly ask for
+// — this tiny tag is how both sides of undo re-identify each object after a reload.
+type Role = "background" | "design" | "text";
+function setRole(obj: fabric.FabricObject, role: Role) {
+  (obj as unknown as { role?: Role }).role = role;
+}
+function getRole(obj: fabric.FabricObject): Role | undefined {
+  return (obj as unknown as { role?: Role }).role;
+}
 
 export type MockupView = {
   label: string;
@@ -138,6 +153,9 @@ type MockupEditorProps = {
   initialPlacement?: ViewPlacement | null;
   sizes?: SizeMeasurements[];
   selectedSizeLabel?: string;
+  // The chosen garment color — used only to warn/block a white-background design on a white
+  // garment, where the print would be invisible.
+  colorHex?: string;
 };
 
 // Round 44px button that repeats while it is held down (nudging a design with a finger).
@@ -185,7 +203,8 @@ function PadButton({ label, onStep, children }: { label: string; onStep: () => v
 }
 
 const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
-  function MockupEditor({ view, initialPlacement, onDesignAdded, sizes = [], selectedSizeLabel = "" }, ref) {
+  function MockupEditor({ view, initialPlacement, onDesignAdded, sizes = [], selectedSizeLabel = "", colorHex = "" }, ref) {
+    const isWhiteGarment = isNearWhiteHex(colorHex);
     const onDesignAddedRef = useRef(onDesignAdded);
     onDesignAddedRef.current = onDesignAdded;
     const canvasElRef = useRef<HTMLCanvasElement>(null);
@@ -228,6 +247,66 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
     const [cropping, setCropping] = useState(false);
     const [applyingCrop, setApplyingCrop] = useState(false);
     const cropRectRef = useRef<fabric.Rect | null>(null);
+    const [whiteRisk, setWhiteRisk] = useState(false);
+    const whiteRiskRef = useRef(false);
+    function refreshWhiteRisk(url: string) {
+      if (!isWhiteGarment) {
+        whiteRiskRef.current = false;
+        setWhiteRisk(false);
+        return;
+      }
+      looksLikeOpaqueWhiteBackground(url).then((risky) => {
+        whiteRiskRef.current = risky;
+        setWhiteRisk(risky);
+      });
+    }
+    // Undo: a small stack of full-canvas JSON snapshots (fabric's own toJSON/loadFromJSON), taken
+    // at each meaningful checkpoint — never mid-drag. "history[0]" is always the empty/starting
+    // canvas, so undo can never leave the editor in a broken state.
+    const historyRef = useRef<string[]>([]);
+    const lastPushRef = useRef(0);
+    const [canUndo, setCanUndo] = useState(false);
+    const [undoing, setUndoing] = useState(false);
+    function pushHistory(force = false) {
+      const canvas = fabricCanvasRef.current;
+      if (!canvas) return;
+      const now = Date.now();
+      if (!force && now - lastPushRef.current < 350) return;
+      lastPushRef.current = now;
+      const json = JSON.stringify(canvas.toObject(["role"]));
+      if (historyRef.current[historyRef.current.length - 1] === json) return;
+      historyRef.current.push(json);
+      if (historyRef.current.length > 30) historyRef.current.shift();
+      setCanUndo(historyRef.current.length > 1);
+    }
+    function handleUndo() {
+      const canvas = fabricCanvasRef.current;
+      if (!canvas || historyRef.current.length <= 1 || undoing) return;
+      setUndoing(true);
+      historyRef.current.pop();
+      const prevJson = historyRef.current[historyRef.current.length - 1];
+      canvas.loadFromJSON(JSON.parse(prevJson)).then(() => {
+        designRef.current = null;
+        textRef.current = null;
+        for (const obj of canvas.getObjects()) {
+          const role = getRole(obj);
+          if (role === "design") designRef.current = obj as fabric.FabricImage;
+          else if (role === "text") textRef.current = obj as fabric.IText;
+          else if (role === "background") obj.set({ selectable: false, evented: false });
+        }
+        setHasDesign(!!designRef.current);
+        setHasText(!!textRef.current);
+        setCanUndo(historyRef.current.length > 1);
+        updateDesignBadge(null);
+        if (designRef.current) refreshWhiteRisk(designRef.current.getSrc());
+        else {
+          whiteRiskRef.current = false;
+          setWhiteRisk(false);
+        }
+        canvas.renderAll();
+        setUndoing(false);
+      });
+    }
     const [error, setError] = useState("");
     // Live cm readout shown on the design/text's own selection box while
     // it's selected or being dragged/scaled — replaces the old fixed
@@ -320,6 +399,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           selectable: false,
           evented: false,
         });
+        setRole(bgImg, "background");
         // Add as a regular object rather than canvas.backgroundImage — the
         // latter has had scaling/rendering bugs in fabric v6/v7.
         canvas.add(bgImg);
@@ -369,6 +449,11 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           updateDesignBadge(obj === designRef.current || obj === textRef.current ? obj : null);
         });
         canvas.on("selection:cleared", () => updateDesignBadge(null));
+        // Finished drag/scale/rotate (fires on mouse-up, not per-frame) — exactly the checkpoint
+        // undo should capture.
+        canvas.on("object:modified", (e) => {
+          if (e.target === designRef.current || e.target === textRef.current) pushHistory();
+        });
 
         // "Elegir color de fondo": while active, a click samples the pixel
         // color at that spot straight off the rendered canvas and removes
@@ -392,6 +477,8 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         }
 
         canvas.renderAll();
+        historyRef.current = [];
+        pushHistory(true);
       });
 
       return () => {
@@ -454,6 +541,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           transparentCorners: false,
         });
         img.setControlsVisibility({ mtr: view.allowRotate });
+        setRole(img, "design");
 
         designRef.current = img;
         clampObjectToMaxSize(img);
@@ -467,6 +555,8 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         updateDesignBadge(img);
         canvas.renderAll();
         setHasDesign(true);
+        refreshWhiteRisk(url);
+        pushHistory(true);
         if (!placement) onDesignAddedRef.current?.();
       });
     }
@@ -488,6 +578,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       canvas.setActiveObject(obj);
       updateDesignBadge(obj);
       canvas.requestRenderAll();
+      pushHistory();
     }
 
     function moveBy(dx: number, dy: number) {
@@ -533,12 +624,14 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         cornerStyle: "circle",
         transparentCorners: false,
       });
+      setRole(text, "text");
       textRef.current = text;
       canvas.add(text);
       canvas.setActiveObject(text);
       updateDesignBadge(text);
       canvas.renderAll();
       setHasText(true);
+      pushHistory(true);
     }
 
     function handleTextColorChange(color: string) {
@@ -575,6 +668,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         updateDesignBadge(null);
         canvas.renderAll();
         setHasText(false);
+        pushHistory(true);
       }
     }
 
@@ -620,12 +714,15 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         transparentCorners: false,
       });
       newImg.setControlsVisibility({ mtr: view.allowRotate });
+      setRole(newImg, "design");
       designRef.current = newImg;
       canvas.add(newImg);
       canvas.moveObjectTo(newImg, 1);
       canvas.setActiveObject(newImg);
       updateDesignBadge(newImg);
       canvas.renderAll();
+      refreshWhiteRisk(url);
+      pushHistory(true);
     }
 
     async function handleRemoveWhiteBg() {
@@ -776,6 +873,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           transparentCorners: false,
         });
         newImg.setControlsVisibility({ mtr: view.allowRotate });
+        setRole(newImg, "design");
         designRef.current = newImg;
         clampObjectToMaxSize(newImg);
         newImg.setCoords();
@@ -785,6 +883,8 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         updateDesignBadge(newImg);
         canvas.renderAll();
         setCropping(false);
+        refreshWhiteRisk(croppedUrl);
+        pushHistory(true);
       } catch (e) {
         setError(friendlyMessage(e, "No se pudo recortar la imagen. Intenta de nuevo."));
       } finally {
@@ -844,6 +944,9 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         updateDesignBadge(null);
         canvas.renderAll();
         setHasDesign(false);
+        whiteRiskRef.current = false;
+        setWhiteRisk(false);
+        pushHistory(true);
       }
     }
 
@@ -941,6 +1044,9 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           zoneHeightCm: 0,
         });
       },
+      hasWhiteOnWhiteRisk() {
+        return isWhiteGarment && whiteRiskRef.current;
+      },
     }));
 
     return (
@@ -1030,7 +1136,29 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
                 Centrar
               </button>
             </div>
+            <div className="flex flex-col items-center gap-1">
+              <span className="text-[11px] font-bold uppercase tracking-wide text-neutral-500">Historial</span>
+              <button
+                type="button"
+                onClick={handleUndo}
+                disabled={!canUndo || undoing}
+                title="Deshacer (Ctrl+Z)"
+                className="flex h-11 items-center gap-1.5 rounded-full border-2 border-black bg-white px-4 text-xs font-bold uppercase tracking-wide text-black transition hover:border-neon hover:bg-neon disabled:opacity-40 disabled:hover:border-black disabled:hover:bg-white"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} className="h-4 w-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+                </svg>
+                Deshacer
+              </button>
+            </div>
           </div>
+        )}
+
+        {isWhiteGarment && whiteRisk && (
+          <p className="mx-auto max-w-md rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-center text-sm font-medium text-amber-800">
+            Tu diseño tiene fondo blanco y el polerón también es blanco: la estampa quedaría invisible. Usa
+            &quot;Quitar fondo blanco&quot; o &quot;Aislar sujeto (IA)&quot; antes de continuar.
+          </p>
         )}
 
         {/* Secondary tools: collapsed by default so the phone screen stays simple */}

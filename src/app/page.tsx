@@ -51,19 +51,6 @@ export default async function Home() {
     <main>
       <PopeHero editorHref={editorHref} />
 
-      {/* Manifesto banner */}
-      <section className="border-t border-neutral-800 bg-[#102200] py-14">
-        <p className="mx-auto max-w-4xl px-6 text-center font-display text-4xl font-bold uppercase leading-[1] text-white sm:text-5xl lg:text-6xl">
-          <EditableText value={t("manifesto.title")} siteKey="manifesto.title" as="span" />{" "}
-          <span className="font-script text-[1.15em] font-normal normal-case text-neon">
-            <EditableText value={t("manifesto.titleAccent")} siteKey="manifesto.titleAccent" as="span" />
-          </span>
-        </p>
-        <p className="mx-auto mt-5 max-w-lg px-6 text-center text-sm text-neutral-400">
-          <EditableText value={t("manifesto.subtext")} siteKey="manifesto.subtext" as="span" multiline />
-        </p>
-      </section>
-
       <HowItWorks editorHref={editorHref} />
 
       {/* Trust badges */}

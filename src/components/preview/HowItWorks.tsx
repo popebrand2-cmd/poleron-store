@@ -170,7 +170,7 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-10"
-        style={{ background: "radial-gradient(45% 40% at 50% 55%, color-mix(in srgb, var(--neon) 9%, transparent), transparent 70%)" }}
+        style={{ background: "radial-gradient(55% 50% at 50% 55%, color-mix(in srgb, var(--neon) 28%, transparent), transparent 78%)" }}
       />
 
       <div className="mx-auto max-w-7xl px-5 py-16 sm:py-24">
@@ -236,7 +236,7 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
             <article className="hiw-card hiw-card-main rounded-3xl p-5 sm:p-7 lg:py-8">
               <StepHead n="02" labelKey="how.tag2" icon={<SizeIcon className="h-7 w-7" />} main />
 
-              <div className="hiw-scene relative -mx-3 mt-4 overflow-hidden rounded-2xl sm:mx-0 bg-[radial-gradient(60%_60%_at_50%_45%,color-mix(in_srgb,var(--neon)_16%,transparent),transparent_75%)] bg-black/60">
+              <div className="hiw-scene relative -mx-3 mt-4 overflow-hidden rounded-2xl sm:mx-0 bg-[radial-gradient(70%_70%_at_50%_45%,color-mix(in_srgb,var(--neon)_46%,transparent),transparent_82%)] bg-black/60">
                 <Garment
                   color={color}
                   design={
@@ -280,7 +280,7 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
             <article className="hiw-card rounded-3xl p-5 sm:p-6">
               <StepHead n="03" labelKey="how.tag3" icon={<ShirtIcon className="h-6 w-6" />} />
 
-              <div className="hiw-scene relative -mx-2 mt-4 overflow-hidden rounded-2xl sm:mx-0 bg-[radial-gradient(55%_55%_at_50%_50%,color-mix(in_srgb,var(--neon)_10%,transparent),transparent_75%)] bg-black/50">
+              <div className="hiw-scene relative -mx-2 mt-4 overflow-hidden rounded-2xl sm:mx-0 bg-[radial-gradient(65%_65%_at_50%_50%,color-mix(in_srgb,var(--neon)_36%,transparent),transparent_82%)] bg-black/50">
                 <Garment color={color} design={<DesignImg color={color} />}>
                   <div className="glass-neon absolute bottom-[10%] left-[4%] flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-bold uppercase tracking-wide text-black">
                     <CheckIcon className="h-4 w-4" />

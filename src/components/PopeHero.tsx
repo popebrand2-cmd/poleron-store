@@ -14,7 +14,7 @@ export default function PopeHero({ editorHref }: { editorHref: string }) {
         <div
           aria-hidden="true"
           className="absolute inset-0 -z-10"
-          style={{ background: "radial-gradient(60% 55% at 70% 58%, #102200 0%, rgba(16,34,0,0.35) 45%, transparent 75%)" }}
+          style={{ background: "radial-gradient(70% 65% at 70% 58%, color-mix(in srgb, var(--neon) 48%, #102200) 0%, color-mix(in srgb, var(--neon) 18%, #102200) 28%, #102200 45%, rgba(16,34,0,0.6) 65%, transparent 85%)" }}
         />
 
         <div className="mx-auto grid min-h-[calc(100svh-7rem)] max-w-6xl items-center gap-6 px-5 py-8 lg:grid-cols-2 lg:gap-10 lg:py-12">
