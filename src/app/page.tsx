@@ -65,8 +65,6 @@ export default async function Home() {
         />
       )}
 
-      <HowItWorks editorHref={editorHref} />
-
       {/* Featured */}
       <section id="tienda" className="bg-black">
         <div className="mx-auto max-w-6xl px-6 py-16">
@@ -103,6 +101,8 @@ export default async function Home() {
           )}
         </div>
       </section>
+
+      <HowItWorks editorHref={editorHref} />
 
       {/* Vertical videos of finished garments, as a hand of cards (hidden until the owner uploads some) */}
       <RealVideos />
