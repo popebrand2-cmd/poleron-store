@@ -526,9 +526,12 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
         >
           ¿Cómo se vería puesto?
         </button>
-
-        <ProductInfo />
       </section>
+
+      {/* Purchase info: under the buttons on phones, a horizontal strip across both columns on desktop */}
+      <div className="min-w-0 lg:col-span-2 lg:row-start-4">
+        <ProductInfo />
+      </div>
 
       {tryOnSnapshot && (
         <div className="min-w-0 lg:col-span-2">

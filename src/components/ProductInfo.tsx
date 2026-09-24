@@ -32,8 +32,8 @@ export default function ProductInfo() {
   const visible = ROWS.filter((r) => editMode || filled(r.key));
 
   return (
-    <section aria-label="Información de compra" className="mt-6 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-      <ul className="space-y-3">
+    <section aria-label="Información de compra" className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 lg:p-6">
+      <ul className="space-y-3 lg:grid lg:grid-cols-[repeat(auto-fit,minmax(210px,1fr))] lg:gap-x-8 lg:gap-y-5 lg:space-y-0">
         {visible.map((r) => (
           <li key={r.key} className="flex gap-3">
             <span className="mt-0.5 text-neutral-900">{r.icon}</span>
