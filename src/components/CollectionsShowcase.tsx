@@ -17,25 +17,25 @@ type St = { x: number; s: number; o: number; d: number; z: number; r: number };
 // interpolated, so dragging moves the cards live instead of jumping.
 const STATES: Record<Mode, St[]> = {
   desktop: [
-    { x: 0, s: 1, o: 1, d: 0, z: 100, r: 0 },
-    { x: 0.56, s: 0.86, o: 0.82, d: 0.3, z: -60, r: 5 },
-    { x: 0.98, s: 0.72, o: 0.52, d: 0.52, z: -170, r: 9 },
-    { x: 1.28, s: 0.6, o: 0, d: 0.7, z: -280, r: 12 },
+    { x: 0, s: 1, o: 1, d: 0, z: 80, r: 0 },
+    { x: 0.55, s: 0.89, o: 0.84, d: 0.28, z: -40, r: 3 },
+    { x: 0.96, s: 0.78, o: 0.54, d: 0.5, z: -130, r: 6 },
+    { x: 1.24, s: 0.68, o: 0, d: 0.68, z: -220, r: 8 },
   ],
   tablet: [
-    { x: 0, s: 1, o: 1, d: 0, z: 100, r: 0 },
-    { x: 0.6, s: 0.86, o: 0.82, d: 0.3, z: -60, r: 5 },
-    { x: 1.0, s: 0.72, o: 0, d: 0.52, z: -170, r: 9 },
-    { x: 1.28, s: 0.6, o: 0, d: 0.7, z: -280, r: 12 },
+    { x: 0, s: 1, o: 1, d: 0, z: 80, r: 0 },
+    { x: 0.6, s: 0.89, o: 0.84, d: 0.28, z: -40, r: 3 },
+    { x: 1.0, s: 0.78, o: 0, d: 0.5, z: -130, r: 6 },
+    { x: 1.24, s: 0.68, o: 0, d: 0.68, z: -220, r: 8 },
   ],
   mobile: [
-    { x: 0, s: 1, o: 1, d: 0, z: 60, r: 0 },
-    { x: 0.2, s: 0.86, o: 0.85, d: 0.38, z: -60, r: 0 },
-    { x: 0.3, s: 0.72, o: 0, d: 0.52, z: -170, r: 0 },
-    { x: 0.4, s: 0.6, o: 0, d: 0.7, z: -280, r: 0 },
+    { x: 0, s: 1, o: 1, d: 0, z: 40, r: 0 },
+    { x: 0.2, s: 0.9, o: 0.85, d: 0.36, z: -40, r: 0 },
+    { x: 0.3, s: 0.8, o: 0, d: 0.5, z: -130, r: 0 },
+    { x: 0.4, s: 0.7, o: 0, d: 0.68, z: -220, r: 0 },
   ],
 };
-const COLLAPSED: St = { x: 0, s: 0.6, o: 0, d: 0.7, z: -300, r: 0 };
+const COLLAPSED: St = { x: 0, s: 0.8, o: 0, d: 0.6, z: -150, r: 0 };
 
 function stateAt(S: St[], a: number): St {
   if (a >= 3) return S[3];
@@ -86,6 +86,7 @@ export default function CollectionsShowcase({
   const unit = useRef(160);
   const wheelLock = useRef(0);
   const firstDeal = useRef(true);
+  const [giant, setGiant] = useState<{ cur?: string; prev?: string; k: number }>({ k: 0 });
 
   // Sections in order of first appearance; artists without one fall under "Otros". The filter row
   // (with a final "Todas") only exists when there is more than one section.
@@ -121,6 +122,13 @@ export default function CollectionsShowcase({
       mqR.removeEventListener("change", update);
     };
   }, []);
+
+  useEffect(() => {
+    const name = cur?.name;
+    setGiant((g) => (g.cur === name ? g : { cur: name, prev: g.cur, k: g.k + 1 }));
+    const t = setTimeout(() => setGiant((g) => (g.prev ? { ...g, prev: undefined } : g)), 1100);
+    return () => clearTimeout(t);
+  }, [cur?.name]);
 
   useEffect(() => {
     if (dealtFor === key) return;
@@ -243,10 +251,10 @@ export default function CollectionsShowcase({
     const r = card.getBoundingClientRect();
     const px = (e.clientX - r.left) / r.width - 0.5;
     const py = (e.clientY - r.top) / r.height - 0.5;
-    card.style.setProperty("--ty", `${(px * 5).toFixed(2)}deg`);
-    card.style.setProperty("--tx", `${(-py * 5).toFixed(2)}deg`);
-    card.style.setProperty("--px", `${(-px * 8).toFixed(1)}px`);
-    card.style.setProperty("--py", `${(-py * 8).toFixed(1)}px`);
+    card.style.setProperty("--ty", `${(px * 3).toFixed(2)}deg`);
+    card.style.setProperty("--tx", `${(-py * 3).toFixed(2)}deg`);
+    card.style.setProperty("--px", `${(-px * 5).toFixed(1)}px`);
+    card.style.setProperty("--py", `${(-py * 5).toFixed(1)}px`);
     card.style.setProperty("--gx2", `${((px + 0.5) * 100).toFixed(0)}%`);
     card.style.setProperty("--gy2", `${((py + 0.5) * 100).toFixed(0)}%`);
   }
@@ -323,7 +331,14 @@ export default function CollectionsShowcase({
         onWheel={onWheel}
       >
         <div className="pcol-giant" aria-hidden="true">
-          <span key={cur?.id ?? "none"}>{cur?.name}</span>
+          {giant.prev && (
+            <span key={`p${giant.k}`} className="pcol-g out">
+              {giant.prev}
+            </span>
+          )}
+          <span key={`c${giant.k}`} className="pcol-g in">
+            {giant.cur}
+          </span>
         </div>
         <div className="pcol-floor" aria-hidden="true" />
         <div className={`pcol-ring${swapping ? " swap" : ""}${dragging ? " drag grabbing" : ""}`} onPointerDown={onPointerDown}>
@@ -342,7 +357,7 @@ export default function CollectionsShowcase({
               "--z": `${st.z.toFixed(1)}px`,
               "--ry": `${(-sg * st.r).toFixed(2)}deg`,
               "--zi": Math.round(100 - ad * 10),
-              transitionDelay: stagger && !reduce ? `${Math.round(Math.min(ad, 3) * 70)}ms` : undefined,
+              transitionDelay: stagger && !reduce ? `${Math.round(Math.min(ad, 3) * 45)}ms` : undefined,
               ...(collapsed ? { transition: "none" } : null),
             } as CSSProperties;
             return (
