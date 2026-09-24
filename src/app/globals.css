@@ -387,8 +387,7 @@ h1, h2, h3 {
 @keyframes pcolGOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-8px); } }
 .pcol-floor { position: absolute; left: 50%; bottom: 6px; width: calc(var(--w) * 1.15); height: 34px; transform: translateX(-50%); z-index: 0; pointer-events: none; background: radial-gradient(closest-side, rgba(0, 0, 0, 0.75), transparent); filter: blur(4px); }
 .pcol-floor::after { content: ""; position: absolute; left: 12%; right: 12%; top: 50%; height: 1px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--neon) 28%, transparent), transparent); }
-.pcol-ring { position: absolute; inset: 0; perspective: 1500px; perspective-origin: 50% 45%; touch-action: pan-y; user-select: none; cursor: grab; z-index: 1; transition: opacity 0.28s ease, transform 0.28s ease; }
-.pcol-ring.grabbing { cursor: grabbing; }
+.pcol-ring { position: absolute; inset: 0; perspective: 1500px; perspective-origin: 50% 45%; touch-action: pan-y; user-select: none; z-index: 1; transition: opacity 0.28s ease, transform 0.28s ease; }
 .pcol-ring.swap { opacity: 0; transform: translateY(10px); }
 .pcol-ring.drag .pcol-slot { transition: none !important; }
 @media (min-width: 1024px) { .pcol-ring { -webkit-mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent); mask-image: linear-gradient(90deg, transparent, #000 9%, #000 91%, transparent); } }

@@ -15,7 +15,7 @@ type Mode = "desktop" | "tablet" | "mobile";
 type St = { x: number; s: number; o: number; d: number; z: number; r: number };
 
 // Stack geometry by distance from the centre (x in card widths). Values between two steps are
-// interpolated, so dragging moves the cards live instead of jumping.
+// interpolated, so changing artist glides instead of jumping.
 const STATES: Record<Mode, St[]> = {
   desktop: [
     { x: 0, s: 1, o: 1, d: 0, z: 80, r: 0 },
@@ -67,8 +67,6 @@ export default function CollectionsShowcase({
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [active, setActive] = useState(0);
-  const [dragU, setDragU] = useState(0);
-  const [dragging, setDragging] = useState(false);
   const [swapping, setSwapping] = useState(false);
   const [mode, setMode] = useState<Mode>("desktop");
   const [reduce, setReduce] = useState(false);
@@ -82,9 +80,6 @@ export default function CollectionsShowcase({
   const swapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sx = useRef<number | null>(null);
   const moved = useRef(false);
-  const dragRef = useRef(false);
-  const dragVal = useRef(0);
-  const unit = useRef(160);
   const wheelLock = useRef(0);
   const firstDeal = useRef(true);
   const [giant, setGiant] = useState<{ cur?: string; prev?: string; k: number }>({ k: 0 });
@@ -170,7 +165,6 @@ export default function CollectionsShowcase({
   function go(i: number) {
     if (n === 0) return;
     setActive(((i % n) + n) % n);
-    setDragU(0);
   }
   const move = (d: number) => go(active + d);
 
@@ -190,36 +184,23 @@ export default function CollectionsShowcase({
     if (!editMode) router.push(`/artistas/${a.slug}`);
   }
 
+  // A swipe/drag never moves the card by hand: it only triggers the normal "next / previous artist"
+  // animation once the gesture is long enough.
   function onPointerDown(e: React.PointerEvent) {
     sx.current = e.clientX;
     moved.current = false;
-    unit.current = (stageRef.current?.querySelector(".pcol-slot")?.getBoundingClientRect().width ?? 300) * 0.5;
+    let dx = 0;
     const onMove = (ev: PointerEvent) => {
       if (sx.current === null) return;
-      const dx = ev.clientX - sx.current;
-      if (!dragRef.current && Math.abs(dx) > 8) {
-        dragRef.current = true;
-        moved.current = true;
-        setDragging(true);
-      }
-      if (dragRef.current) {
-        dragVal.current = Math.max(-1.6, Math.min(1.6, dx / unit.current));
-        setDragU(dragVal.current);
-      }
+      dx = ev.clientX - sx.current;
+      if (Math.abs(dx) > 8) moved.current = true;
     };
     const onUp = () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onUp);
       sx.current = null;
-      if (dragRef.current) {
-        dragRef.current = false;
-        setDragging(false);
-        const steps = -Math.round(dragVal.current);
-        dragVal.current = 0;
-        setDragU(0);
-        if (steps !== 0 && n > 0) setActive((a) => (((a + steps) % n) + n) % n);
-      }
+      if (Math.abs(dx) > 50 && n > 0) move(dx < 0 ? 1 : -1);
       setTimeout(() => (moved.current = false), 30);
     };
     window.addEventListener("pointermove", onMove);
@@ -247,7 +228,7 @@ export default function CollectionsShowcase({
   }
 
   function tilt(e: React.PointerEvent<HTMLDivElement>, isActive: boolean) {
-    if (reduce || !isActive || dragging || e.pointerType === "touch") return;
+    if (reduce || !isActive || e.pointerType === "touch") return;
     const card = e.currentTarget;
     const r = card.getBoundingClientRect();
     const px = (e.clientX - r.left) / r.width - 0.5;
@@ -326,7 +307,6 @@ export default function CollectionsShowcase({
       <div
         ref={stageRef}
         className="pcol-stage"
-        style={{ "--gx": (-dragU * 46).toFixed(1) } as CSSProperties}
         tabIndex={0}
         aria-label="Carrusel de colecciones. Usa las flechas del teclado para navegar."
         onWheel={onWheel}
@@ -342,9 +322,9 @@ export default function CollectionsShowcase({
           </span>
         </div>
         <div className="pcol-floor" aria-hidden="true" />
-        <div className={`pcol-ring${swapping ? " swap" : ""}${dragging ? " drag grabbing" : ""}`} onPointerDown={onPointerDown}>
+        <div className={`pcol-ring${swapping ? " swap" : ""}`} onPointerDown={onPointerDown}>
           {items.map((a, i) => {
-            const d = wrapDist(i) + dragU;
+            const d = wrapDist(i);
             const ad = Math.abs(d);
             if (mode === "mobile" && ad > 2.2) return null;
             const sg = d < 0 ? -1 : 1;
