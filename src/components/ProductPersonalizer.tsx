@@ -413,9 +413,11 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
             </div>
           </div>
         )}
+      </section>
 
-        {collectionsForView.length > 0 && (
-          <div className="relative mt-6 overflow-hidden rounded-2xl border border-neutral-200 bg-white p-4 text-black sm:p-5">
+      {/* Collections: under the size/material choices on phones, full width under both columns on desktop */}
+      {collectionsForView.length > 0 && (
+          <div className="relative min-w-0 overflow-hidden rounded-2xl border border-neutral-200 bg-white p-4 text-black sm:p-5 lg:col-span-2 lg:row-start-4 lg:p-8">
             <div className="relative">
               <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#0b6b25]">POPE · Colecciones</p>
               <h3 className="mt-1 font-display text-2xl font-bold uppercase leading-none sm:text-3xl">O elige de nuestra colección</h3>
@@ -460,7 +462,6 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
             </div>
           </div>
         )}
-      </section>
 
       {/* 02 — PERSONALIZA */}
       <section id="paso-2" className="min-w-0 scroll-mt-28 lg:col-start-1 lg:row-span-2 lg:row-start-2">
@@ -529,7 +530,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
       </section>
 
       {/* Purchase info: under the buttons on phones, a horizontal strip across both columns on desktop */}
-      <div className="min-w-0 lg:col-span-2 lg:row-start-4">
+      <div className="min-w-0 lg:col-span-2 lg:row-start-5">
         <ProductInfo />
       </div>
 
