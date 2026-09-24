@@ -428,13 +428,15 @@ h1, h2, h3 {
 .pcol-arrow.r { right: clamp(12px, 4vw, 56px); }
 
 .pcol-foot { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-top: 8px; }
-.pcol-ticks { display: flex; gap: 4px; align-items: center; min-height: 20px; width: min(560px, 88vw); }
-.pcol-tick { height: 20px; flex: 1 1 0; min-width: 3px; position: relative; }
-.pcol-tick::after { content: ""; position: absolute; left: 0; right: 0; top: 8px; height: 3px; border-radius: 2px; background: #ffffff2e; }
-.pcol-tick i { position: absolute; left: 0; right: 0; top: 8px; height: 3px; border-radius: 2px; background: var(--neon); z-index: 1; transform: scaleX(0); transform-origin: left center; }
-.pcol-tick.done i { transform: scaleX(1); }
-.pcol-tick.on i { animation: pcol-fill 6s linear forwards; }
-@keyframes pcol-fill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+/* Instagram-style dots: the current one is bright, the ones beside it shrink, the far ones disappear */
+.pcol-ticks { display: flex; gap: 0; align-items: center; justify-content: center; min-height: 20px; }
+.pcol-tick { --dot: 4px; height: 20px; width: 15px; flex: none; position: relative; transition: width 0.4s var(--ease), opacity 0.4s ease; }
+.pcol-tick::after { content: ""; position: absolute; left: 50%; top: 50%; width: var(--dot); height: var(--dot); border-radius: 50%; transform: translate(-50%, -50%); background: #ffffff59; transition: width 0.4s var(--ease), height 0.4s var(--ease), background 0.4s ease; }
+.pcol-tick[data-d="1"] { --dot: 7px; }
+.pcol-tick[data-d="2"] { --dot: 5.5px; }
+.pcol-tick[data-d="4"] { width: 0; opacity: 0; pointer-events: none; }
+.pcol-tick.on { --dot: 9px; }
+.pcol-tick.on::after { background: var(--neon); }
 .pcol-count { font-family: var(--font-teko), sans-serif; font-size: 1.5rem; letter-spacing: 0.2em; color: #ffffff88; }
 .pcol-count b { color: var(--neon); font-weight: 600; }
 .pcol-empty { position: absolute; inset: 0; display: grid; place-items: center; color: #888; letter-spacing: 0.14em; font-size: 13px; text-transform: uppercase; z-index: 3; }
