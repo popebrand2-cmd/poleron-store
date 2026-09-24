@@ -425,10 +425,10 @@ h1, h2, h3 {
   .pcol-copy p { display: none; }
   .pcol-artist { top: 160px; width: 90vw; }
   .pcol-artist strong { font-size: 44px; }
-  .pcol-stage { left: 0; right: 0; top: 215px; bottom: 130px; }
+  .pcol-stage { left: 0; right: 0; top: 215px; bottom: 96px; }
   .pcol-card { height: 92%; max-width: 70vw; aspect-ratio: 3 / 4; border-radius: 20px; }
-  .pcol-controls { left: 50%; bottom: 88px; transform: translateX(-50%); white-space: nowrap; }
-  .pcol-rail { left: 16px; right: 16px; top: auto; bottom: 18px; transform: none; width: auto; display: flex; gap: 7px; }
+  .pcol-controls { left: 50%; bottom: 36px; transform: translateX(-50%); white-space: nowrap; }
+  .pcol-rail { left: auto; right: 16px; top: 66px; bottom: auto; transform: none; width: 48px; display: block; }
   .pcol-search-wrap { flex: none; width: 48px; }
   .pcol-search-wrap.open .pcol-search { width: calc(100vw - 32px); }
   .pcol-artist strong { font-size: 36px; }
