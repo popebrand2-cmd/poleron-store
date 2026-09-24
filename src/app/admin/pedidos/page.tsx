@@ -3,6 +3,7 @@ import { formatCLP } from "@/lib/money";
 import DeleteOrderButton from "@/components/admin/DeleteOrderButton";
 import AdminNav from "@/components/admin/AdminNav";
 import OrderStatusControl from "@/components/admin/OrderStatusControl";
+import { CHILE_COMUNAS } from "@/lib/chile-comunas";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +55,7 @@ export default async function AdminOrdersPage() {
                       "Retiro en tienda"
                     ) : (
                       <>
-                        Envío a {o.shippingComuna || "—"} ({formatCLP(o.shippingCost)}) · {o.shippingAddr}
+                        Envío a {o.shippingComuna || "—"}{CHILE_COMUNAS.find((c) => c.comuna === o.shippingComuna)?.region ? `, ${CHILE_COMUNAS.find((c) => c.comuna === o.shippingComuna)?.region}` : ""} ({formatCLP(o.shippingCost)}) · {o.shippingAddr}
                       </>
                     )}
                   </p>

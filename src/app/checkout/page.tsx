@@ -5,20 +5,13 @@ import { useCartStore } from "@/lib/cart-store";
 import { formatCLP } from "@/lib/money";
 import { once, trackEvent } from "@/lib/track";
 import { VatNote } from "@/components/ProductInfo";
+import { CHILE_COMUNAS } from "@/lib/chile-comunas";
 
 type ShippingRate = { region: string; comuna: string; priceCLP: number };
 type ShippingInfo = {
   rates: ShippingRate[];
   pickup: { enabled: boolean; address: string; hours: string };
 };
-
-function normalize(s: string) {
-  return s
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .trim()
-    .toLowerCase();
-}
 
 export default function CheckoutPage() {
   const items = useCartStore((s) => s.items);
@@ -61,17 +54,16 @@ export default function CheckoutPage() {
   const [referencia, setReferencia] = useState("");
   const [method, setMethod] = useState<"PICKUP" | "DELIVERY">("DELIVERY");
   const [comuna, setComuna] = useState("");
-  const [comunaFocused, setComunaFocused] = useState(false);
+  const [region, setRegion] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   if (!mounted) return null;
 
-  const matchedRate = shipping?.rates.find((r) => normalize(r.comuna) === normalize(comuna)) ?? null;
-  const comunaSuggestions =
-    comuna.trim() && !matchedRate
-      ? (shipping?.rates.filter((r) => normalize(r.comuna).includes(normalize(comuna))) ?? []).slice(0, 6)
-      : [];
+  const regionOrder = CHILE_COMUNAS.map((c) => c.region);
+  const regions = [...new Set(shipping?.rates.map((r) => r.region) ?? [])].sort((x, y) => regionOrder.indexOf(x) - regionOrder.indexOf(y));
+  const comunasInRegion = (shipping?.rates ?? []).filter((r) => r.region === region).sort((x, y) => x.comuna.localeCompare(y.comuna, "es"));
+  const matchedRate = comunasInRegion.find((r) => r.comuna === comuna) ?? null;
   const addressComplete = Boolean(matchedRate && calle.trim() && numero.trim());
 
   const subtotal = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
@@ -83,7 +75,7 @@ export default function CheckoutPage() {
     setError("");
 
     if (method === "DELIVERY" && !matchedRate) {
-      setError("Escribe una comuna válida de nuestra cobertura de envío.");
+      setError(!region ? "Elige tu región." : "Elige tu comuna.");
       return;
     }
     if (method === "DELIVERY" && (!calle.trim() || !numero.trim())) {
@@ -229,49 +221,55 @@ export default function CheckoutPage() {
 
         {method === "DELIVERY" && (
           <>
-            <div className="relative">
-              <label className="mb-1 block text-sm font-medium">Comuna</label>
-              <input
+            <div>
+              <label htmlFor="checkout-region" className="mb-1 block text-sm font-medium">
+                Región
+              </label>
+              <select
+                id="checkout-region"
                 required
-                autoComplete="off"
+                value={region}
+                onChange={(e) => {
+                  setRegion(e.target.value);
+                  setComuna("");
+                }}
+                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2"
+              >
+                <option value="">Selecciona tu región</option>
+                {regions.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+              {shipping && shipping.rates.length === 0 && (
+                <p className="mt-1 text-xs text-neutral-500">Por ahora no hay comunas con envío configurado — escríbenos para coordinar.</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="checkout-comuna" className="mb-1 block text-sm font-medium">
+                Comuna
+              </label>
+              <select
+                id="checkout-comuna"
+                required
+                disabled={!region}
                 value={comuna}
                 onChange={(e) => setComuna(e.target.value)}
-                onFocus={() => setComunaFocused(true)}
-                onBlur={() => setTimeout(() => setComunaFocused(false), 150)}
-                placeholder="Escribe tu comuna"
-                className="w-full rounded-md border border-neutral-300 px-3 py-2"
-              />
-              {matchedRate ? (
+                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 disabled:bg-neutral-100 disabled:text-neutral-400"
+              >
+                <option value="">{region ? "Selecciona tu comuna" : "Primero elige tu región"}</option>
+                {comunasInRegion.map((r) => (
+                  <option key={r.comuna} value={r.comuna}>
+                    {r.comuna} · {formatCLP(r.priceCLP)}
+                  </option>
+                ))}
+              </select>
+              {matchedRate && (
                 <p className="mt-1 text-xs text-green-700">
                   {matchedRate.comuna} · {matchedRate.region}
                 </p>
-              ) : shipping && shipping.rates.length === 0 ? (
-                <p className="mt-1 text-xs text-neutral-500">
-                  Por ahora no hay comunas con envío configurado — escríbenos para coordinar.
-                </p>
-              ) : comuna.trim() && comunaSuggestions.length === 0 ? (
-                <p className="mt-1 text-xs text-red-600">
-                  No hacemos envíos a esa comuna todavía. Verifica que esté bien escrita.
-                </p>
-              ) : null}
-
-              {comunaFocused && comunaSuggestions.length > 0 && (
-                <ul className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border border-neutral-200 bg-white shadow-lg">
-                  {comunaSuggestions.map((r) => (
-                    <li key={r.comuna}>
-                      <button
-                        type="button"
-                        onClick={() => setComuna(r.comuna)}
-                        className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-neutral-50"
-                      >
-                        <span>
-                          {r.comuna} <span className="text-neutral-400">· {r.region}</span>
-                        </span>
-                        <span className="text-neutral-500">{formatCLP(r.priceCLP)}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
               )}
             </div>
 
