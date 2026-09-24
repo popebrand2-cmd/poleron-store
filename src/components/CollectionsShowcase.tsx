@@ -70,6 +70,11 @@ export default function CollectionsShowcase({
   const [swapping, setSwapping] = useState(false);
   const [mode, setMode] = useState<Mode>("desktop");
   const [reduce, setReduce] = useState(false);
+  // Instagram-story style progress: the active bar fills and then moves on to the next collection. It
+  // pauses while the visitor hovers / touches the carousel or when the section is off screen.
+  const [hold, setHold] = useState(false);
+  const [inView, setInView] = useState(true);
+  const sectionRef = useRef<HTMLElement>(null);
   // Which list the cards were last "dealt" for: while it differs from the current one, the new cards
   // render stacked at the centre for a frame, then fan out one after another.
   const [dealtFor, setDealtFor] = useState("|");
@@ -98,6 +103,14 @@ export default function CollectionsShowcase({
   const n = items.length;
   const cur = items[Math.min(active, Math.max(0, n - 1))];
   const key = `${cat}|${query}`;
+
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.3 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
   const collapsed = !reduce && !firstDeal.current && dealtFor !== key;
 
   useEffect(() => {
@@ -246,9 +259,22 @@ export default function CollectionsShowcase({
   }
 
   const S = STATES[mode];
+  const autoplay = n > 1 && !editMode;
+  const paused = hold || !inView;
 
   return (
-    <section id="colecciones" className="pcol" aria-label="Colecciones POPE" onKeyDown={onKeyDown}>
+    <section
+      id="colecciones"
+      ref={sectionRef}
+      className="pcol"
+      aria-label="Colecciones POPE"
+      onKeyDown={onKeyDown}
+      onPointerEnter={(e) => e.pointerType === "mouse" && setHold(true)}
+      onPointerLeave={(e) => e.pointerType === "mouse" && setHold(false)}
+      onPointerDown={() => setHold(true)}
+      onPointerUp={(e) => e.pointerType !== "mouse" && setHold(false)}
+      onPointerCancel={() => setHold(false)}
+    >
       <header className="pcol-head">
         <p className="pcol-eyebrow">{eyebrow}</p>
         <h2 className="pcol-title">
@@ -399,9 +425,15 @@ export default function CollectionsShowcase({
               role="tab"
               aria-selected={i === active}
               aria-label={`Ir a ${a.name}`}
-              className={`pcol-tick${i === active ? " on" : ""}`}
+              className={`pcol-tick${i < active ? " done" : i === active ? " on" : ""}`}
               onClick={() => go(i)}
-            />
+            >
+              <i
+                key={i === active ? `${key}-${active}` : "fill"}
+                style={{ animationPlayState: paused ? "paused" : "running" }}
+                onAnimationEnd={i === active && autoplay ? () => go(active + 1) : undefined}
+              />
+            </button>
           ))}
         </div>
         <div className="pcol-count">
