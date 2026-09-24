@@ -60,7 +60,6 @@ export default async function Home() {
           }))}
           eyebrow={<EditableText value={t("collections.eyebrow")} siteKey="collections.eyebrow" as="span" />}
           heading={<EditableText value={t("collections.heading")} siteKey="collections.heading" as="span" />}
-          subtext={<EditableText value={t("collections.subtext")} siteKey="collections.subtext" as="span" multiline />}
           ctaLabel={<Txt k="collections.cta" />}
         />
       )}

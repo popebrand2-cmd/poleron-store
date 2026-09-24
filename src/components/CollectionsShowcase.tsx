@@ -8,112 +8,217 @@ import { useEditMode } from "@/components/edit/EditModeContext";
 export type ShowcaseArtist = { id: string; slug: string; name: string; imageUrl: string; count: number; category: string };
 
 const NO_SECTION = "Otros";
+const ALL = "Todas";
+
+type Mode = "desktop" | "tablet" | "mobile";
+type St = { x: number; s: number; o: number; d: number; z: number; r: number };
+
+// Stack geometry by distance from the centre (x in card widths). Values between two steps are
+// interpolated, so dragging moves the cards live instead of jumping.
+const STATES: Record<Mode, St[]> = {
+  desktop: [
+    { x: 0, s: 1, o: 1, d: 0, z: 100, r: 0 },
+    { x: 0.56, s: 0.86, o: 0.82, d: 0.3, z: -60, r: 5 },
+    { x: 0.98, s: 0.72, o: 0.52, d: 0.52, z: -170, r: 9 },
+    { x: 1.28, s: 0.6, o: 0, d: 0.7, z: -280, r: 12 },
+  ],
+  tablet: [
+    { x: 0, s: 1, o: 1, d: 0, z: 100, r: 0 },
+    { x: 0.6, s: 0.86, o: 0.82, d: 0.3, z: -60, r: 5 },
+    { x: 1.0, s: 0.72, o: 0, d: 0.52, z: -170, r: 9 },
+    { x: 1.28, s: 0.6, o: 0, d: 0.7, z: -280, r: 12 },
+  ],
+  mobile: [
+    { x: 0, s: 1, o: 1, d: 0, z: 60, r: 0 },
+    { x: 0.2, s: 0.86, o: 0.85, d: 0.38, z: -60, r: 0 },
+    { x: 0.3, s: 0.72, o: 0, d: 0.52, z: -170, r: 0 },
+    { x: 0.4, s: 0.6, o: 0, d: 0.7, z: -280, r: 0 },
+  ],
+};
+const COLLAPSED: St = { x: 0, s: 0.6, o: 0, d: 0.7, z: -300, r: 0 };
+
+function stateAt(S: St[], a: number): St {
+  if (a >= 3) return S[3];
+  const i = Math.floor(a);
+  const t = a - i;
+  const A = S[i];
+  const B = S[i + 1];
+  return { x: A.x + (B.x - A.x) * t, s: A.s + (B.s - A.s) * t, o: A.o + (B.o - A.o) * t, d: A.d + (B.d - A.d) * t, z: A.z + (B.z - A.z) * t, r: A.r + (B.r - A.r) * t };
+}
+
+const pad = (n: number) => String(n).padStart(2, "0");
+const designsLabel = (n: number) => `${n} ${n === 1 ? "diseño" : "diseños"}`;
 
 export default function CollectionsShowcase({
   artists,
   eyebrow,
   heading,
-  subtext,
   ctaLabel,
 }: {
   artists: ShowcaseArtist[];
   eyebrow: ReactNode;
   heading: ReactNode;
-  subtext: ReactNode;
   ctaLabel: ReactNode;
 }) {
   const router = useRouter();
   const { editMode } = useEditMode();
-  const [catIndex, setCatIndex] = useState(0);
-  const [active, setActive] = useState(0);
+  const [cat, setCat] = useState(ALL);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [mobile, setMobile] = useState(false);
-  const [hovering, setHovering] = useState(false);
-  const [visible, setVisible] = useState(true);
-  const rootRef = useRef<HTMLElement>(null);
+  const [active, setActive] = useState(0);
+  const [dragU, setDragU] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [swapping, setSwapping] = useState(false);
+  const [mode, setMode] = useState<Mode>("desktop");
+  const [reduce, setReduce] = useState(false);
+  // Which list the cards were last "dealt" for: while it differs from the current one, the new cards
+  // render stacked at the centre for a frame, then fan out one after another.
+  const [dealtFor, setDealtFor] = useState("|");
+  const [stagger, setStagger] = useState(false);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const chipsRef = useRef<HTMLElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
-  const dragStartX = useRef<number | null>(null);
-  const suppressClick = useRef(false);
+  const swapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const sx = useRef<number | null>(null);
+  const moved = useRef(false);
+  const dragRef = useRef(false);
+  const dragVal = useRef(0);
+  const unit = useRef(160);
   const wheelLock = useRef(0);
+  const firstDeal = useRef(true);
 
-  // Sections (tabs) in order of first appearance; artists with no section fall under "Otros".
+  // Sections in order of first appearance; artists without one fall under "Otros". The filter row
+  // (with a final "Todas") only exists when there is more than one section.
   const sections = useMemo(() => [...new Set(artists.map((a) => a.category || NO_SECTION))], [artists]);
+  const filters = sections.length > 1 ? [...sections, ALL] : [];
   const items = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (q) return artists.filter((a) => a.name.toLowerCase().includes(q));
-    if (sections.length < 2) return artists;
-    return artists.filter((a) => (a.category || NO_SECTION) === (sections[catIndex] ?? sections[0]));
-  }, [artists, query, sections, catIndex]);
+    if (cat === ALL || sections.length < 2) return artists;
+    return artists.filter((a) => (a.category || NO_SECTION) === cat);
+  }, [artists, query, cat, sections]);
 
   const n = items.length;
-  const current = items[Math.min(active, Math.max(0, n - 1))];
+  const cur = items[Math.min(active, Math.max(0, n - 1))];
+  const key = `${cat}|${query}`;
+  const collapsed = !reduce && !firstDeal.current && dealtFor !== key;
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 900px)");
-    const update = () => setMobile(mq.matches);
+    const mqM = window.matchMedia("(max-width: 639px)");
+    const mqT = window.matchMedia("(max-width: 1023px)");
+    const mqR = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => {
+      setMode(mqM.matches ? "mobile" : mqT.matches ? "tablet" : "desktop");
+      setReduce(mqR.matches);
+    };
     update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
+    mqM.addEventListener("change", update);
+    mqT.addEventListener("change", update);
+    mqR.addEventListener("change", update);
+    return () => {
+      mqM.removeEventListener("change", update);
+      mqT.removeEventListener("change", update);
+      mqR.removeEventListener("change", update);
+    };
   }, []);
 
   useEffect(() => {
-    const el = rootRef.current;
-    if (!el || !("IntersectionObserver" in window)) return;
-    const io = new IntersectionObserver(([e]) => setVisible(e.isIntersecting), { threshold: 0.25 });
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
+    if (dealtFor === key) return;
+    if (firstDeal.current) {
+      firstDeal.current = false;
+      setDealtFor(key);
+      return;
+    }
+    let t: ReturnType<typeof setTimeout>;
+    const r = requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        setStagger(true);
+        setDealtFor(key);
+        t = setTimeout(() => setStagger(false), 1000);
+      }),
+    );
+    return () => {
+      cancelAnimationFrame(r);
+      clearTimeout(t);
+    };
+  }, [key, dealtFor]);
 
-  // Autoplay: restarts after every change (so a manual tap gets a full pause), and rests while the
-  // visitor is pointing at the stage or the section is off-screen. Deliberately NOT tied to the OS
-  // "reduce motion" setting — this carousel is the point of the section.
+  // On narrow screens the filter row scrolls: keep the active filter in view.
   useEffect(() => {
-    if (hovering || !visible || n < 2) return;
-    const id = setInterval(() => setActive((a) => (a + 1) % n), 4600);
-    return () => clearInterval(id);
-  }, [hovering, visible, n, active]);
+    const box = chipsRef.current;
+    const on = box?.querySelector<HTMLElement>(".pcol-chip.on");
+    if (!box || !on || box.scrollWidth <= box.clientWidth + 1) return;
+    box.scrollTo({ left: on.offsetLeft - (box.clientWidth - on.offsetWidth) / 2, behavior: reduce ? "auto" : "smooth" });
+  }, [cat, query, mode, reduce, filters.length]);
 
-  function go(i: number) {
-    if (n === 0) return;
-    setActive(((i % n) + n) % n);
-  }
-  function move(delta: number) {
-    go(active + delta);
-  }
-  function pickSection(i: number) {
-    setCatIndex(i);
-    setActive(0);
-    setQuery("");
-  }
-  function signedDistance(i: number) {
+  const wrapDist = (i: number) => {
     let d = i - active;
     if (d > n / 2) d -= n;
     if (d < -n / 2) d += n;
     return d;
+  };
+
+  function go(i: number) {
+    if (n === 0) return;
+    setActive(((i % n) + n) % n);
+    setDragU(0);
+  }
+  const move = (d: number) => go(active + d);
+
+  function pickCat(k: string) {
+    if (k === cat && !query) return;
+    setSwapping(true);
+    if (swapTimer.current) clearTimeout(swapTimer.current);
+    swapTimer.current = setTimeout(() => {
+      setCat(k);
+      setQuery("");
+      setActive(0);
+      setSwapping(false);
+    }, 260);
+  }
+
+  function open(a: ShowcaseArtist) {
+    if (!editMode) router.push(`/artistas/${a.slug}`);
   }
 
   function onPointerDown(e: React.PointerEvent) {
-    dragStartX.current = e.clientX;
-    const up = (ev: PointerEvent) => {
-      window.removeEventListener("pointerup", up);
-      window.removeEventListener("pointercancel", up);
-      const start = dragStartX.current;
-      dragStartX.current = null;
-      if (start === null) return;
-      const dx = ev.clientX - start;
-      if (Math.abs(dx) > 35) {
-        suppressClick.current = true;
-        setTimeout(() => (suppressClick.current = false), 60);
-        setActive((a) => (((a + (dx < 0 ? 1 : -1)) % n) + n) % n);
+    sx.current = e.clientX;
+    moved.current = false;
+    unit.current = (stageRef.current?.querySelector(".pcol-slot")?.getBoundingClientRect().width ?? 300) * 0.5;
+    const onMove = (ev: PointerEvent) => {
+      if (sx.current === null) return;
+      const dx = ev.clientX - sx.current;
+      if (!dragRef.current && Math.abs(dx) > 8) {
+        dragRef.current = true;
+        moved.current = true;
+        setDragging(true);
+      }
+      if (dragRef.current) {
+        dragVal.current = Math.max(-1.6, Math.min(1.6, dx / unit.current));
+        setDragU(dragVal.current);
       }
     };
-    window.addEventListener("pointerup", up);
-    window.addEventListener("pointercancel", up);
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+      sx.current = null;
+      if (dragRef.current) {
+        dragRef.current = false;
+        setDragging(false);
+        const steps = -Math.round(dragVal.current);
+        dragVal.current = 0;
+        setDragU(0);
+        if (steps !== 0 && n > 0) setActive((a) => (((a + steps) % n) + n) % n);
+      }
+      setTimeout(() => (moved.current = false), 30);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
   }
 
   function onWheel(e: React.WheelEvent) {
-    // Only sideways swipes turn the carousel — plain vertical scrolling must keep scrolling the page.
     if (Math.abs(e.deltaX) <= Math.abs(e.deltaY) || Math.abs(e.deltaX) < 20) return;
     const now = Date.now();
     if (now - wheelLock.current < 450) return;
@@ -122,6 +227,7 @@ export default function CollectionsShowcase({
   }
 
   function onKeyDown(e: React.KeyboardEvent) {
+    if ((e.target as HTMLElement).tagName === "INPUT") return;
     if (e.key === "ArrowRight") {
       e.preventDefault();
       move(1);
@@ -131,122 +237,58 @@ export default function CollectionsShowcase({
     }
   }
 
-  const spread = mobile ? 58 : 92;
-  const lift = mobile ? 12 : 18;
-  const depth = mobile ? 105 : 145;
-  const tilt = mobile ? 7 : 10;
+  function tilt(e: React.PointerEvent<HTMLDivElement>, isActive: boolean) {
+    if (reduce || !isActive || dragging || e.pointerType === "touch") return;
+    const card = e.currentTarget;
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width - 0.5;
+    const py = (e.clientY - r.top) / r.height - 0.5;
+    card.style.setProperty("--ty", `${(px * 5).toFixed(2)}deg`);
+    card.style.setProperty("--tx", `${(-py * 5).toFixed(2)}deg`);
+    card.style.setProperty("--px", `${(-px * 8).toFixed(1)}px`);
+    card.style.setProperty("--py", `${(-py * 8).toFixed(1)}px`);
+    card.style.setProperty("--gx2", `${((px + 0.5) * 100).toFixed(0)}%`);
+    card.style.setProperty("--gy2", `${((py + 0.5) * 100).toFixed(0)}%`);
+  }
+  function untilt(e: React.PointerEvent<HTMLDivElement>) {
+    const c = e.currentTarget;
+    ["--ty", "--tx", "--px", "--py"].forEach((k) => c.style.removeProperty(k));
+  }
+
+  const S = STATES[mode];
 
   return (
-    <section ref={rootRef} id="colecciones" className={`pcol${sections.length > 1 ? " pcol--cats" : ""}`} aria-label="Colecciones POPE" onKeyDown={onKeyDown}>
-      <header className="pcol-top">
-        <div className="pcol-eyebrow">{eyebrow}</div>
-        <div className="pcol-counter">
-          <span>{String(n === 0 ? 0 : Math.min(active, n - 1) + 1).padStart(2, "0")}</span> / {String(n).padStart(2, "0")}
+    <section id="colecciones" className="pcol" aria-label="Colecciones POPE" onKeyDown={onKeyDown}>
+      <header className="pcol-head">
+        <p className="pcol-eyebrow">{eyebrow}</p>
+        <h2 className="pcol-title">
+          <span>{heading}</span>
+        </h2>
+        <div className="pcol-bar" aria-hidden="true">
+          <i />
+          <i />
+          <i />
         </div>
       </header>
 
-      <div className="pcol-copy">
-        <h2>{heading}</h2>
-        <p>{subtext}</p>
-      </div>
-
-      {current && (
-        <div className="pcol-artist" aria-live="polite">
-          <span className="pcol-artist-type">
-            {current.count} {current.count === 1 ? "diseño" : "diseños"}
-          </span>
-          <strong>{current.name}</strong>
-        </div>
-      )}
-
-      <div
-        className="pcol-stage"
-        aria-label="Carrusel de artistas"
-        onPointerDown={onPointerDown}
-        onWheel={onWheel}
-        onMouseEnter={() => setHovering(true)}
-        onMouseLeave={() => setHovering(false)}
-      >
-        <div className="pcol-ring">
-          {items.map((item, i) => {
-            const d = signedDistance(i);
-            const ad = Math.abs(d);
-            const style = {
-              "--x": `${d * spread}px`,
-              "--y": `${ad * lift}px`,
-              "--z": `${-ad * depth}px`,
-              "--ry": `${-d * tilt}deg`,
-              "--s": Math.max(0.7, 1 - ad * 0.075),
-              opacity: ad > 3 ? 0 : Math.max(0.28, 1 - ad * 0.21),
-              filter: `brightness(${Math.max(0.45, 1 - ad * 0.15)})`,
-              zIndex: 20 - ad,
-            } as CSSProperties;
-            return (
-              <article
-                key={item.id}
-                className={`pcol-card${d === 0 ? " is-active" : ""}${ad > 3 ? " is-hidden" : ""}`}
-                style={style}
-                tabIndex={ad > 3 ? -1 : 0}
-                aria-hidden={ad > 3}
-                aria-label={`${item.name} — ${item.count} ${item.count === 1 ? "diseño" : "diseños"}`}
-                onClick={() => {
-                  if (suppressClick.current) return;
-                  if (d === 0 && !editMode) router.push(`/artistas/${item.slug}`);
-                  else go(i);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    if (d === 0 && !editMode) router.push(`/artistas/${item.slug}`);
-                    else go(i);
-                  }
-                }}
-              >
-                <div className="pcol-face">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={item.imageUrl} alt={item.name} draggable={false} />
-                </div>
-                <div className="pcol-meta">
-                  <b>{item.name}</b>
-                  <span>
-                    {item.count} {item.count === 1 ? "diseño" : "diseños"}
-                  </span>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-        {n === 0 && <div className="pcol-empty">No encontramos ese artista.</div>}
-      </div>
-
-      <div className="pcol-controls">
-        <button type="button" className="pcol-round" onClick={() => move(-1)} aria-label="Artista anterior">
-          ←
-        </button>
-        {current ? (
-          <EditableLink href={`/artistas/${current.slug}`} className="pcol-view">
-            {ctaLabel}
-            <span aria-hidden="true">↗</span>
-          </EditableLink>
-        ) : (
-          <span className="pcol-view" aria-hidden="true" style={{ opacity: 0.4 }}>
-            {ctaLabel}
-          </span>
+      <div className="pcol-filters">
+        {filters.length > 0 && (
+          <nav ref={chipsRef} className="pcol-chips" aria-label="Categorías">
+            {filters.map((f) => (
+              <button key={f} type="button" className={`pcol-chip${!query && f === cat ? " on" : ""}`} onClick={() => pickCat(f)}>
+                {f}
+              </button>
+            ))}
+          </nav>
         )}
-        <button type="button" className="pcol-round" onClick={() => move(1)} aria-label="Artista siguiente">
-          →
-        </button>
-      </div>
-
-      <aside className="pcol-rail" aria-label="Buscar artista">
-        <div className={`pcol-search-wrap${searchOpen ? " open" : ""}`}>
+        <div className={`pcol-search${searchOpen ? " open" : ""}`}>
           <input
             ref={searchRef}
-            className="pcol-search"
+            className="pcol-sinput"
             type="search"
-            placeholder="Buscar artista…"
+            placeholder="Buscar una colección..."
             autoComplete="off"
-            aria-label="Buscar artista"
+            aria-label="Buscar una colección"
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -255,35 +297,123 @@ export default function CollectionsShowcase({
           />
           <button
             type="button"
-            className="pcol-search-toggle"
-            aria-label={searchOpen ? "Cerrar búsqueda" : "Abrir búsqueda"}
+            className="pcol-sbtn"
+            aria-label="Buscar colección"
+            aria-expanded={searchOpen}
             onClick={() => {
               const next = !searchOpen;
               setSearchOpen(next);
               if (next) setTimeout(() => searchRef.current?.focus(), 0);
             }}
           >
-            <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
               <circle cx="11" cy="11" r="7" />
               <path d="m20 20-3.8-3.8" />
             </svg>
           </button>
         </div>
-        {sections.length > 1 && (
-          <nav className="pcol-cats" aria-label="Secciones">
-            {sections.map((sec, i) => (
-              <button
-                key={sec}
-                type="button"
-                className={`pcol-category${!query && i === catIndex ? " active" : ""}`}
-                onClick={() => pickSection(i)}
+      </div>
+
+      <div
+        ref={stageRef}
+        className="pcol-stage"
+        style={{ "--gx": (-dragU * 46).toFixed(1) } as CSSProperties}
+        tabIndex={0}
+        aria-label="Carrusel de colecciones. Usa las flechas del teclado para navegar."
+        onWheel={onWheel}
+      >
+        <div className="pcol-giant" aria-hidden="true">
+          <span key={cur?.id ?? "none"}>{cur?.name}</span>
+        </div>
+        <div className="pcol-floor" aria-hidden="true" />
+        <div className={`pcol-ring${swapping ? " swap" : ""}${dragging ? " drag grabbing" : ""}`} onPointerDown={onPointerDown}>
+          {items.map((a, i) => {
+            const d = wrapDist(i) + dragU;
+            const ad = Math.abs(d);
+            const sg = d < 0 ? -1 : 1;
+            const st = collapsed ? COLLAPSED : stateAt(S, ad);
+            const hidden = st.o < 0.02;
+            const isAct = ad < 0.5;
+            const style = {
+              "--x": (st.x * sg).toFixed(3),
+              "--s": st.s.toFixed(3),
+              "--o": st.o.toFixed(3),
+              "--d": st.d.toFixed(3),
+              "--z": `${st.z.toFixed(1)}px`,
+              "--ry": `${(-sg * st.r).toFixed(2)}deg`,
+              "--zi": Math.round(100 - ad * 10),
+              transitionDelay: stagger && !reduce ? `${Math.round(Math.min(ad, 3) * 70)}ms` : undefined,
+              ...(collapsed ? { transition: "none" } : null),
+            } as CSSProperties;
+            return (
+              <article
+                key={`${key}:${a.id}`}
+                className={`pcol-slot${isAct ? " act" : ""}${ad > 2.4 || hidden ? " hide" : ""}`}
+                style={style}
+                tabIndex={hidden ? -1 : 0}
+                aria-hidden={hidden}
+                aria-label={`${a.name}, ${designsLabel(a.count)}`}
+                onClick={() => {
+                  if (moved.current) return;
+                  if (wrapDist(i) === 0) open(a);
+                  else go(i);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    if (wrapDist(i) === 0) open(a);
+                    else go(i);
+                  }
+                }}
               >
-                {sec}
-              </button>
-            ))}
-          </nav>
-        )}
-      </aside>
+                <div className="pcol-card" onPointerMove={(e) => tilt(e, isAct)} onPointerLeave={untilt}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={a.imageUrl} alt={a.name} loading={i < 3 ? "eager" : "lazy"} decoding="async" draggable={false} />
+                  <span className="pcol-dim" />
+                  <span className="pcol-shade" />
+                  <span className="pcol-glare" />
+                  <div className="pcol-meta">
+                    <h3>{a.name}</h3>
+                    <p>{designsLabel(a.count)}</p>
+                    <EditableLink href={`/artistas/${a.slug}`} className="pcol-cta" tabIndex={isAct ? 0 : -1} onClick={(e) => e.stopPropagation()}>
+                      {ctaLabel} <span aria-hidden="true">→</span>
+                    </EditableLink>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+        {n === 0 && <div className="pcol-empty">No encontramos esa colección</div>}
+        <button type="button" className="pcol-arrow l" onClick={() => move(-1)} aria-label="Colección anterior">
+          ←
+        </button>
+        <button type="button" className="pcol-arrow r" onClick={() => move(1)} aria-label="Colección siguiente">
+          →
+        </button>
+      </div>
+
+      <div className="pcol-foot">
+        <div className="pcol-ticks" role="tablist" aria-label="Ir a una colección">
+          {items.map((a, i) => (
+            <button
+              key={a.id}
+              type="button"
+              role="tab"
+              aria-selected={i === active}
+              aria-label={`Ir a ${a.name}`}
+              className={`pcol-tick${i === active ? " on" : ""}`}
+              onClick={() => go(i)}
+            />
+          ))}
+        </div>
+        <div className="pcol-count">
+          <b>{pad(n ? Math.min(active, n - 1) + 1 : 0)}</b> / {pad(n)}
+        </div>
+      </div>
+      <p className="sr-only" aria-live="polite">
+        {cur ? `${cur.name}, ${designsLabel(cur.count)}, ${Math.min(active, n - 1) + 1} de ${n}` : ""}
+      </p>
     </section>
   );
 }
