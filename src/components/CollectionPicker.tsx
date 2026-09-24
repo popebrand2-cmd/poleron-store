@@ -7,6 +7,7 @@ export type PickerDesign = { id: string; name: string; imageUrl: string; placeme
 export type PickerCollection = { id: string; name: string; category?: string; designs: PickerDesign[] };
 
 const ALL = "Todas";
+const GREEN = "#0b6b25";
 const EASE = "cubic-bezier(0.32, 0.72, 0, 1)";
 
 // Signed distance on a loop, so the carousel can keep going in either direction.
@@ -85,7 +86,7 @@ export default function CollectionPicker({
               }}
               aria-pressed={cat === s}
               className={`h-8 shrink-0 rounded-full border px-3.5 text-[11px] font-bold uppercase tracking-wider transition ${
-                cat === s ? "border-neon bg-neon text-black" : "border-neutral-700 text-neutral-300 hover:border-neon"
+                cat === s ? "border-[#0b6b25] bg-[#0b6b25] text-white" : "border-neutral-300 text-black hover:border-[#0b6b25]"
               }`}
             >
               {s}
@@ -137,15 +138,15 @@ export default function CollectionPicker({
                 style={{
                   opacity: isAct ? 1 : 0,
                   transition: "opacity 0.6s ease",
-                  boxShadow: "0 0 0 1px var(--neon), 0 0 14px 2px color-mix(in srgb, var(--neon) 60%, transparent), 0 0 30px 4px color-mix(in srgb, var(--neon) 22%, transparent)",
+                  boxShadow: `0 0 0 1px ${GREEN}, 0 0 12px 2px color-mix(in srgb, ${GREEN} 55%, transparent), 0 0 26px 3px color-mix(in srgb, ${GREEN} 20%, transparent)`,
                 }}
               />
-              <span className="absolute inset-0 overflow-hidden rounded-md bg-neutral-900">
+              <span className="absolute inset-0 overflow-hidden rounded-md bg-neutral-200">
                 {cover && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={cover} alt="" draggable={false} className="h-full w-full object-cover object-top" />
                 )}
-                <span className="absolute inset-0 bg-black" style={{ opacity: isAct ? 0 : 0.35, transition: "opacity 0.5s ease" }} />
+                <span className="absolute inset-0 bg-white" style={{ opacity: isAct ? 0 : 0.5, transition: "opacity 0.5s ease" }} />
               </span>
             </button>
           );
@@ -155,8 +156,8 @@ export default function CollectionPicker({
 
       {current && (
         <div className="mt-2 text-center">
-          <p className="font-display text-2xl font-bold uppercase leading-none">{current.name}</p>
-          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-neutral-400">
+          <p className="font-display text-2xl font-bold uppercase leading-none text-black">{current.name}</p>
+          <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-neutral-500">
             {current.designs.length} {current.designs.length === 1 ? "diseño" : "diseños"}
           </p>
         </div>
@@ -184,7 +185,7 @@ export default function CollectionPicker({
                     width: size,
                     height: size,
                     transform: "translate(-50%, -50%)",
-                    background: i === idx ? "var(--neon)" : "#ffffff59",
+                    background: i === idx ? GREEN : "#00000033",
                     transition: `width 0.4s ${EASE}, height 0.4s ${EASE}, background 0.4s ease`,
                   }}
                 />
@@ -202,13 +203,13 @@ export default function CollectionPicker({
               <button key={d.id} type="button" onClick={() => onPick(d)} aria-pressed={selected} title={d.name} className="group w-20 shrink-0 snap-start text-left sm:w-24">
                 <span
                   className={`relative block aspect-[3/4] overflow-hidden rounded-xl border-2 bg-neutral-200 transition ${
-                    selected ? "border-neon shadow-[0_0_18px_color-mix(in_srgb,var(--neon)_45%,transparent)]" : "border-neutral-700 group-hover:border-neon"
+                    selected ? "border-[#0b6b25] shadow-[0_0_16px_color-mix(in_srgb,#0b6b25_40%,transparent)]" : "border-neutral-300 group-hover:border-[#0b6b25]"
                   }`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={d.imageUrl} alt={d.name} loading="lazy" className="h-full w-full object-cover object-top" />
                   {selected && (
-                    <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-neon text-black" aria-hidden="true">
+                    <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#0b6b25] text-white" aria-hidden="true">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">
                         <path d="M5 12.5l4.5 4.5L19 7.5" />
                       </svg>
@@ -216,7 +217,7 @@ export default function CollectionPicker({
                   )}
                 </span>
                 {d.name.toLowerCase() !== current.name.toLowerCase() && (
-                  <span className="mt-1 block truncate text-[11px] font-semibold uppercase tracking-wide text-neutral-300">{d.name}</span>
+                  <span className="mt-1 block truncate text-[11px] font-semibold uppercase tracking-wide text-neutral-700">{d.name}</span>
                 )}
               </button>
             );

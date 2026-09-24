@@ -455,22 +455,17 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
         </div>
 
         {collectionsForView.length > 0 && (
-          <div className="relative mt-6 overflow-hidden rounded-2xl bg-black p-4 text-white sm:p-5">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0"
-              style={{ background: "radial-gradient(70% 60% at 85% 0%, color-mix(in srgb, var(--neon) 24%, transparent), transparent 70%)" }}
-            />
+          <div className="relative mt-6 overflow-hidden rounded-2xl border border-neutral-200 bg-white p-4 text-black sm:p-5">
             <div className="relative">
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-neon">POPE · Colecciones</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#0b6b25]">POPE · Colecciones</p>
               <h3 className="mt-1 font-display text-2xl font-bold uppercase leading-none sm:text-3xl">O elige de nuestra colección</h3>
-              <p className="mt-2 text-sm text-neutral-400">Toca un diseño y aparece en tu prenda.</p>
+              <p className="mt-2 text-sm text-neutral-600">Toca un diseño y aparece en tu prenda.</p>
 
               <CollectionPicker collections={collectionsForView} selectedUrl={presetFront?.url} onPick={(d) => applyPresetDesign(d, activePlacement === "BACK" ? "back" : "center")} />
 
               {presetFront && (
-                <div className="mt-6 border-t border-neutral-800 pt-4">
-                  <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-neon">Posición en el pecho</p>
+                <div className="mt-6 border-t border-neutral-200 pt-4">
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#0b6b25]">Posición en el pecho</p>
                   <div className="flex flex-wrap gap-2">
                     {(["left", "center", "right"] as const).map((pos) => (
                       <button
@@ -485,8 +480,8 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
                         aria-pressed={presetFront.position === pos}
                         className={`min-h-11 rounded-full border-2 px-5 py-1.5 text-xs font-bold uppercase tracking-wide transition ${
                           presetFront.position === pos
-                            ? "border-neon bg-neon text-black"
-                            : "border-neutral-600 text-white hover:border-neon"
+                            ? "border-[#0b6b25] bg-[#0b6b25] text-white"
+                            : "border-neutral-300 text-black hover:border-[#0b6b25]"
                         }`}
                       >
                         {pos === "left" ? "Izquierda" : pos === "center" ? "Centro" : "Derecha"}
