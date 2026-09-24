@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import EditableLink from "@/components/edit/EditableLink";
 import { useEditMode } from "@/components/edit/EditModeContext";
 
-export type ShowcaseArtist = { id: string; slug: string; name: string; imageUrl: string; count: number };
+export type ShowcaseArtist = { id: string; slug: string; name: string; imageUrl: string; count: number; category: string };
+
+const NO_SECTION = "Otros";
 
 export default function CollectionsShowcase({
   artists,
@@ -22,6 +24,7 @@ export default function CollectionsShowcase({
 }) {
   const router = useRouter();
   const { editMode } = useEditMode();
+  const [catIndex, setCatIndex] = useState(0);
   const [active, setActive] = useState(0);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -34,10 +37,14 @@ export default function CollectionsShowcase({
   const suppressClick = useRef(false);
   const wheelLock = useRef(0);
 
+  // Sections (tabs) in order of first appearance; artists with no section fall under "Otros".
+  const sections = useMemo(() => [...new Set(artists.map((a) => a.category || NO_SECTION))], [artists]);
   const items = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return q ? artists.filter((a) => a.name.toLowerCase().includes(q)) : artists;
-  }, [artists, query]);
+    if (q) return artists.filter((a) => a.name.toLowerCase().includes(q));
+    if (sections.length < 2) return artists;
+    return artists.filter((a) => (a.category || NO_SECTION) === (sections[catIndex] ?? sections[0]));
+  }, [artists, query, sections, catIndex]);
 
   const n = items.length;
   const current = items[Math.min(active, Math.max(0, n - 1))];
@@ -73,6 +80,11 @@ export default function CollectionsShowcase({
   }
   function move(delta: number) {
     go(active + delta);
+  }
+  function pickSection(i: number) {
+    setCatIndex(i);
+    setActive(0);
+    setQuery("");
   }
   function signedDistance(i: number) {
     let d = i - active;
@@ -125,7 +137,7 @@ export default function CollectionsShowcase({
   const tilt = mobile ? 7 : 10;
 
   return (
-    <section ref={rootRef} id="colecciones" className="pcol" aria-label="Colecciones POPE" onKeyDown={onKeyDown}>
+    <section ref={rootRef} id="colecciones" className={`pcol${sections.length > 1 ? " pcol--cats" : ""}`} aria-label="Colecciones POPE" onKeyDown={onKeyDown}>
       <header className="pcol-top">
         <div className="pcol-eyebrow">{eyebrow}</div>
         <div className="pcol-counter">
@@ -257,6 +269,20 @@ export default function CollectionsShowcase({
             </svg>
           </button>
         </div>
+        {sections.length > 1 && (
+          <nav className="pcol-cats" aria-label="Secciones">
+            {sections.map((sec, i) => (
+              <button
+                key={sec}
+                type="button"
+                className={`pcol-category${!query && i === catIndex ? " active" : ""}`}
+                onClick={() => pickSection(i)}
+              >
+                {sec}
+              </button>
+            ))}
+          </nav>
+        )}
       </aside>
     </section>
   );

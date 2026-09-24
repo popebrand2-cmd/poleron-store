@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
   active: z.boolean().optional(),
+  category: z.string().trim().max(40).optional(),
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {

@@ -13,9 +13,10 @@ function slugify(s: string) {
     .replace(/(^-|-$)/g, "");
 }
 
-export default function NewCollectionForm() {
+export default function NewCollectionForm({ categories }: { categories: string[] }) {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [category, setCategory] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -27,7 +28,7 @@ export default function NewCollectionForm() {
       const res = await fetch("/api/admin/collections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, slug: slugify(name), active: true }),
+        body: JSON.stringify({ name, slug: slugify(name), active: true, category }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -35,6 +36,7 @@ export default function NewCollectionForm() {
         return;
       }
       setName("");
+      setCategory("");
       router.refresh();
     } finally {
       setSaving(false);
@@ -44,14 +46,29 @@ export default function NewCollectionForm() {
   return (
     <form onSubmit={handleSubmit} className="flex items-end gap-3 rounded-xl border border-neutral-200 bg-white p-4">
       <div className="flex-1">
-        <label className="mb-1 block text-sm font-medium">Nueva colección</label>
+        <label className="mb-1 block text-sm font-medium">Nueva colección (artista o tema)</label>
         <input
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Ej. Navidad"
+          placeholder="Ej. Karol G"
           className="w-full rounded-md border border-neutral-300 px-3 py-2"
         />
+      </div>
+      <div className="w-48">
+        <label className="mb-1 block text-sm font-medium">Sección</label>
+        <input
+          list="secciones"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          placeholder="Ej. Reguetón, Anime"
+          className="w-full rounded-md border border-neutral-300 px-3 py-2"
+        />
+        <datalist id="secciones">
+          {categories.map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
       </div>
       <button
         type="submit"

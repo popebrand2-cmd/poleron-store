@@ -55,6 +55,7 @@ export default async function Home() {
             slug: c.slug,
             name: c.name,
             imageUrl: c.designs[0].imageUrl,
+            category: c.category,
             count: c.designs.length,
           }))}
           eyebrow={<EditableText value={t("collections.eyebrow")} siteKey="collections.eyebrow" as="span" />}

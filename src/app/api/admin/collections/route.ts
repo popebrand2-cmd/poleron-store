@@ -9,6 +9,7 @@ const collectionSchema = z.object({
     .min(1)
     .regex(/^[a-z0-9-]+$/),
   active: z.boolean().default(true),
+  category: z.string().trim().max(40).default(""),
 });
 
 export async function GET() {
@@ -34,7 +35,7 @@ export async function POST(request: Request) {
 
   const count = await prisma.designCollection.count();
   const collection = await prisma.designCollection.create({
-    data: { name: data.name, slug: data.slug, active: data.active, sortOrder: count },
+    data: { name: data.name, slug: data.slug, active: data.active, category: data.category, sortOrder: count },
   });
 
   return NextResponse.json({ id: collection.id });

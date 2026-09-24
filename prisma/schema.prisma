@@ -200,6 +200,8 @@ model DesignCollection {
   id        String   @id @default(cuid())
   slug      String   @unique
   name      String
+  // Section shown as a tab on the homepage carousel (e.g. "Reguetón", "Anime"); free text, empty = "Otros".
+  category  String   @default("")
   active    Boolean  @default(true)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())

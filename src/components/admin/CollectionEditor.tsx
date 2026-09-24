@@ -15,13 +15,33 @@ type Collection = {
   id: string;
   name: string;
   active: boolean;
+  category: string;
   designs: Design[];
 };
 
-export default function CollectionEditor({ collection }: { collection: Collection }) {
+export default function CollectionEditor({ collection, categories }: { collection: Collection; categories: string[] }) {
   const router = useRouter();
   const [active, setActive] = useState(collection.active);
   const [savingActive, setSavingActive] = useState(false);
+  const [category, setCategory] = useState(collection.category);
+  const [savingCategory, setSavingCategory] = useState(false);
+  const [categorySaved, setCategorySaved] = useState(false);
+
+  async function saveCategory() {
+    setSavingCategory(true);
+    setCategorySaved(false);
+    try {
+      await fetch(`/api/admin/collections/${collection.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ category }),
+      });
+      setCategorySaved(true);
+      router.refresh();
+    } finally {
+      setSavingCategory(false);
+    }
+  }
 
   const [name, setName] = useState("");
   const [placement, setPlacement] = useState<"FRONT" | "BACK">("FRONT");
@@ -107,6 +127,40 @@ export default function CollectionEditor({ collection }: { collection: Collectio
         </label>
       </div>
 
+      <div className="space-y-2 rounded-xl border border-neutral-200 bg-white p-4">
+        <label className="block text-sm font-medium">Sección en la página principal</label>
+        <p className="text-sm text-neutral-500">
+          Escribe una sección nueva (ej. Reguetón, Anime, Navidad) o elige una existente. Las colecciones con la misma sección aparecen
+          juntas en una pestaña. La <strong>primera imagen</strong> de la colección es la portada que se ve en el carrusel.
+        </p>
+        <div className="flex items-center gap-3">
+          <input
+            list="secciones-editor"
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              setCategorySaved(false);
+            }}
+            placeholder="Sin sección (se agrupa en «Otros»)"
+            className="w-full max-w-xs rounded-md border border-neutral-300 px-3 py-2"
+          />
+          <datalist id="secciones-editor">
+            {categories.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
+          <button
+            type="button"
+            onClick={saveCategory}
+            disabled={savingCategory}
+            className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {savingCategory ? "Guardando..." : "Guardar sección"}
+          </button>
+          {categorySaved && <span className="text-sm text-emerald-600">Guardado</span>}
+        </div>
+      </div>
+
       <form onSubmit={handleAddDesign} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6">
         <h2 className="text-lg font-semibold">Agregar diseño</h2>
         <div>
@@ -143,11 +197,11 @@ export default function CollectionEditor({ collection }: { collection: Collectio
           </div>
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">Imagen del diseño (fondo transparente idealmente)</label>
+          <label className="mb-1 block text-sm font-medium">Imagen del diseño (PNG con fondo transparente idealmente, o foto JPG)</label>
           <input
             required
             type="file"
-            accept="image/png,image/webp"
+            accept="image/png,image/jpeg,image/webp"
             onChange={(e) => setFile(e.target.files?.[0] ?? null)}
             className="text-sm"
           />

@@ -13,6 +13,8 @@ export default async function AdminCollectionPage({ params }: { params: Promise<
   });
 
   if (!collection) notFound();
+  const all = await prisma.designCollection.findMany({ select: { category: true } });
+  const categories = [...new Set(all.map((c) => c.category).filter(Boolean))];
 
   return (
     <main className="mx-auto max-w-5xl p-6">
@@ -24,10 +26,12 @@ export default async function AdminCollectionPage({ params }: { params: Promise<
       </div>
 
       <CollectionEditor
+        categories={categories}
         collection={{
           id: collection.id,
           name: collection.name,
           active: collection.active,
+          category: collection.category,
           designs: collection.designs.map((d) => ({
             id: d.id,
             name: d.name,
