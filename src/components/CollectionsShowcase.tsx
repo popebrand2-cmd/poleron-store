@@ -31,9 +31,9 @@ const STATES: Record<Mode, St[]> = {
   ],
   mobile: [
     { x: 0, s: 1, o: 1, d: 0, z: 40, r: 0 },
-    { x: 0.2, s: 0.9, o: 0.85, d: 0.36, z: -40, r: 0 },
-    { x: 0.3, s: 0.8, o: 0, d: 0.5, z: -130, r: 0 },
-    { x: 0.4, s: 0.7, o: 0, d: 0.68, z: -220, r: 0 },
+    { x: 0.31, s: 0.9, o: 0.85, d: 0.36, z: -40, r: 0 },
+    { x: 0.42, s: 0.8, o: 0, d: 0.5, z: -130, r: 0 },
+    { x: 0.5, s: 0.7, o: 0, d: 0.68, z: -220, r: 0 },
   ],
 };
 const COLLAPSED: St = { x: 0, s: 0.8, o: 0, d: 0.6, z: -150, r: 0 };
@@ -346,6 +346,7 @@ export default function CollectionsShowcase({
           {items.map((a, i) => {
             const d = wrapDist(i) + dragU;
             const ad = Math.abs(d);
+            if (mode === "mobile" && ad > 2.2) return null;
             const sg = d < 0 ? -1 : 1;
             const st = collapsed ? COLLAPSED : stateAt(S, ad);
             const hidden = st.o < 0.02;
