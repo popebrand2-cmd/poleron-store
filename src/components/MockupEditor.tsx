@@ -3,7 +3,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import * as fabric from "fabric";
 import type { ViewPlacement } from "@/types";
-import { removeWhiteBackground } from "@/lib/remove-white-bg";
 import { removeColorBackground } from "@/lib/remove-color-bg";
 import { segmentSubject, preloadSubjectSegmenter } from "@/lib/segment-subject";
 import { zoneScaleFactor, type SizeMeasurements } from "@/lib/size-scale";
@@ -248,6 +247,12 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
     const [cropping, setCropping] = useState(false);
     const [applyingCrop, setApplyingCrop] = useState(false);
     const cropRectRef = useRef<fabric.Rect | null>(null);
+    // "Más herramientas" opens by itself as soon as the customer has a design (upload, ready-made or
+    // restored), and can still be closed/opened by hand.
+    const [toolsOpen, setToolsOpen] = useState(false);
+    useEffect(() => {
+      if (hasDesign) setToolsOpen(true);
+    }, [hasDesign]);
     const [whiteRisk, setWhiteRisk] = useState(false);
     const whiteRiskRef = useRef(false);
     function refreshWhiteRisk(url: string) {
@@ -727,23 +732,6 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       pushHistory(true);
     }
 
-    async function handleRemoveWhiteBg() {
-      const design = designRef.current;
-      if (!design) return;
-
-      setRemovingBg(true);
-      setError("");
-      try {
-        const blob = await removeWhiteBackground(design.getSrc());
-        const url = await uploadBlob(blob, "image/png", "diseno-sin-fondo.png");
-        await swapDesignImage(url);
-      } catch (e) {
-        setError(friendlyMessage(e, "No se pudo quitar el fondo. Intenta con otra foto."));
-      } finally {
-        setRemovingBg(false);
-      }
-    }
-
     async function handleSegmentSubject() {
       const design = designRef.current;
       if (!design) return;
@@ -1106,8 +1094,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         )}
         {pickingBgColor && (
           <p className="text-center text-sm font-medium text-green-700">
-            Haz clic sobre el fondo negro de tu diseño para quitarlo (si tu fondo es de otro color, haz clic sobre ese
-            color).
+            Selecciona el fondo: haz clic sobre el fondo de tu diseño (del color que quieres quitar).
           </p>
         )}
 
@@ -1160,13 +1147,17 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         {isWhiteGarment && whiteRisk && (
           <p className="mx-auto max-w-md rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-center text-sm font-medium text-amber-800">
             Tu diseño tiene fondo blanco y el polerón también es blanco: la estampa quedaría invisible. Usa
-            &quot;Quitar fondo blanco&quot; o &quot;Aislar sujeto (IA)&quot; antes de continuar.
+            &quot;Quitar fondo&quot; o &quot;Aislar sujeto (IA)&quot; antes de continuar.
           </p>
         )}
 
         {/* Secondary tools: collapsed by default so the phone screen stays simple */}
         {!cropping && !pickingBgColor && (
-          <details className="mx-auto max-w-md rounded-xl border border-neutral-200 bg-white">
+          <details
+            open={toolsOpen}
+            onToggle={(e) => setToolsOpen(e.currentTarget.open)}
+            className="mx-auto max-w-md rounded-xl border border-neutral-200 bg-white"
+          >
             <summary className="cursor-pointer select-none px-4 py-2.5 text-center text-xs font-bold uppercase tracking-wide text-neutral-700">
               Más herramientas (recorte, fondo, texto…)
             </summary>
@@ -1178,13 +1169,8 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
             </button>
           )}
           {hasDesign && !pickingBgColor && !cropping && (
-            <button type="button" onClick={handleRemoveWhiteBg} disabled={removingBg} className={PILL_BTN}>
-              {removingBg ? "Quitando fondo..." : "Quitar fondo blanco"}
-            </button>
-          )}
-          {hasDesign && !pickingBgColor && !cropping && (
             <button type="button" onClick={handleStartPickBgColor} disabled={removingBg} className={PILL_BTN}>
-              Quitar fondo negro
+              {removingBg ? "Quitando fondo..." : "Quitar fondo \u201Cseleccionar el fondo\u201D"}
             </button>
           )}
           {hasDesign && !pickingBgColor && !cropping && (
