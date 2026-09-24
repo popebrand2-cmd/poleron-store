@@ -346,10 +346,7 @@ h1, h2, h3 {
 }
 
 /* ---------- Colecciones: carrusel 3D apilado ---------- */
-.pcol { --ease: cubic-bezier(0.32, 0.72, 0, 1); --dur: 0.95s; position: relative; isolation: isolate; overflow: hidden; background: #050505; color: #f2f2ee; border-top: 1px solid #1c1c1c; padding: clamp(56px, 8vw, 96px) 0 clamp(48px, 6vw, 72px); }
-.pcol::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.045;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
-.pcol::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(60% 45% at 50% 62%, color-mix(in srgb, var(--neon) 5%, transparent), transparent 70%); }
+.pcol { --ease: cubic-bezier(0.32, 0.72, 0, 1); --dur: 0.95s; position: relative; isolation: isolate; overflow: hidden; background: #000; color: #f2f2ee; border-top: 1px solid #1c1c1c; padding: clamp(56px, 8vw, 96px) 0 clamp(48px, 6vw, 72px); }
 
 .pcol-head { text-align: center; padding: 0 20px; }
 .pcol-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.42em; color: var(--neon); text-transform: uppercase; }
