@@ -129,22 +129,86 @@ const PILL_BTN =
 const PILL_BTN_DANGER =
   "rounded-full border-2 border-red-600 bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-red-600 transition hover:bg-red-600 hover:text-white disabled:opacity-40";
 
-// Loaded via Google Fonts <link> in src/app/layout.tsx.
-const FONT_OPTIONS = [
-  { label: "Arial", value: "Arial, sans-serif" },
-  { label: "Poppins", value: '"Poppins", sans-serif' },
-  { label: "Montserrat", value: '"Montserrat", sans-serif' },
-  { label: "Oswald", value: '"Oswald", sans-serif' },
-  { label: "Bebas Neue", value: '"Bebas Neue", sans-serif' },
-  { label: "Anton", value: '"Anton", sans-serif' },
-  { label: "Archivo Black", value: '"Archivo Black", sans-serif' },
-  { label: "Playfair Display", value: '"Playfair Display", serif' },
-  { label: "Pacifico", value: '"Pacifico", cursive' },
-  { label: "Dancing Script", value: '"Dancing Script", cursive' },
-  { label: "Permanent Marker", value: '"Permanent Marker", cursive' },
-  { label: "Lobster", value: '"Lobster", cursive' },
-  { label: "Roboto Mono", value: '"Roboto Mono", monospace' },
+// Loaded via Google Fonts <link> in src/app/layout.tsx — every family here must also be in that URL.
+const FONT_GROUPS: { title: string; fonts: { label: string; value: string }[] }[] = [
+  {
+    title: "POPE",
+    fonts: [
+      { label: "Teko", value: '"Teko", sans-serif' },
+      { label: "Yellowtail", value: '"Yellowtail", cursive' },
+    ],
+  },
+  {
+    title: "Urbanas",
+    fonts: [
+      { label: "Bebas Neue", value: '"Bebas Neue", sans-serif' },
+      { label: "Anton", value: '"Anton", sans-serif' },
+      { label: "League Gothic", value: '"League Gothic", sans-serif' },
+      { label: "Staatliches", value: '"Staatliches", sans-serif' },
+      { label: "Big Shoulders", value: '"Big Shoulders Display", sans-serif' },
+      { label: "Oswald", value: '"Oswald", sans-serif' },
+      { label: "Russo One", value: '"Russo One", sans-serif' },
+      { label: "Black Ops One", value: '"Black Ops One", sans-serif' },
+      { label: "Bungee", value: '"Bungee", sans-serif' },
+      { label: "Archivo Black", value: '"Archivo Black", sans-serif' },
+      { label: "Alfa Slab One", value: '"Alfa Slab One", serif' },
+      { label: "Rubik Mono", value: '"Rubik Mono One", sans-serif' },
+    ],
+  },
+  {
+    title: "Graffiti y a mano",
+    fonts: [
+      { label: "Permanent Marker", value: '"Permanent Marker", cursive' },
+      { label: "Sedgwick Ave", value: '"Sedgwick Ave Display", cursive' },
+      { label: "Rock Salt", value: '"Rock Salt", cursive' },
+      { label: "Caveat Brush", value: '"Caveat Brush", cursive' },
+      { label: "Covered By Your Grace", value: '"Covered By Your Grace", cursive' },
+    ],
+  },
+  {
+    title: "Gótica",
+    fonts: [
+      { label: "Unifraktur", value: '"UnifrakturCook", cursive' },
+      { label: "Pirata One", value: '"Pirata One", cursive' },
+      { label: "New Rocker", value: '"New Rocker", cursive' },
+      { label: "Metal Mania", value: '"Metal Mania", cursive' },
+    ],
+  },
+  {
+    title: "Cursivas",
+    fonts: [
+      { label: "Pacifico", value: '"Pacifico", cursive' },
+      { label: "Dancing Script", value: '"Dancing Script", cursive' },
+      { label: "Lobster", value: '"Lobster", cursive' },
+      { label: "Kaushan Script", value: '"Kaushan Script", cursive' },
+      { label: "Sacramento", value: '"Sacramento", cursive' },
+    ],
+  },
+  {
+    title: "Retro y neón",
+    fonts: [
+      { label: "Monoton", value: '"Monoton", cursive' },
+      { label: "Righteous", value: '"Righteous", sans-serif' },
+      { label: "Press Start", value: '"Press Start 2P", monospace' },
+    ],
+  },
+  {
+    title: "Clásicas",
+    fonts: [
+      { label: "Arial", value: "Arial, sans-serif" },
+      { label: "Poppins", value: '"Poppins", sans-serif' },
+      { label: "Montserrat", value: '"Montserrat", sans-serif' },
+      { label: "Playfair Display", value: '"Playfair Display", serif' },
+      { label: "Abril Fatface", value: '"Abril Fatface", serif' },
+      { label: "Roboto Mono", value: '"Roboto Mono", monospace' },
+      { label: "Space Mono", value: '"Space Mono", monospace' },
+    ],
+  },
 ];
+const FONT_OPTIONS = FONT_GROUPS.flatMap((g) => g.fonts);
+
+// Quick text colours in the brand palette; the last swatch opens the full colour picker.
+const TEXT_COLORS = ["#111111", "#FFFFFF", "#B6FF00", "#FF2D2D", "#2D6BFF", "#FFD400", "#FF4FD8", "#9B5CFF"];
 
 type MockupEditorProps = {
   view: MockupView;
@@ -237,6 +301,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
     }, [hasDesign]);
     const [hasText, setHasText] = useState(false);
     const [textColor, setTextColor] = useState("#111111");
+    const [fontPanelOpen, setFontPanelOpen] = useState(false);
     const [fontFamily, setFontFamily] = useState(FONT_OPTIONS[0].value);
     const [uploading, setUploading] = useState(false);
     const [removingBg, setRemovingBg] = useState(false);
@@ -613,9 +678,15 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       finishAdjust(obj);
     }
 
-    function handleAddText() {
+    async function handleAddText() {
       const canvas = fabricCanvasRef.current;
       if (!canvas || textRef.current) return;
+      try {
+        await document.fonts.load(`16px ${fontFamily.split(",")[0]}`);
+      } catch {
+        // the text still shows once the browser finishes loading the font
+      }
+      if (textRef.current) return;
       const zone = currentZoneRect();
 
       const text = new fabric.IText("Tu texto", {
@@ -651,6 +722,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
 
     async function handleFontChange(family: string) {
       setFontFamily(family);
+      setFontPanelOpen(false);
       const canvas = fabricCanvasRef.current;
       if (!canvas || !textRef.current) return;
       textRef.current.set({ fontFamily: family });
@@ -1191,29 +1263,79 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
             </button>
           ) : hasText ? (
             <>
-              <label className="flex items-center gap-2 text-sm text-neutral-600">
-                Tipografía
-                <select
-                  value={fontFamily}
-                  onChange={(e) => handleFontChange(e.target.value)}
-                  className="rounded border border-neutral-300 px-2 py-1 text-sm"
+              <div className="flex w-full flex-col items-center gap-1">
+                <span className="text-[11px] font-bold uppercase tracking-wide text-neutral-500">Tipografía</span>
+                <button
+                  type="button"
+                  onClick={() => setFontPanelOpen((o) => !o)}
+                  aria-expanded={fontPanelOpen}
+                  className="flex min-h-11 max-w-full items-center gap-3 rounded-full border-2 border-black bg-white px-5 py-1.5 text-black transition hover:border-neon hover:bg-neon"
                 >
-                  {FONT_OPTIONS.map((f) => (
-                    <option key={f.label} value={f.value} style={{ fontFamily: f.value }}>
-                      {f.label}
-                    </option>
+                  <span className="truncate text-xl leading-none" style={{ fontFamily }}>
+                    {(FONT_OPTIONS.find((f) => f.value === fontFamily) ?? FONT_OPTIONS[0]).label}
+                  </span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className={`h-4 w-4 shrink-0 transition ${fontPanelOpen ? "rotate-180" : ""}`}>
+                    <path d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+                {fontPanelOpen && (
+                  <div className="mt-1 max-h-72 w-full space-y-3 overflow-y-auto rounded-xl border-2 border-black bg-neutral-950 p-3">
+                    {FONT_GROUPS.map((g) => (
+                      <div key={g.title}>
+                        <p className="mb-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-neon">{g.title}</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {g.fonts.map((fo) => (
+                            <button
+                              key={fo.label}
+                              type="button"
+                              onClick={() => handleFontChange(fo.value)}
+                              aria-pressed={fo.value === fontFamily}
+                              className={`rounded-full border-2 px-3.5 py-1 text-lg leading-tight transition ${
+                                fo.value === fontFamily
+                                  ? "border-neon bg-neon text-black"
+                                  : "border-neutral-700 bg-neutral-900 text-white hover:border-neon"
+                              }`}
+                              style={{ fontFamily: fo.value }}
+                            >
+                              {fo.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="flex w-full flex-col items-center gap-1">
+                <span className="text-[11px] font-bold uppercase tracking-wide text-neutral-500">Color del texto</span>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  {TEXT_COLORS.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      aria-label={`Color ${c}`}
+                      aria-pressed={textColor.toLowerCase() === c.toLowerCase()}
+                      onClick={() => handleTextColorChange(c)}
+                      className={`h-9 w-9 rounded-full border-2 transition ${
+                        textColor.toLowerCase() === c.toLowerCase() ? "border-black ring-2 ring-neon" : "border-neutral-300 hover:border-black"
+                      }`}
+                      style={{ backgroundColor: c }}
+                    />
                   ))}
-                </select>
-              </label>
-              <label className="flex items-center gap-2 text-sm text-neutral-600">
-                Color del texto
-                <input
-                  type="color"
-                  value={textColor}
-                  onChange={(e) => handleTextColorChange(e.target.value)}
-                  className="h-7 w-10 rounded"
-                />
-              </label>
+                  <label
+                    title="Otro color"
+                    className="relative flex h-9 w-9 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-black bg-[conic-gradient(red,yellow,lime,aqua,blue,magenta,red)] transition hover:border-neon"
+                  >
+                    <input
+                      type="color"
+                      value={textColor}
+                      onChange={(e) => handleTextColorChange(e.target.value)}
+                      className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                      aria-label="Elegir otro color"
+                    />
+                  </label>
+                </div>
+              </div>
               <button type="button" onClick={handleRemoveText} className={PILL_BTN_DANGER}>
                 Quitar texto
               </button>

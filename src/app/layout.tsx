@@ -54,7 +54,7 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Montserrat:wght@400;700&family=Oswald:wght@400;700&family=Bebas+Neue&family=Anton&family=Playfair+Display:wght@400;700&family=Pacifico&family=Dancing+Script:wght@700&family=Permanent+Marker&family=Lobster&family=Roboto+Mono:wght@400;700&family=Archivo+Black&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Montserrat:wght@400;700&family=Oswald:wght@400;700&family=Bebas+Neue&family=Anton&family=Playfair+Display:wght@400;700&family=Pacifico&family=Dancing+Script:wght@700&family=Permanent+Marker&family=Lobster&family=Roboto+Mono:wght@400;700&family=Archivo+Black&family=Teko:wght@600&family=Yellowtail&family=League+Gothic&family=Staatliches&family=Big+Shoulders+Display:wght@800&family=Russo+One&family=Black+Ops+One&family=Bungee&family=Alfa+Slab+One&family=Rubik+Mono+One&family=Sedgwick+Ave+Display&family=Rock+Salt&family=Caveat+Brush&family=Covered+By+Your+Grace&family=UnifrakturCook:wght@700&family=Pirata+One&family=New+Rocker&family=Metal+Mania&family=Kaushan+Script&family=Sacramento&family=Abril+Fatface&family=Monoton&family=Press+Start+2P&family=Righteous&family=Space+Mono:wght@400;700&display=swap"
         />
       </head>
       <body className="flex min-h-screen flex-col antialiased">
