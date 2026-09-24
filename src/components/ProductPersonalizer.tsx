@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import MockupEditor, { type MockupEditorHandle, type MockupView, type PresetPosition } from "./MockupEditor";
 import TryOnEditor from "./TryOnEditor";
+import CollectionPicker from "./CollectionPicker";
 import ProductInfo, { VatNote } from "./ProductInfo";
 import { useCartStore } from "@/lib/cart-store";
 import { formatCLP } from "@/lib/money";
@@ -99,7 +100,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
   const [tryOnSnapshot, setTryOnSnapshot] = useState<string | null>(null);
 
   type PresetDesign = { id: string; name: string; imageUrl: string; placement: "FRONT" | "BACK" };
-  type PresetCollection = { id: string; name: string; designs: PresetDesign[] };
+  type PresetCollection = { id: string; name: string; category?: string; designs: PresetDesign[] };
   const [collections, setCollections] = useState<PresetCollection[]>([]);
   const [presetFront, setPresetFront] = useState<{ url: string; position: PresetPosition } | null>(null);
 
@@ -462,53 +463,10 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
             />
             <div className="relative">
               <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-neon">POPE · Colecciones</p>
-              <h3 className="mt-1 font-display text-3xl font-bold uppercase leading-none sm:text-4xl">O elige de nuestra colección</h3>
+              <h3 className="mt-1 font-display text-2xl font-bold uppercase leading-none sm:text-3xl">O elige de nuestra colección</h3>
               <p className="mt-2 text-sm text-neutral-400">Toca un diseño y aparece en tu prenda.</p>
 
-              <div className="mt-5 space-y-6">
-                {collectionsForView.map((c) => (
-                  <div key={c.id}>
-                    <p className="mb-2.5 flex items-center gap-3 font-display text-2xl font-bold uppercase leading-none">
-                      <span className="h-0.5 w-6 bg-neon" aria-hidden="true" />
-                      {c.name}
-                    </p>
-                    <div className="scrollbar-none -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" style={{ scrollbarWidth: "none" }}>
-                      {c.designs.map((d) => {
-                        const selected = presetFront?.url === d.imageUrl;
-                        return (
-                          <button
-                            key={d.id}
-                            type="button"
-                            onClick={() => applyPresetDesign(d, activePlacement === "BACK" ? "back" : "center")}
-                            aria-pressed={selected}
-                            title={d.name}
-                            className="group w-24 shrink-0 snap-start text-left sm:w-28"
-                          >
-                            <span
-                              className={`relative block aspect-[3/4] overflow-hidden rounded-xl border-2 bg-neutral-200 transition ${
-                                selected ? "border-neon shadow-[0_0_22px_color-mix(in_srgb,var(--neon)_45%,transparent)]" : "border-neutral-700 group-hover:border-neon"
-                              }`}
-                            >
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img src={d.imageUrl} alt={d.name} className="h-full w-full object-cover object-top transition duration-300 group-hover:scale-105" />
-                              {selected && (
-                                <span className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-neon text-black" aria-hidden="true">
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
-                                    <path d="M5 12.5l4.5 4.5L19 7.5" />
-                                  </svg>
-                                </span>
-                              )}
-                            </span>
-                            {d.name.toLowerCase() !== c.name.toLowerCase() && (
-                              <span className="mt-1.5 block truncate text-xs font-semibold uppercase tracking-wide text-neutral-300">{d.name}</span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <CollectionPicker collections={collectionsForView} selectedUrl={presetFront?.url} onPick={(d) => applyPresetDesign(d, activePlacement === "BACK" ? "back" : "center")} />
 
               {presetFront && (
                 <div className="mt-6 border-t border-neutral-800 pt-4">

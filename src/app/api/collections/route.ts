@@ -21,6 +21,7 @@ export async function GET() {
       .map((c) => ({
         id: c.id,
         name: c.name,
+        category: c.category,
         designs: c.designs.map((d) => ({ id: d.id, name: d.name, imageUrl: d.imageUrl, placement: d.placement })),
       })),
   });
