@@ -1,12 +1,12 @@
 // Self-healing guard that runs first on every start. When the volume is nearly full (the reason
 // customers couldn't upload photos: "ENOSPC: no space left on device"), it deletes uploaded files
-// that nothing references any more and are older than KEEP_DAYS — the same safe rule as
+// that nothing references any more and are older than 2 hours — the same safe rule as
 // Admin > Almacenamiento. With enough free space it does nothing.
 const fs = require("fs");
 const path = require("path");
 const { PrismaClient } = require("@prisma/client");
 
-const KEEP_DAYS = 3;
+const KEEP_MS = 2 * 60 * 60 * 1000;
 const MIN_FREE_BYTES = 150 * 1024 * 1024;
 const dir = process.env.UPLOADS_DIR || path.join(process.cwd(), "uploads");
 const mb = (b) => (b / 1048576).toFixed(1) + " MB";
@@ -39,13 +39,13 @@ const mb = (b) => (b / 1048576).toFixed(1) + " MB";
       } catch {}
     }
 
-    const cutoff = Date.now() - KEEP_DAYS * 86400000;
+    const cutoff = Date.now() - KEEP_MS;
     let deleted = 0;
     let freed = 0;
     for (const name of fs.readdirSync(dir)) {
       const full = path.join(dir, name);
       const s = fs.statSync(full);
-      if (!s.isFile() || urls.has(name) || s.mtimeMs >= cutoff) continue;
+      if (!s.isFile() || urls.has(name) || name.startsWith("pope-video-") || s.mtimeMs >= cutoff) continue;
       fs.unlinkSync(full);
       deleted++;
       freed += s.size;

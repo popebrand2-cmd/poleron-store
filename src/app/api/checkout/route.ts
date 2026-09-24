@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { existsSync } from "fs";
+import path from "path";
 import { prisma } from "@/lib/prisma";
+import { uploadsDir } from "@/lib/storage";
 import { createMercadoPagoPreference, isMercadoPagoConfigured } from "@/lib/mercadopago";
 
 const placementSchema = z.object({
@@ -53,6 +56,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos." }, { status: 400 });
   }
   const data = parsed.data;
+
+  // Uploaded designs that nobody ordered are deleted after a couple of hours. Never take an order whose
+  // design file is already gone — it could not be produced.
+  for (const item of data.items) {
+    for (const p of Object.values(item.designPlacement)) {
+      for (const u of [p.designUrl, p.originalDesignUrl]) {
+        if (!u || !u.startsWith("/uploads/")) continue;
+        const name = u.slice("/uploads/".length);
+        const gone = name.includes("/") || name.includes("\\") || (!existsSync(path.join(uploadsDir(), name)) && !existsSync(path.join(process.cwd(), "media", name)));
+        if (gone) {
+          return NextResponse.json(
+            { error: "Tu diseño ya no está guardado porque pasó mucho tiempo desde que lo subiste. Vuelve al carrito, edita tu prenda y súbelo de nuevo." },
+            { status: 409 },
+          );
+        }
+      }
+    }
+  }
 
   // Recompute prices server-side from the DB — never trust client-sent amounts.
   const orderItemsData: {

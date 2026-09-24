@@ -8,7 +8,7 @@ type Stats = {
   deletableCount: number;
   deletableBytes: number;
   oldestMtimeMs: number | null;
-  keepDays: number;
+  keepHours: number;
   disk: { totalBytes: number; freeBytes: number } | null;
 };
 
@@ -105,7 +105,7 @@ export default function StoragePanel() {
         <h2 className="font-semibold">Liberar espacio</h2>
         <p className="mt-1 text-sm text-neutral-600">
           Se pueden borrar con seguridad <strong>{stats.deletableCount}</strong> archivos ({formatBytes(stats.deletableBytes)}): tienen
-          más de {stats.keepDays} días y no pertenecen a ningún producto, colección, pedido ni imagen de la página. Los archivos más
+          más de {stats.keepHours} horas y no pertenecen a ningún producto, colección, pedido ni imagen de la página. Los archivos más
           nuevos no se tocan, por si un cliente los está usando ahora mismo.
         </p>
         <button

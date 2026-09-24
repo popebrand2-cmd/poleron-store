@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { formatCLP } from "@/lib/money";
 import DeleteOrderButton from "@/components/admin/DeleteOrderButton";
 import AdminNav from "@/components/admin/AdminNav";
+import OrderStatusControl from "@/components/admin/OrderStatusControl";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,7 @@ const STATUS_LABELS: Record<string, string> = {
   PENDING_PAYMENT: "Pendiente de pago",
   PAID: "Pagado",
   IN_PRODUCTION: "En producción",
-  SHIPPED: "Enviado",
+  SHIPPED: "Terminado",
   CANCELLED: "Cancelado",
 };
 
@@ -62,6 +63,7 @@ export default async function AdminOrdersPage() {
                   <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_COLORS[o.status] ?? ""}`}>
                     {STATUS_LABELS[o.status] ?? o.status}
                   </span>
+                  <OrderStatusControl orderId={o.id} status={o.status} />
                   <DeleteOrderButton orderId={o.id} />
                 </div>
               </div>
@@ -83,6 +85,9 @@ export default async function AdminOrdersPage() {
                         {it.quantity}x {it.colorName} · Talla {it.sizeLabel}
                         {it.materialLabel && ` · ${it.materialLabel}`}
                       </p>
+                      {originals.length === 0 && (o.status === "SHIPPED" || o.status === "CANCELLED") && (
+                        <p className="mt-1 text-xs text-neutral-500">Imagen original y mockup eliminados al cerrar el pedido.</p>
+                      )}
                       {originals.length > 0 && (
                         <div className="mt-2">
                           <p className="text-xs font-semibold uppercase tracking-wide text-neutral-600">

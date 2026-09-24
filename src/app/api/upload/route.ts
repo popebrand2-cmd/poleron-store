@@ -3,6 +3,7 @@ import path from "path";
 import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { uploadsDir } from "@/lib/storage";
+import { scheduleSweep } from "@/lib/upload-cleanup";
 
 const ALLOWED_TYPES: Record<string, string> = {
   "image/png": "png",
@@ -20,6 +21,7 @@ async function saveBytes(bytes: Buffer, ext: string): Promise<string> {
   await mkdir(dir, { recursive: true });
   const filename = `${uuidv4()}.${ext}`;
   await writeFile(path.join(dir, filename), bytes);
+  scheduleSweep();
   return filename;
 }
 
