@@ -7,6 +7,7 @@ import { removeWhiteBackground } from "@/lib/remove-white-bg";
 import { removeColorBackground } from "@/lib/remove-color-bg";
 import { segmentSubject, preloadSubjectSegmenter } from "@/lib/segment-subject";
 import { zoneScaleFactor, type SizeMeasurements } from "@/lib/size-scale";
+import { prepareImage } from "@/lib/prepare-image";
 import { isNearWhiteHex, looksLikeOpaqueWhiteBackground } from "@/lib/white-bg-detect";
 
 export type PresetPosition = "left" | "center" | "right";
@@ -677,7 +678,8 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       setUploading(true);
       setError("");
       try {
-        const url = await uploadBlob(file, file.type, file.name || "diseno.png");
+        const prepared = await prepareImage(file);
+        const url = await uploadBlob(prepared.blob, prepared.type, prepared.name);
         originalDesignUrlRef.current = url;
         const canvas = fabricCanvasRef.current;
         if (canvas) await loadDesign(canvas, url);
