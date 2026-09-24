@@ -184,6 +184,9 @@ export default function RealVideos() {
   const listRef = useRef<HTMLUListElement>(null);
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastPoint = useRef({ x: -1, y: -1 });
+  // 'hover' openings must never scroll the row (that would slide strips under the cursor)
+  const source = useRef<"hover" | "tap">("tap");
   // Set when the browser refused to autoplay, or while the (large) clip is still buffering.
   const [blocked, setBlocked] = useState(false);
   const [buffering, setBuffering] = useState(false);
@@ -229,10 +232,16 @@ export default function RealVideos() {
 
   // On phones the row scrolls sideways: keep the open card in view.
   useEffect(() => {
-    const li = listRef.current?.children[current] as HTMLElement | undefined;
     const ul = listRef.current;
-    if (!li || !ul || ul.scrollWidth <= ul.clientWidth + 1) return;
-    ul.scrollTo({ left: li.offsetLeft - (ul.clientWidth - li.offsetWidth) / 2, behavior: reduceMotion ? "auto" : "smooth" });
+    if (!ul || source.current === "hover" || ul.scrollWidth <= ul.clientWidth + 1) return;
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const wide = window.innerWidth >= 640;
+    const closedW = (wide ? 5.25 : 4.25) * rem;
+    const openW = ((wide ? 32 : 26) * rem * 9) / 16;
+    const gap = 0.5 * rem;
+    const padLeft = 1.5 * rem;
+    const left = padLeft + current * (closedW + gap) - (ul.clientWidth - openW) / 2;
+    ul.scrollTo({ left: Math.max(0, left), behavior: reduceMotion ? "auto" : "smooth" });
   }, [current, reduceMotion]);
 
   if (all.length === 0) {
@@ -270,19 +279,34 @@ export default function RealVideos() {
             <li key={c.n} className={`pope-strip ${on ? "is-open" : ""}`}>
               <button
                 type="button"
-                onMouseEnter={() => {
+                onMouseMove={(e) => {
+                  // Strips slide while they open/close, which makes the browser report a new
+                  // element under a perfectly still cursor. Only a real movement counts.
+                  const moved = Math.abs(e.clientX - lastPoint.current.x) > 2 || Math.abs(e.clientY - lastPoint.current.y) > 2;
+                  lastPoint.current = { x: e.clientX, y: e.clientY };
+                  if (!moved || on) {
+                    if (on && hoverTimer.current) clearTimeout(hoverTimer.current);
+                    return;
+                  }
                   if (hoverTimer.current) clearTimeout(hoverTimer.current);
-                  hoverTimer.current = setTimeout(() => setActive(i), 110);
+                  hoverTimer.current = setTimeout(() => {
+                    source.current = "hover";
+                    setActive(i);
+                  }, 140);
                 }}
                 onMouseLeave={() => {
                   if (hoverTimer.current) clearTimeout(hoverTimer.current);
                 }}
-                onFocus={() => setActive(i)}
+                onFocus={() => {
+                  source.current = "tap";
+                  setActive(i);
+                }}
                 onClick={() => {
                   if (on) {
                     setOpen(i);
                     return;
                   }
+                  source.current = "tap";
                   setActive(i);
                   setBlocked(false);
                   const v = videoRefs.current[i];
@@ -293,10 +317,8 @@ export default function RealVideos() {
                 }}
                 aria-label={`${on ? "Ver con sonido" : "Abrir"}${c.caption ? `: ${c.caption}` : ""}`}
                 aria-current={on}
-                className={`group relative block h-full w-full overflow-hidden rounded-3xl border-2 bg-neutral-900 text-left transition-[border-color,box-shadow,filter] duration-[900ms] ease-in-out ${
-                  on
-                    ? "border-neon shadow-[0_0_38px_-6px_color-mix(in_srgb,var(--neon)_65%,transparent)]"
-                    : "border-white/10 brightness-[0.55] hover:brightness-90"
+                className={`group relative block h-full w-full overflow-hidden rounded-3xl border-2 bg-neutral-900 text-left transition-[border-color,box-shadow] duration-[900ms] ease-in-out ${
+                  on ? "border-neon shadow-[0_0_38px_-6px_color-mix(in_srgb,var(--neon)_65%,transparent)]" : "border-white/10"
                 }`}
               >
                 <video
@@ -322,48 +344,58 @@ export default function RealVideos() {
                   preload={on ? "auto" : "metadata"}
                   tabIndex={-1}
                   aria-hidden="true"
-                  className={`pointer-events-none h-full w-full object-cover transition-transform duration-[1400ms] ease-out ${
+                  className={`pointer-events-none h-full w-full transform-gpu object-cover transition-transform duration-[900ms] ease-out ${
                     on ? "scale-100" : "scale-[1.12]"
                   }`}
                 />
                 <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/5 to-black/35" />
+                <span
+                  className={`pointer-events-none absolute inset-0 bg-black transition-opacity duration-700 ${on ? "opacity-0" : "opacity-45 group-hover:opacity-20"}`}
+                  aria-hidden="true"
+                />
 
-                {/* Folded strip: the title runs vertically */}
-                {!on && (
-                  <span className="pope-strip-fade pointer-events-none absolute inset-x-0 bottom-5 flex justify-center">
-                    <span className="font-display text-2xl font-bold uppercase leading-none tracking-wide text-white [text-orientation:mixed] [writing-mode:vertical-rl] rotate-180">
-                      {c.caption || c.tag || `Video ${i + 1}`}
-                    </span>
+                {/* Folded strip: the title runs vertically (fades out as the card opens) */}
+                <span
+                  className={`pointer-events-none absolute inset-x-0 bottom-5 flex justify-center transition-opacity duration-500 ${
+                    on ? "opacity-0" : "opacity-100 delay-500"
+                  }`}
+                >
+                  <span className="font-display text-2xl font-bold uppercase leading-none tracking-wide text-white [text-orientation:mixed] [writing-mode:vertical-rl] rotate-180">
+                    {c.caption || c.tag || `Video ${i + 1}`}
+                  </span>
+                </span>
+
+                {/* Open card: spinner / play hint only while open */}
+                {on && buffering && !blocked && (
+                  <span className="pointer-events-none absolute right-3 top-3 h-9 w-9 animate-spin rounded-full border-2 border-white/25 border-t-neon" aria-label="Cargando video" />
+                )}
+                {on && blocked && (
+                  <span className="pointer-events-none absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-neon backdrop-blur-sm">
+                    <PlayIcon className="h-7 w-7" />
                   </span>
                 )}
 
-                {/* Open card: chip, title and the invitation to play with sound */}
-                {on && (
-                  <>
-                    {buffering && !blocked && (
-                      <span className="pointer-events-none absolute right-3 top-3 h-9 w-9 animate-spin rounded-full border-2 border-white/25 border-t-neon" aria-label="Cargando video" />
-                    )}
-                    {blocked && (
-                      <span className="pointer-events-none absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-neon backdrop-blur-sm">
-                        <PlayIcon className="h-7 w-7" />
-                      </span>
-                    )}
-                    {c.tag && (
-                      <span className="pope-strip-fade glass-neon pointer-events-none absolute left-3 top-3 rounded-full px-3 py-0.5 font-display text-lg font-bold uppercase leading-none tracking-wide text-black">
-                        {c.tag}
-                      </span>
-                    )}
-                    <span className="pointer-events-none absolute inset-x-4 bottom-4 flex flex-col gap-2">
-                      {c.caption && <span className="pope-strip-in font-display text-4xl font-bold uppercase leading-[0.9] text-white">{c.caption}</span>}
-                      <span className="pope-strip-in-late glass-dark inline-flex w-fit items-center gap-2 rounded-full py-1.5 pl-2 pr-4 text-xs font-bold uppercase tracking-wide text-white transition group-hover:bg-neon group-hover:text-black">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-neon text-black">
-                          <PlayIcon className="h-3.5 w-3.5" />
-                        </span>
-                        Ver con sonido
-                      </span>
+                {/* Open card: chip, title and the invitation to play with sound (fade in once open, out at once) */}
+                <span
+                  className={`pointer-events-none absolute inset-0 transition-[opacity,transform] ${
+                    on ? "translate-y-0 opacity-100 delay-[450ms] duration-700" : "translate-y-3 opacity-0 duration-300"
+                  }`}
+                >
+                  {c.tag && (
+                    <span className="glass-neon absolute left-3 top-3 rounded-full px-3 py-0.5 font-display text-lg font-bold uppercase leading-none tracking-wide text-black">
+                      {c.tag}
                     </span>
-                  </>
-                )}
+                  )}
+                  <span className="absolute inset-x-4 bottom-4 flex flex-col gap-2">
+                    {c.caption && <span className="font-display text-4xl font-bold uppercase leading-[0.9] text-white">{c.caption}</span>}
+                    <span className="glass-dark inline-flex w-fit items-center gap-2 rounded-full py-1.5 pl-2 pr-4 text-xs font-bold uppercase tracking-wide text-white transition group-hover:bg-neon group-hover:text-black">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-neon text-black">
+                        <PlayIcon className="h-3.5 w-3.5" />
+                      </span>
+                      Ver con sonido
+                    </span>
+                  </span>
+                </span>
               </button>
             </li>
           );
