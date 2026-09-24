@@ -407,8 +407,8 @@ h1, h2, h3 {
   box-shadow: inset 0 0 0 1px var(--neon); }
 .pcol-slot.act .pcol-card::after { opacity: 1; }
 .pcol-slot.act::before { opacity: 1; }
-.pcol-slot::before { content: ""; position: absolute; inset: -9% -14%; border-radius: 50%; pointer-events: none; opacity: 0; transition: opacity 1s ease;
-  background: radial-gradient(closest-side, color-mix(in srgb, var(--neon) 24%, transparent), color-mix(in srgb, var(--neon) 8%, transparent) 55%, transparent 100%); }
+.pcol-slot::before { content: ""; position: absolute; inset: 0; border-radius: 6px; pointer-events: none; opacity: 0; transition: opacity 1s ease;
+  box-shadow: 0 0 0 1px var(--neon), 0 0 26px 3px color-mix(in srgb, var(--neon) 75%, transparent), 0 0 80px 14px color-mix(in srgb, var(--neon) 38%, transparent); }
 .pcol-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center top; pointer-events: none; -webkit-user-drag: none; transform: translate(var(--px, 0px), var(--py, 0px)) scale(1.05); transition: transform 1.6s var(--ease); }
 .pcol-slot.act .pcol-card img { transform: translate(var(--px, 0px), var(--py, 0px)) scale(1.01); }
 .pcol-dim { position: absolute; inset: 0; background: #000; opacity: var(--d); transition: opacity 0.9s ease; pointer-events: none; }
@@ -454,10 +454,12 @@ h1, h2, h3 {
 @media (max-width: 639px) {
   .pcol-giant { -webkit-text-stroke: 0; -webkit-mask-image: none; mask-image: none; color: rgba(255, 255, 255, 0.05); will-change: opacity; }
   .pcol-floor { filter: none; }
-  .pcol-stage { --w: 62vw; height: calc(62vw * 1.333 + 44px); }
-  .pcol-meta { left: 14px; right: 14px; bottom: 14px; }
-  .pcol-meta h3 { font-size: 1.9rem; }
-  .pcol-cta { margin-top: 10px; font-size: 1.02rem; }
+  .pcol-stage { --w: 52vw; height: calc(52vw * 1.333 + 44px); }
+  .pcol-slot::before { box-shadow: 0 0 0 1px var(--neon), 0 0 20px 3px color-mix(in srgb, var(--neon) 70%, transparent), 0 0 44px 6px color-mix(in srgb, var(--neon) 30%, transparent); }
+  .pcol-meta { left: 12px; right: 12px; bottom: 12px; }
+  .pcol-meta h3 { font-size: 1.5rem; }
+  .pcol-meta p { font-size: 9px; letter-spacing: 0.2em; }
+  .pcol-cta { margin-top: 8px; font-size: 0.92rem; }
   .pcol-arrow { display: none; }
   .pcol-chip { height: 38px; padding: 0 13px; font-size: 11px; }
   .pcol-title { font-size: clamp(3.4rem, 17vw, 7rem); }
