@@ -96,6 +96,8 @@ model ProductMaterial {
 // in application code to: PENDING_PAYMENT | PAID | IN_PRODUCTION | SHIPPED | CANCELLED
 model Order {
   id            String   @id @default(cuid())
+  // Customer-facing order name POPE01, POPE02 … (0 = not numbered yet); see src/lib/order-number.ts
+  number        Int      @default(0)
   status        String   @default("PENDING_PAYMENT")
   customerName  String
   customerEmail String

@@ -1,3 +1,4 @@
+import { formatOrderNumber } from "@/lib/order-number";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatCLP } from "@/lib/money";
@@ -23,7 +24,7 @@ export default async function CheckoutTestModePage({
         </div>
         <h1 className="mb-3 text-2xl font-semibold">Pedido creado (sin cobrar)</h1>
         <p className="text-neutral-600">
-          Tu pedido{order ? ` #${order.id.slice(0, 8)}` : ""} quedó guardado por{" "}
+          Tu pedido{order ? ` ${formatOrderNumber(order)}` : ""} quedó guardado por{" "}
           {order ? formatCLP(order.totalAmount) : ""}, pero no se realizó ningún cobro real.
         </p>
         <p className="mt-2 text-sm text-neutral-500">

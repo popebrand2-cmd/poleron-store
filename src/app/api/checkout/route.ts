@@ -1,3 +1,4 @@
+import { formatOrderNumber } from "@/lib/order-number";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { existsSync } from "fs";
@@ -134,8 +135,11 @@ export async function POST(request: Request) {
   const itemsTotal = orderItemsData.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
   const totalAmount = itemsTotal + shippingCost;
 
-  const order = await prisma.order.create({
+  const order = await prisma.$transaction(async (tx) => {
+    const last = await tx.order.aggregate({ _max: { number: true } });
+    return tx.order.create({
     data: {
+      number: (last._max.number ?? 0) + 1,
       customerName: data.customerName,
       customerEmail: data.customerEmail,
       customerPhone: data.customerPhone,
@@ -146,6 +150,7 @@ export async function POST(request: Request) {
       totalAmount,
       items: { create: orderItemsData },
     },
+    });
   });
 
   if (!isMercadoPagoConfigured()) {
@@ -157,7 +162,7 @@ export async function POST(request: Request) {
   try {
     const { initPoint } = await createMercadoPagoPreference({
       orderId: order.id,
-      title: `Pedido POPE #${order.id.slice(0, 8)}`,
+      title: `Pedido ${formatOrderNumber(order)}`,
       amountCLP: totalAmount,
       email: data.customerEmail,
     });

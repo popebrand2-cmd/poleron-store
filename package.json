@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "node scripts/free-disk-space.js && prisma db push --skip-generate && node scripts/rebrand-texts.js && node scripts/artistas-collection.js && node scripts/artist-sections.js && node scripts/collections-texts.js && node scripts/sections-artistas.js && node scripts/anime-collections.js && next start",
+    "start": "node scripts/free-disk-space.js && prisma db push --skip-generate && node scripts/rebrand-texts.js && node scripts/artistas-collection.js && node scripts/artist-sections.js && node scripts/collections-texts.js && node scripts/sections-artistas.js && node scripts/anime-collections.js && node scripts/order-numbers.js && next start",
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",

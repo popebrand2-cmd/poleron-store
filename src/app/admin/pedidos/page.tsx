@@ -1,3 +1,4 @@
+import { formatOrderNumber } from "@/lib/order-number";
 import { prisma } from "@/lib/prisma";
 import { formatCLP } from "@/lib/money";
 import DeleteOrderButton from "@/components/admin/DeleteOrderButton";
@@ -45,7 +46,7 @@ export default async function AdminOrdersPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">
-                    #{o.id.slice(0, 8)} · {o.customerName}
+                    {formatOrderNumber(o)} · {o.customerName}
                   </p>
                   <p className="text-sm text-neutral-500">
                     {o.customerEmail} · {o.items.length} producto(s) · {formatCLP(o.totalAmount)}

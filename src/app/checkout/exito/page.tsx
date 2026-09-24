@@ -1,3 +1,4 @@
+import { formatOrderNumber } from "@/lib/order-number";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatCLP } from "@/lib/money";
@@ -24,7 +25,7 @@ export default async function CheckoutSuccessPage({
         <h1 className="mb-3 text-2xl font-semibold">¡Pago recibido!</h1>
         <p className="text-neutral-600">
           Gracias{order ? ` ${order.customerName}` : ""}, tu pedido está confirmado
-          {order ? ` (#${order.id.slice(0, 8)})` : ""} por {order ? formatCLP(order.totalAmount) : ""}.
+          {order ? ` (${formatOrderNumber(order)})` : ""} por {order ? formatCLP(order.totalAmount) : ""}.
         </p>
         <p className="mt-2 text-neutral-600">Te enviaremos la confirmación de envío por email.</p>
         <Link href="/" className="mt-8 inline-block text-green-700 hover:underline">
