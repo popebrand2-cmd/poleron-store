@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNod
 import { useRouter } from "next/navigation";
 import EditableLink from "@/components/edit/EditableLink";
 import { useEditMode } from "@/components/edit/EditModeContext";
+import { DEFAULT_SECTIONS } from "@/lib/collection-sections";
 
 export type ShowcaseArtist = { id: string; slug: string; name: string; imageUrl: string; count: number; category: string };
 
@@ -88,16 +89,16 @@ export default function CollectionsShowcase({
   const firstDeal = useRef(true);
   const [giant, setGiant] = useState<{ cur?: string; prev?: string; k: number }>({ k: 0 });
 
-  // Sections in order of first appearance; artists without one fall under "Otros". The filter row
-  // (with a final "Todas") only exists when there is more than one section.
-  const sections = useMemo(() => [...new Set(artists.map((a) => a.category || NO_SECTION))], [artists]);
-  const filters = sections.length > 1 ? [...sections, ALL] : [];
+  // The default sections always show (even while empty), then any other section used in the admin,
+  // then "Todas". Artists without a section fall under "Otros".
+  const sections = useMemo(() => [...new Set([...DEFAULT_SECTIONS, ...artists.map((a) => a.category || NO_SECTION)])], [artists]);
+  const filters = [...sections, ALL];
   const items = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (q) return artists.filter((a) => a.name.toLowerCase().includes(q));
-    if (cat === ALL || sections.length < 2) return artists;
+    if (cat === ALL) return artists;
     return artists.filter((a) => (a.category || NO_SECTION) === cat);
-  }, [artists, query, cat, sections]);
+  }, [artists, query, cat]);
 
   const n = items.length;
   const cur = items[Math.min(active, Math.max(0, n - 1))];
@@ -280,7 +281,7 @@ export default function CollectionsShowcase({
       </header>
 
       <div className="pcol-filters">
-        {filters.length > 0 && (
+        {(
           <nav ref={chipsRef} className="pcol-chips" aria-label="Categorías">
             {filters.map((f) => (
               <button key={f} type="button" className={`pcol-chip${!query && f === cat ? " on" : ""}`} onClick={() => pickCat(f)}>
@@ -383,7 +384,7 @@ export default function CollectionsShowcase({
               >
                 <div className="pcol-card" onPointerMove={(e) => tilt(e, isAct)} onPointerLeave={untilt}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={a.imageUrl} alt={a.name} loading={i < 3 ? "eager" : "lazy"} decoding="async" draggable={false} />
+                  <img src={a.imageUrl} alt={a.name} loading={i < 8 ? "eager" : "lazy"} decoding="sync" draggable={false} />
                   <span className="pcol-dim" />
                   <span className="pcol-shade" />
                   <span className="pcol-glare" />
@@ -399,7 +400,7 @@ export default function CollectionsShowcase({
             );
           })}
         </div>
-        {n === 0 && <div className="pcol-empty">No encontramos esa colección</div>}
+        {n === 0 && <div className="pcol-empty">{query ? "No encontramos esa colección" : "Muy pronto: aún no hay colecciones en esta sección"}</div>}
         <button type="button" className="pcol-arrow l" onClick={() => move(-1)} aria-label="Colección anterior">
           ←
         </button>

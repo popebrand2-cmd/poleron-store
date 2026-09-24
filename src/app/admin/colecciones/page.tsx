@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import NewCollectionForm from "@/components/admin/NewCollectionForm";
 import DeleteCollectionButton from "@/components/admin/DeleteCollectionButton";
 import AdminNav from "@/components/admin/AdminNav";
+import { DEFAULT_SECTIONS } from "@/lib/collection-sections";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,7 @@ export default async function AdminCollectionsPage() {
         tamaño fijo debajo de la capucha.
       </p>
 
-      <NewCollectionForm categories={[...new Set(collections.map((c) => c.category).filter(Boolean))]} />
+      <NewCollectionForm categories={[...new Set([...DEFAULT_SECTIONS, ...collections.map((c) => c.category).filter(Boolean)])]} />
 
       {collections.length === 0 ? (
         <p className="mt-6 text-neutral-500">Todavía no tienes colecciones.</p>

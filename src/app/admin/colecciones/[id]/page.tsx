@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import CollectionEditor from "@/components/admin/CollectionEditor";
+import { DEFAULT_SECTIONS } from "@/lib/collection-sections";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export default async function AdminCollectionPage({ params }: { params: Promise<
 
   if (!collection) notFound();
   const all = await prisma.designCollection.findMany({ select: { category: true } });
-  const categories = [...new Set(all.map((c) => c.category).filter(Boolean))];
+  const categories = [...new Set([...DEFAULT_SECTIONS, ...all.map((c) => c.category).filter(Boolean)])];
 
   return (
     <main className="mx-auto max-w-5xl p-6">
