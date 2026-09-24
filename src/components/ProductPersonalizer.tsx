@@ -102,7 +102,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
   type PresetDesign = { id: string; name: string; imageUrl: string; placement: "FRONT" | "BACK" };
   type PresetCollection = { id: string; name: string; category?: string; designs: PresetDesign[] };
   const [collections, setCollections] = useState<PresetCollection[]>([]);
-  const [presetFront, setPresetFront] = useState<{ url: string; position: PresetPosition } | null>(null);
+  const [presetFront, setPresetFront] = useState<{ url: string; position: PresetPosition | "back" } | null>(null);
 
   useEffect(() => {
     fetch("/api/collections")
@@ -187,16 +187,13 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [presetId, collections, activeViewLabel]);
 
-  const activePlacement = activeViewLabel === "Frente" ? "FRONT" : activeViewLabel === "Espalda" ? "BACK" : null;
-  const collectionsForView = collections
-    .map((c) => ({ ...c, designs: c.designs.filter((d) => d.placement === activePlacement) }))
-    .filter((c) => c.designs.length > 0);
+  // Any collection design can go on the front or the back: it lands on whichever view is showing.
+  const onBackView = activeViewLabel === "Espalda";
+  const collectionsForView = collections.filter((c) => c.designs.length > 0);
 
   function applyPresetDesign(design: PresetDesign, position: PresetPosition | "back") {
     editorRefs.current[activeViewLabel]?.applyPresetDesign(design.imageUrl, position);
-    if (design.placement === "FRONT" && position !== "back") {
-      setPresetFront({ url: design.imageUrl, position });
-    }
+    setPresetFront({ url: design.imageUrl, position });
   }
 
   function handleColorChange(index: number) {
@@ -423,10 +420,33 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
               <h3 className="mt-1 font-display text-2xl font-bold uppercase leading-none sm:text-3xl">O elige de nuestra colección</h3>
               <p className="mt-2 text-sm text-neutral-600">Toca un diseño y aparece en tu prenda.</p>
 
-              <CollectionPicker collections={collectionsForView} selectedUrl={presetFront?.url} onPick={(d) => applyPresetDesign(d, activePlacement === "BACK" ? "back" : "center")} />
+              {color.views.length > 1 && (
+                <div className="mt-4">
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#0b6b25]">¿Dónde va el diseño?</p>
+                  <div className="flex gap-2">
+                    {color.views.map((v) => (
+                      <button
+                        key={v.label}
+                        type="button"
+                        onClick={() => handleViewChange(v.label)}
+                        aria-pressed={activeViewLabel === v.label}
+                        className={`min-h-11 rounded-full border-2 px-5 py-1.5 text-xs font-bold uppercase tracking-wide transition ${
+                          activeViewLabel === v.label ? "border-[#0b6b25] bg-[#0b6b25] text-white" : "border-neutral-300 text-black hover:border-[#0b6b25]"
+                        }`}
+                      >
+                        {v.label === "Frente" ? "Adelante" : v.label === "Espalda" ? "Atrás" : v.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <CollectionPicker collections={collectionsForView} selectedUrl={presetFront?.url} onPick={(d) => applyPresetDesign(d, onBackView ? "back" : "center")} />
 
               {presetFront && (
                 <div className="mt-6 border-t border-neutral-200 pt-4">
+                  {presetFront.position !== "back" && (
+                  <>
                   <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#0b6b25]">Posición en el pecho</p>
                   <div className="flex flex-wrap gap-2">
                     {(["left", "center", "right"] as const).map((pos) => (
@@ -450,6 +470,8 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
                       </button>
                     ))}
                   </div>
+                  </>
+                  )}
                   <button
                     type="button"
                     onClick={() => document.getElementById("paso-2")?.scrollIntoView({ behavior: "smooth", block: "start" })}
