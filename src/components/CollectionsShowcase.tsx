@@ -1,5 +1,6 @@
 "use client";
 
+import { thumb } from "@/lib/thumb";
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import EditableLink from "@/components/edit/EditableLink";
@@ -365,7 +366,7 @@ export default function CollectionsShowcase({
               >
                 <div className="pcol-card" onPointerMove={(e) => tilt(e, isAct)} onPointerLeave={untilt}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={a.imageUrl} alt={a.name} loading={i < 8 ? "eager" : "lazy"} decoding="sync" draggable={false} />
+                  <img src={thumb(a.imageUrl, 640)} alt={a.name} loading={i < 8 ? "eager" : "lazy"} decoding="sync" draggable={false} />
                   <span className="pcol-dim" />
                   <span className="pcol-shade" />
                   <span className="pcol-glare" />

@@ -47,14 +47,14 @@ export default async function RootLayout({
   );
 
   return (
-    <html lang="es" className={`${inter.variable} ${teko.variable} ${yellowtail.variable}`} style={{ ["--neon" as string]: accentColor }}>
+    <html lang="es" suppressHydrationWarning className={`${inter.variable} ${teko.variable} ${yellowtail.variable}`} style={{ ["--neon" as string]: accentColor }}>
       <head>
-        {/* Fonts customers can pick for their design text (src/components/MockupEditor.tsx FONT_OPTIONS) */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Montserrat:wght@400;700&family=Oswald:wght@400;700&family=Bebas+Neue&family=Anton&family=Playfair+Display:wght@400;700&family=Pacifico&family=Dancing+Script:wght@700&family=Permanent+Marker&family=Lobster&family=Roboto+Mono:wght@400;700&family=Archivo+Black&family=Teko:wght@600&family=Yellowtail&family=League+Gothic&family=Staatliches&family=Big+Shoulders+Display:wght@800&family=Russo+One&family=Black+Ops+One&family=Bungee&family=Alfa+Slab+One&family=Rubik+Mono+One&family=Sedgwick+Ave+Display&family=Rock+Salt&family=Caveat+Brush&family=Covered+By+Your+Grace&family=UnifrakturCook:wght@700&family=Pirata+One&family=New+Rocker&family=Metal+Mania&family=Kaushan+Script&family=Sacramento&family=Abril+Fatface&family=Monoton&family=Press+Start+2P&family=Righteous&family=Space+Mono:wght@400;700&display=swap"
+        {/* Light mode for low-power phones (few cores / little memory / data saver / slow network), or ?lite=1:
+            CSS under [data-lite] switches off the costly effects. ?lite=0 turns it off again. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var n=navigator,c=n.connection||{},q=location.search.match(/[?&]lite=([01])/),k="pope-lite",v=q?q[1]==="1":null;if(v===null){var st=localStorage.getItem(k);v=st===null?null:st==="1"}else{localStorage.setItem(k,v?"1":"0")}if(v===null)v=(n.deviceMemory&&n.deviceMemory<=2)||(n.hardwareConcurrency&&n.hardwareConcurrency<=4)||c.saveData===true||/(^|-)(slow-2g|2g|3g)$/.test(c.effectiveType||"");if(v)document.documentElement.setAttribute("data-lite","")}catch(e){}})()`,
+          }}
         />
       </head>
       <body className="flex min-h-screen flex-col antialiased">

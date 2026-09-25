@@ -207,6 +207,19 @@ const FONT_GROUPS: { title: string; fonts: { label: string; value: string }[] }[
 ];
 const FONT_OPTIONS = FONT_GROUPS.flatMap((g) => g.fonts);
 
+// The stylesheet with all the text fonts is only needed here, so it is added when an editor opens
+// instead of blocking every page of the store (keeps the storefront light on slow phones).
+const EDITOR_FONTS_URL =
+  "https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Montserrat:wght@400;700&family=Oswald:wght@400;700&family=Bebas+Neue&family=Anton&family=Playfair+Display:wght@400;700&family=Pacifico&family=Dancing+Script:wght@700&family=Permanent+Marker&family=Lobster&family=Roboto+Mono:wght@400;700&family=Archivo+Black&family=Teko:wght@600&family=Yellowtail&family=League+Gothic&family=Staatliches&family=Big+Shoulders+Display:wght@800&family=Russo+One&family=Black+Ops+One&family=Bungee&family=Alfa+Slab+One&family=Rubik+Mono+One&family=Sedgwick+Ave+Display&family=Rock+Salt&family=Caveat+Brush&family=Covered+By+Your+Grace&family=UnifrakturCook:wght@700&family=Pirata+One&family=New+Rocker&family=Metal+Mania&family=Kaushan+Script&family=Sacramento&family=Abril+Fatface&family=Monoton&family=Press+Start+2P&family=Righteous&family=Space+Mono:wght@400;700&display=swap";
+function ensureEditorFonts() {
+  if (typeof document === "undefined" || document.getElementById("pope-editor-fonts")) return;
+  const link = document.createElement("link");
+  link.id = "pope-editor-fonts";
+  link.rel = "stylesheet";
+  link.href = EDITOR_FONTS_URL;
+  document.head.appendChild(link);
+}
+
 // Quick text colours in the brand palette; the last swatch opens the full colour picker.
 const TEXT_COLORS = ["#111111", "#FFFFFF", "#B6FF00", "#FF2D2D", "#2D6BFF", "#FFD400", "#FF4FD8", "#9B5CFF"];
 
@@ -268,6 +281,7 @@ function PadButton({ label, onStep, children }: { label: string; onStep: () => v
 
 const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
   function MockupEditor({ view, initialPlacement, onDesignAdded, sizes = [], selectedSizeLabel = "", colorHex = "" }, ref) {
+    ensureEditorFonts();
     const isWhiteGarment = isNearWhiteHex(colorHex);
     const onDesignAddedRef = useRef(onDesignAdded);
     onDesignAddedRef.current = onDesignAdded;

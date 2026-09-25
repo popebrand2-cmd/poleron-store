@@ -521,3 +521,32 @@ a.pope-social:active { transform: scale(0.96); }
 .pope-player-video { animation: stripFade 0.5s ease both; }
 /* These are short, user-triggered movements, so they also run with "reduce motion" on (the whole
    point of the section); only the long-running looping video is left to the browser. */
+
+/* ---------- Teléfonos de poco poder ----------
+   Phones: the frosted-glass blur is the costliest thing on the page (the fixed header re-blurs on every
+   scroll frame), so it is much smaller. When the device looks low-power (see the script in layout.tsx,
+   or ?lite=1) it is switched off with solid backgrounds, and the loops / filters go quiet. */
+@media (hover: none) {
+  .glass, .glass-dark { -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .glass-neon, .glass-wa { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+}
+@keyframes popeWordLite { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+[data-lite] .glass, [data-lite] .glass-dark, [data-lite] .glass-neon, [data-lite] .glass-wa,
+[data-lite] .backdrop-blur-md, [data-lite] .backdrop-blur-sm, [data-lite] .pope-popup-backdrop {
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+[data-lite] .glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0.12) 100%), #262626;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+[data-lite] .glass-dark {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 60%), #0d0f0a;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+[data-lite] .glass-neon { background-color: var(--neon); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7); }
+[data-lite] .glass-wa { background-color: #25d366; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6); }
+[data-lite] .pope-cta-goo { filter: none; }
+[data-lite] .pope-cta-drop { animation: none; }
+[data-lite] .pope-nudge, [data-lite] .hiw-float, [data-lite] .hiw-handle { animation: none; }
+[data-lite] .pope-word { animation-name: popeWordLite; }
+[data-lite] .glass-hover:hover { transform: none; }

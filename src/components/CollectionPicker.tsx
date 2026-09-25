@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { thumb } from "@/lib/thumb";
 import { DEFAULT_SECTIONS } from "@/lib/collection-sections";
 
 export type PickerDesign = { id: string; name: string; imageUrl: string; placement: "FRONT" | "BACK" };
@@ -144,7 +145,7 @@ export default function CollectionPicker({
               <span className="absolute inset-0 overflow-hidden rounded-md bg-neutral-200">
                 {cover && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={cover} alt="" draggable={false} className="h-full w-full object-cover object-top" />
+                  <img src={thumb(cover, 384)} alt="" draggable={false} className="h-full w-full object-cover object-top" />
                 )}
                 <span className="absolute inset-0 bg-white" style={{ opacity: isAct ? 0 : 0.5, transition: "opacity 0.5s ease" }} />
               </span>
@@ -207,7 +208,7 @@ export default function CollectionPicker({
                   }`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={d.imageUrl} alt={d.name} loading="lazy" className="h-full w-full object-cover object-top" />
+                  <img src={thumb(d.imageUrl, 256)} alt={d.name} loading="lazy" className="h-full w-full object-cover object-top" />
                   {selected && (
                     <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#0b6b25] text-white" aria-hidden="true">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3">

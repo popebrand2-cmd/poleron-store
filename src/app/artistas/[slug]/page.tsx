@@ -1,3 +1,4 @@
+import { thumb } from "@/lib/thumb";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -63,7 +64,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
           <div className="relative mx-auto w-full max-w-sm">
             <div className="aspect-[3/4] overflow-hidden rounded-3xl shadow-[0_40px_90px_rgba(0,0,0,0.7)] ring-2 ring-neon">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={cover.imageUrl} alt={artist.name} className="h-full w-full object-cover object-top" />
+              <img src={thumb(cover.imageUrl, 640)} alt={artist.name} className="h-full w-full object-cover object-top" />
             </div>
           </div>
         </div>
@@ -85,7 +86,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
                   <div className="aspect-[3/4] overflow-hidden rounded-xl bg-neutral-200">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={d.imageUrl}
+                      src={thumb(d.imageUrl, 384)}
                       alt={d.name}
                       loading="lazy"
                       className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-[1.04]"

@@ -179,6 +179,10 @@ export default function RealVideos() {
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState<number | null>(null);
   const [inView, setInView] = useState(false);
+  // The videos are big: nothing is downloaded until the section is about to be reached, and on
+  // low-power phones only the open card loads (the rest stay as dark strips until opened).
+  const [near, setNear] = useState(false);
+  const [lite, setLite] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -207,14 +211,21 @@ export default function RealVideos() {
 
   useEffect(() => {
     setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    setLite(document.documentElement.hasAttribute("data-lite"));
     const el = sectionRef.current;
     if (!el || !("IntersectionObserver" in window)) {
       setInView(true);
+      setNear(true);
       return;
     }
     const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.25 });
+    const ioNear = new IntersectionObserver(([e]) => e.isIntersecting && setNear(true), { rootMargin: "700px 0px" });
     io.observe(el);
-    return () => io.disconnect();
+    ioNear.observe(el);
+    return () => {
+      io.disconnect();
+      ioNear.disconnect();
+    };
   }, [hasVideos]);
 
   // Only the open card plays (muted, looping) and only while the section is on screen —
@@ -224,11 +235,11 @@ export default function RealVideos() {
     cards.forEach((_, i) => {
       const v = videoRefs.current[i];
       if (!v) return;
-      if (i === current && inView && open === null) {
+      if (i === current && inView && open === null && !lite) {
         v.play().then(() => setBlocked(false)).catch(() => setBlocked(true));
       } else v.pause();
     });
-  }, [cards, current, inView, open]);
+  }, [cards, current, inView, open, lite]);
 
   // On phones the row scrolls sideways: keep the open card in view.
   useEffect(() => {
@@ -337,11 +348,11 @@ export default function RealVideos() {
                     setBlocked(false);
                   }}
                   onCanPlay={() => setBuffering(false)}
-                  src={`${c.src}#t=0.1`}
+                  src={near ? `${c.src}#t=0.1` : undefined}
                   muted
                   loop
                   playsInline
-                  preload={on ? "auto" : "metadata"}
+                  preload={lite ? (on ? "metadata" : "none") : on ? "auto" : "metadata"}
                   tabIndex={-1}
                   aria-hidden="true"
                   className={`pointer-events-none h-full w-full transform-gpu object-cover transition-transform duration-[900ms] ease-out ${
