@@ -6,6 +6,7 @@ import { formatCLP } from "@/lib/money";
 import { once, trackEvent } from "@/lib/track";
 import { VatNote } from "@/components/ProductInfo";
 import { CHILE_COMUNAS } from "@/lib/chile-comunas";
+import ComunaCombobox from "@/components/ComunaCombobox";
 
 type ShippingRate = { region: string; comuna: string; priceCLP: number };
 type ShippingInfo = {
@@ -251,21 +252,14 @@ export default function CheckoutPage() {
               <label htmlFor="checkout-comuna" className="mb-1 block text-sm font-medium">
                 Comuna
               </label>
-              <select
+              <ComunaCombobox
                 id="checkout-comuna"
-                required
-                disabled={!region}
+                options={comunasInRegion}
                 value={comuna}
-                onChange={(e) => setComuna(e.target.value)}
-                className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 disabled:bg-neutral-100 disabled:text-neutral-400"
-              >
-                <option value="">{region ? "Selecciona tu comuna" : "Primero elige tu región"}</option>
-                {comunasInRegion.map((r) => (
-                  <option key={r.comuna} value={r.comuna}>
-                    {r.comuna} · {formatCLP(r.priceCLP)}
-                  </option>
-                ))}
-              </select>
+                onChange={setComuna}
+                disabled={!region}
+                placeholder={region ? "Escribe o elige tu comuna" : "Primero elige tu región"}
+              />
               {matchedRate && (
                 <p className="mt-1 text-xs text-green-700">
                   {matchedRate.comuna} · {matchedRate.region}
