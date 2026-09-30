@@ -18,7 +18,10 @@ export default function PopeHero({ editorHref, cyberActive = false }: { editorHr
         {cyberActive && (
           <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-20 overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/promo/cyber-banner.webp" alt="" className="h-full w-full object-cover object-[68%_35%] opacity-55" />
+            {/* The cropped, text-free version of the campaign photo — the original (cyber-banner.webp)
+                has its own logo/headline baked into its left side, which was bleeding through faintly
+                behind the real headline text at some viewport widths. This crop keeps just the people. */}
+            <img src="/promo/cyber-lookbook.webp" alt="" className="h-full w-full object-cover object-[62%_38%] opacity-55" />
             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/75 to-black/35" />
             <div className="absolute inset-0 bg-black/15" />
           </div>
