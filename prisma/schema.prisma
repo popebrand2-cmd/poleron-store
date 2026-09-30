@@ -13,7 +13,10 @@ model Product {
   slug        String   @unique
   name        String
   description String   @default("")
-  basePrice   Int // CLP, no decimals
+  basePrice   Int // CLP, no decimals — the current selling price
+  // The crossed-out "before" price shown next to basePrice when this is on sale (e.g. a Cyber
+  // promotion). Null = no sale, basePrice shows on its own. Set/cleared from Admin > Productos.
+  compareAtPrice Int?
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

@@ -30,6 +30,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           slug: product.slug,
           name: product.name,
           basePrice: product.basePrice,
+          compareAtPrice: product.compareAtPrice,
           sizes: product.sizes.map((s) => ({
             label: s.label,
             priceDelta: s.priceDelta,

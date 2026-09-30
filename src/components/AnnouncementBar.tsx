@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Txt from "./edit/Txt";
 import { useEditMode } from "./edit/EditModeContext";
 
-const MESSAGE_KEYS = ["announce.1", "announce.2", "announce.3"];
+const MESSAGE_KEYS = ["announce.1", "announce.2", "announce.3", "announce.4"];
 
 const INTERVAL_MS = 5000;
 

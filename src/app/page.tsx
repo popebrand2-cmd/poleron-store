@@ -90,6 +90,7 @@ export default async function Home() {
                 slug: p.slug,
                 name: p.name,
                 basePrice: p.basePrice,
+                compareAtPrice: p.compareAtPrice,
                 colors: p.colors.map((c) => ({
                   name: c.name,
                   hex: c.hex,

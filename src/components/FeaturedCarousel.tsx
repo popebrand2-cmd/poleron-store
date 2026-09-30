@@ -11,6 +11,7 @@ export type FeaturedProduct = {
   slug: string;
   name: string;
   basePrice: number;
+  compareAtPrice?: number | null;
   colors: FeaturedProductColor[];
 };
 
@@ -74,7 +75,17 @@ function ProductCard({ p }: { p: FeaturedProduct }) {
       </div>
       <div className="p-4">
         <p className="font-semibold uppercase tracking-tight text-white">{p.name}</p>
-        <p className="mt-1 text-sm text-neutral-400">{formatCLP(p.basePrice)}</p>
+        <p className="mt-1 flex items-baseline gap-2 text-sm">
+          <span className="text-neutral-400">{formatCLP(p.basePrice)}</span>
+          {p.compareAtPrice != null && p.compareAtPrice > p.basePrice && (
+            <>
+              <span className="text-neutral-600 line-through">{formatCLP(p.compareAtPrice)}</span>
+              <span className="rounded bg-red-600 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+                -{Math.round(100 - (p.basePrice / p.compareAtPrice) * 100)}%
+              </span>
+            </>
+          )}
+        </p>
         <p className="mt-2 text-xs font-bold uppercase tracking-wide text-neon">Ver producto →</p>
       </div>
     </Link>

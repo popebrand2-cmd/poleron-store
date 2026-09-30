@@ -41,6 +41,7 @@ const productSchema = z.object({
     .regex(/^[a-z0-9-]+$/),
   description: z.string(),
   basePrice: z.number().int().min(0),
+  compareAtPrice: z.number().int().min(0).nullable().optional(),
   active: z.boolean(),
   sizes: z.array(sizeSchema).min(1),
   materials: z.array(materialSchema).min(1),
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
       slug: data.slug,
       description: data.description,
       basePrice: data.basePrice,
+      compareAtPrice: data.compareAtPrice ?? null,
       active: data.active,
       sizes: {
         create: data.sizes.map((s, i) => ({

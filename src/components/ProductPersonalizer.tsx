@@ -17,6 +17,7 @@ export type PersonalizerProduct = {
   slug: string;
   name: string;
   basePrice: number;
+  compareAtPrice?: number | null;
   sizes: {
     label: string;
     priceDelta: number;
@@ -301,8 +302,16 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
       {/* Header + the three stages */}
       <header className="lg:col-span-2">
         <h1 className="font-display text-5xl font-bold uppercase leading-[0.9] text-black sm:text-6xl">{product.name}</h1>
-        <p className="mt-1 text-2xl font-semibold text-black" aria-live="polite">
-          {formatCLP(unitPrice)}
+        <p className="mt-1 flex flex-wrap items-baseline gap-2" aria-live="polite">
+          <span className="text-2xl font-semibold text-black">{formatCLP(unitPrice)}</span>
+          {product.compareAtPrice != null && product.compareAtPrice > product.basePrice && (
+            <>
+              <span className="text-base text-neutral-400 line-through">{formatCLP(product.compareAtPrice + (unitPrice - product.basePrice))}</span>
+              <span className="rounded bg-red-600 px-1.5 py-0.5 text-[11px] font-bold uppercase text-white">
+                -{Math.round(100 - (product.basePrice / product.compareAtPrice) * 100)}%
+              </span>
+            </>
+          )}
         </p>
         <VatNote />
         {editing && (

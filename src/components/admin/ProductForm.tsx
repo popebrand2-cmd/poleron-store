@@ -40,6 +40,7 @@ export type ProductFormInitial = {
   name: string;
   description: string;
   basePrice: number;
+  compareAtPrice: number | null;
   active: boolean;
   sizes: SizeFormState[];
   materials: MaterialFormState[];
@@ -72,6 +73,7 @@ export default function ProductForm({ initial }: { initial?: ProductFormInitial 
   const [slugTouched, setSlugTouched] = useState(isEdit);
   const [description, setDescription] = useState(initial?.description ?? "");
   const [basePrice, setBasePrice] = useState(initial?.basePrice ?? 25000);
+  const [compareAtPrice, setCompareAtPrice] = useState(initial?.compareAtPrice != null ? String(initial.compareAtPrice) : "");
   const [active, setActive] = useState(initial?.active ?? true);
   const [sizes, setSizes] = useState<SizeFormState[]>(
     initial?.sizes ?? [
@@ -144,7 +146,17 @@ export default function ProductForm({ initial }: { initial?: ProductFormInitial 
     }
 
     setSaving(true);
-    const payload = { name, slug, description, basePrice, active, sizes, materials, colors };
+    const payload = {
+      name,
+      slug,
+      description,
+      basePrice,
+      compareAtPrice: compareAtPrice.trim() ? Number(compareAtPrice) : null,
+      active,
+      sizes,
+      materials,
+      colors,
+    };
     const res = await fetch(isEdit ? `/api/admin/products/${initial!.id}` : "/api/admin/products", {
       method: isEdit ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
@@ -207,6 +219,19 @@ export default function ProductForm({ initial }: { initial?: ProductFormInitial 
               onChange={(e) => setBasePrice(Number(e.target.value))}
               className="w-full rounded-md border border-neutral-300 px-3 py-2"
             />
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium">Precio antes de descuento (opcional)</label>
+            <input
+              type="number"
+              value={compareAtPrice}
+              onChange={(e) => setCompareAtPrice(e.target.value)}
+              placeholder="Vacío = sin oferta"
+              className="w-full rounded-md border border-neutral-300 px-3 py-2"
+            />
+            <p className="mt-1 text-xs text-neutral-500">
+              Si lo llenas, en la tienda se muestra tachado junto al precio base (ej. Cyber). Bórralo para terminar la oferta.
+            </p>
           </div>
           <div className="flex items-center gap-2 pt-6">
             <input
