@@ -11,7 +11,7 @@ export type CyberProduct = { id: string; slug: string; name: string; basePrice: 
 const CYBER_ENDS_AT = new Date("2026-10-08T02:59:59-03:00"); // end of Oct 7, Chile time
 
 // True while at least one product is actually on sale (has a compareAtPrice) AND we're still before
-// the cutoff above — both the banner below and the owner's designed image banner (CyberImageBanner)
+// the cutoff above — both this banner and the Cyber photo behind the hoodie in PopeHero
 // key off this, so the whole campaign disappears on its own either when the sale prices are cleared
 // in Admin > Productos, or once the campaign date passes, whichever comes first.
 export function isCyberActive(products: CyberProduct[]): boolean {
@@ -30,9 +30,9 @@ export default function CyberBanner({ products }: { products: CyberProduct[] }) 
         style={{ background: "radial-gradient(60% 140% at 50% 0%, color-mix(in srgb, var(--neon) 16%, transparent), transparent 70%)" }}
       />
       <div className="relative mx-auto max-w-5xl px-6 py-10 text-center sm:py-12">
-        {/* The badge/headline/subtext already live in the owner's own Cyber image banner right above
-            this section (CyberImageBanner) — this part only adds the real, live prices, so it stays
-            useful even if that image ever changes without duplicating the same headline twice. */}
+        {/* The hero above already carries "Tu idea. Tu prenda." and the Cyber photo (dimmed, behind
+            the hoodie) — this section stays deliberately compact and only adds what isn't shown
+            anywhere else yet: the real, live sale prices. */}
         <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white">
           🔥 <Txt k="cyber.badge" as="span" />
         </span>

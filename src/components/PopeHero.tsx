@@ -5,7 +5,7 @@ import EditableLink from "@/components/edit/EditableLink";
 import Txt from "@/components/edit/Txt";
 import HeroSignature from "@/components/preview/HeroSignature";
 
-export default function PopeHero({ editorHref }: { editorHref: string }) {
+export default function PopeHero({ editorHref, cyberActive = false }: { editorHref: string; cyberActive?: boolean }) {
   return (
     <>
       <IntroSplash />
@@ -48,6 +48,20 @@ export default function PopeHero({ editorHref }: { editorHref: string }) {
           </div>
 
           <div className="pope-rise relative" style={{ animationDelay: "1s" }}>
+            {/* Cyber campaign photo, sitting behind the hoodie (not its own banner up top anymore —
+                the owner found two stacked banners felt out of sync). Auto-hides with the rest of
+                the campaign the moment isCyberActive(...) goes false. */}
+            {cyberActive && (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -inset-x-6 -inset-y-10 z-0 overflow-hidden rounded-[2rem] sm:-inset-x-10 sm:-inset-y-14"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/promo/cyber-banner.webp" alt="" className="h-full w-full object-cover object-[75%_38%] opacity-40" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/10" />
+                <div className="absolute inset-0 bg-black/25" />
+              </div>
+            )}
             <HeroSignature />
             <div className="relative z-10">
               <RevealStage alt="Polerón POPE" />

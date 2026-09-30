@@ -6,7 +6,6 @@ import EditableLink from "@/components/edit/EditableLink";
 import Txt from "@/components/edit/Txt";
 import PopeHero from "@/components/PopeHero";
 import CyberBanner, { isCyberActive } from "@/components/CyberBanner";
-import CyberImageBanner from "@/components/CyberImageBanner";
 import RealWorks from "@/components/RealWorks";
 import RealVideos from "@/components/RealVideos";
 import HowItWorks from "@/components/preview/HowItWorks";
@@ -48,9 +47,7 @@ export default async function Home() {
 
   return (
     <main>
-      {isCyberActive(cyberProducts) && <CyberImageBanner href={editorHref} />}
-
-      <PopeHero editorHref={editorHref} />
+      <PopeHero editorHref={editorHref} cyberActive={isCyberActive(cyberProducts)} />
 
       <CyberBanner products={cyberProducts} />
 
