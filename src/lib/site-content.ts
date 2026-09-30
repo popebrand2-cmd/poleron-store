@@ -30,7 +30,7 @@ export const SITE_TEXT_DEFAULTS: Record<string, string> = {
   "announce.3": "🧵 CADA PRENDA ES UNA EDICIÓN DE UNA SOLA PERSONA: TÚ",
   "announce.4": "🔥 CYBER POPE: HASTA 45% DCTO EN TODA LA TIENDA — HASTA EL 7 DE OCTUBRE",
   "cyber.badge": "Cyber POPE",
-  "cyber.headline": "Hasta 45% dcto",
+  "cyber.headline": "¡Comenzó el Cyber en POPE!",
   "cyber.subtext": "Por tiempo limitado en toda la tienda. Sube tu diseño y personaliza tu prenda al precio Cyber.",
   "cyber.until": "Válido hasta el 7 de octubre",
   "cyber.cta": "Entra al Cyber",
