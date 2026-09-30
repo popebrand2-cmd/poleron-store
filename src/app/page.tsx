@@ -5,6 +5,7 @@ import EditableText from "@/components/edit/EditableText";
 import EditableLink from "@/components/edit/EditableLink";
 import Txt from "@/components/edit/Txt";
 import PopeHero from "@/components/PopeHero";
+import CyberBanner from "@/components/CyberBanner";
 import RealWorks from "@/components/RealWorks";
 import RealVideos from "@/components/RealVideos";
 import HowItWorks from "@/components/preview/HowItWorks";
@@ -46,6 +47,10 @@ export default async function Home() {
   return (
     <main>
       <PopeHero editorHref={editorHref} />
+
+      <CyberBanner
+        products={products.map((p) => ({ id: p.id, slug: p.slug, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice }))}
+      />
 
       {/* Artist collections: 3D carousel (each card opens its own catalog page) */}
       {collectionsWithDesigns.length > 0 && (

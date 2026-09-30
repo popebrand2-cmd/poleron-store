@@ -61,6 +61,11 @@ function ProductCard({ p }: { p: FeaturedProduct }) {
       <span className="absolute left-3 top-3 z-10 glass-neon rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-black">
         Personalizable
       </span>
+      {p.compareAtPrice != null && p.compareAtPrice > p.basePrice && (
+        <span className="absolute right-3 top-3 z-10 rounded-full bg-red-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-[0_0_14px_rgba(220,38,38,0.55)]">
+          🔥 Cyber
+        </span>
+      )}
       <div className={`aspect-square overflow-hidden p-3 transition-colors ${backdropClass}`}>
         {shown?.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
