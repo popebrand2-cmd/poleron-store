@@ -5,7 +5,8 @@ import EditableText from "@/components/edit/EditableText";
 import EditableLink from "@/components/edit/EditableLink";
 import Txt from "@/components/edit/Txt";
 import PopeHero from "@/components/PopeHero";
-import CyberBanner from "@/components/CyberBanner";
+import CyberBanner, { isCyberActive } from "@/components/CyberBanner";
+import CyberImageBanner from "@/components/CyberImageBanner";
 import RealWorks from "@/components/RealWorks";
 import RealVideos from "@/components/RealVideos";
 import HowItWorks from "@/components/preview/HowItWorks";
@@ -34,6 +35,7 @@ export default async function Home() {
   ]);
   const editorHref = await getEditorHref();
   const collectionsWithDesigns = designCollections.filter((c) => c.designs.length > 0);
+  const cyberProducts = products.map((p) => ({ id: p.id, slug: p.slug, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice }));
 
   const textMap = Object.fromEntries(siteTextRows.map((t) => [t.key, t.value]));
   const t = (key: string) => siteText(textMap, key);
@@ -46,11 +48,11 @@ export default async function Home() {
 
   return (
     <main>
+      {isCyberActive(cyberProducts) && <CyberImageBanner href={editorHref} />}
+
       <PopeHero editorHref={editorHref} />
 
-      <CyberBanner
-        products={products.map((p) => ({ id: p.id, slug: p.slug, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice }))}
-      />
+      <CyberBanner products={cyberProducts} />
 
       {/* Artist collections: 3D carousel (each card opens its own catalog page) */}
       {collectionsWithDesigns.length > 0 && (

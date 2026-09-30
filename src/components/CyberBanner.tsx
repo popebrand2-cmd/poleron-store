@@ -10,9 +10,14 @@ export type CyberProduct = { id: string; slug: string; name: string; basePrice: 
 // the sale never depends on remembering to touch this file.
 const CYBER_ENDS_AT = new Date("2026-10-08T02:59:59-03:00"); // end of Oct 7, Chile time
 
-// Homepage Cyber promo: only renders while at least one product is actually on sale (has a
-// compareAtPrice) AND we're still before the cutoff above — so it disappears on its own either when
-// the owner clears the sale prices, or once the campaign date passes, whichever comes first.
+// True while at least one product is actually on sale (has a compareAtPrice) AND we're still before
+// the cutoff above — both the banner below and the owner's designed image banner (CyberImageBanner)
+// key off this, so the whole campaign disappears on its own either when the sale prices are cleared
+// in Admin > Productos, or once the campaign date passes, whichever comes first.
+export function isCyberActive(products: CyberProduct[]): boolean {
+  return products.some((p) => p.compareAtPrice != null && p.compareAtPrice > p.basePrice) && Date.now() <= CYBER_ENDS_AT.getTime();
+}
+
 export default function CyberBanner({ products }: { products: CyberProduct[] }) {
   const onSale = products.filter((p) => p.compareAtPrice != null && p.compareAtPrice > p.basePrice).slice(0, 3);
   if (onSale.length === 0 || Date.now() > CYBER_ENDS_AT.getTime()) return null;
@@ -24,20 +29,15 @@ export default function CyberBanner({ products }: { products: CyberProduct[] }) 
         className="pointer-events-none absolute inset-0"
         style={{ background: "radial-gradient(60% 140% at 50% 0%, color-mix(in srgb, var(--neon) 16%, transparent), transparent 70%)" }}
       />
-      <div className="relative mx-auto max-w-5xl px-6 py-10 text-center sm:py-14">
+      <div className="relative mx-auto max-w-5xl px-6 py-10 text-center sm:py-12">
+        {/* The badge/headline/subtext already live in the owner's own Cyber image banner right above
+            this section (CyberImageBanner) — this part only adds the real, live prices, so it stays
+            useful even if that image ever changes without duplicating the same headline twice. */}
         <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white">
           🔥 <Txt k="cyber.badge" as="span" />
         </span>
 
-        <h2 className="mt-4 font-display text-4xl font-bold uppercase leading-[0.95] sm:text-6xl">
-          <Txt k="cyber.headline" as="span" />
-        </h2>
-
-        <p className="mx-auto mt-3 max-w-md text-sm text-neutral-300">
-          <Txt k="cyber.subtext" as="span" multiline />
-        </p>
-
-        <div className="mx-auto mt-7 flex max-w-xl flex-wrap items-stretch justify-center gap-3">
+        <div className="mx-auto mt-6 flex max-w-xl flex-wrap items-stretch justify-center gap-3">
           {onSale.map((p) => {
             const pct = Math.round(100 - (p.basePrice / (p.compareAtPrice as number)) * 100);
             return (
