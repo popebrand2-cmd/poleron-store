@@ -173,7 +173,14 @@ function PhotoStage({
   return (
     <div className="relative h-full w-full">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/promo/cyber-lookbook.webp" alt="Clientes POPE con polerones y poleras personalizadas" className="h-full w-full object-cover" />
+      <img
+        src="/promo/cyber-lookbook.webp"
+        alt="Clientes POPE con polerones y poleras personalizadas"
+        className="h-full w-full object-cover"
+        loading="eager"
+        decoding="sync"
+        fetchPriority="high"
+      />
 
       {/* Spotlight: dims the rest of the photo and leaves a soft halo over the picked garment — the
           closest honest approximation to "highlight its silhouette" without a per-garment cutout mask
@@ -342,7 +349,7 @@ export default function CyberLookbook({
           <PhotoStage uid={uid} openId={openId} setOpenId={setOpenId} productFor={productFor} designs={designs} showDesktopCard={false} />
         </div>
         {open && (
-          <div id={`${uid}-${open.id}-mobile`} className="flex justify-center px-5 py-6">
+          <div id={`${uid}-${open.id}-mobile`} className="flex justify-center px-5 pb-24 pt-6">
             <Card
               key={open.id}
               garment={open}
