@@ -5,6 +5,7 @@ import Link from "next/link";
 import Txt from "@/components/edit/Txt";
 
 export type LookbookProduct = { slug: string; colors: { name: string; hex: string }[] };
+export type LookbookDesign = { id: string; name: string; imageUrl: string; placement: "FRONT" | "BACK" };
 
 type Garment = {
   id: string;
@@ -13,7 +14,7 @@ type Garment = {
   designName: string;
   x: number; // % of the photo's width
   y: number; // % of the photo's height
-  thumb: string; // a real crop of the campaign photo around that print — see the note in page notes
+  thumb: string; // a real crop of the campaign photo around that print — used while no design is picked
 };
 
 // Positions were measured by eye against public/promo/cyber-lookbook.webp (the same campaign photo,
@@ -33,15 +34,28 @@ const GARMENTS: Garment[] = [
 function Card({
   garment,
   product,
+  designs,
+  startIndex,
   titleId,
   onClose,
 }: {
   garment: Garment;
   product: LookbookProduct | null;
+  designs: LookbookDesign[];
+  startIndex: number;
   titleId: string;
   onClose: () => void;
 }) {
   const [colorIdx, setColorIdx] = useState(0);
+  const [designIdx, setDesignIdx] = useState(startIndex);
+  const design = designs.length > 0 ? designs[designIdx % designs.length] : null;
+  const canCycle = designs.length > 1;
+
+  function step(dir: 1 | -1) {
+    if (!canCycle) return;
+    setDesignIdx((i) => (i + dir + designs.length) % designs.length);
+  }
+
   return (
     <div role="group" aria-labelledby={titleId} className="w-full max-w-xs rounded-2xl border border-white/10 bg-neutral-900 p-4 text-left text-white shadow-2xl sm:w-72">
       <div className="flex items-start justify-between gap-2">
@@ -80,34 +94,49 @@ function Card({
       <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400">
         <Txt k="lookbook.designLabel" as="span" />
       </p>
-      <div className="mt-1.5 flex items-center gap-2">
-        <button
-          type="button"
-          disabled
-          aria-hidden="true"
-          tabIndex={-1}
-          className="flex h-7 w-7 shrink-0 cursor-default items-center justify-center rounded-full border border-white/10 text-white/25"
-        >
-          ‹
-        </button>
-        <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-white/10">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={garment.thumb} alt={garment.designName} className="h-full w-full object-cover" />
+      {design ? (
+        <div className="mt-1.5 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => step(-1)}
+            disabled={!canCycle}
+            aria-label="Diseño anterior"
+            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition ${
+              canCycle ? "border-white/30 text-white hover:border-neon hover:text-neon" : "cursor-default border-white/10 text-white/25"
+            }`}
+          >
+            ‹
+          </button>
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-black">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={design.imageUrl} alt={design.name} className="h-full w-full object-cover" />
+          </div>
+          <button
+            type="button"
+            onClick={() => step(1)}
+            disabled={!canCycle}
+            aria-label="Diseño siguiente"
+            className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition ${
+              canCycle ? "border-white/30 text-white hover:border-neon hover:text-neon" : "cursor-default border-white/10 text-white/25"
+            }`}
+          >
+            ›
+          </button>
+          <span className="min-w-0 flex-1 truncate text-xs font-semibold text-neutral-200">{design.name}</span>
         </div>
-        <button
-          type="button"
-          disabled
-          aria-hidden="true"
-          tabIndex={-1}
-          className="flex h-7 w-7 shrink-0 cursor-default items-center justify-center rounded-full border border-white/10 text-white/25"
-        >
-          ›
-        </button>
-      </div>
+      ) : (
+        <div className="mt-1.5 flex items-center gap-2">
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-black">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={garment.thumb} alt={garment.designName} className="h-full w-full object-cover" />
+          </div>
+          <span className="text-xs text-neutral-400">Muy pronto vas a poder elegir otros diseños aquí.</span>
+        </div>
+      )}
 
       {product ? (
         <Link
-          href={`/productos/${product.slug}`}
+          href={design ? `/productos/${product.slug}?diseno=${design.id}` : `/productos/${product.slug}`}
           className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-full bg-neon px-5 text-sm font-bold uppercase tracking-wide text-black transition hover:brightness-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
         >
           <Txt k="lookbook.personalizeCta" as="span" />
@@ -129,15 +158,18 @@ function PhotoStage({
   openId,
   setOpenId,
   productFor,
+  designs,
   showDesktopCard,
 }: {
   uid: string;
   openId: string | null;
   setOpenId: (id: string | null) => void;
   productFor: (g: Garment) => LookbookProduct | null;
+  designs: LookbookDesign[];
   showDesktopCard: boolean;
 }) {
   const open = GARMENTS.find((g) => g.id === openId) ?? null;
+  const openIndex = open ? GARMENTS.indexOf(open) : 0;
   return (
     <div className="relative h-full w-full">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -183,7 +215,15 @@ function PhotoStage({
             ...(open.x > 55 ? { right: `${100 - open.x + 6}%` } : { left: `${open.x + 6}%` }),
           }}
         >
-          <Card garment={open} product={productFor(open)} titleId={`${uid}-${open.id}-title`} onClose={() => setOpenId(null)} />
+          <Card
+            key={open.id}
+            garment={open}
+            product={productFor(open)}
+            designs={designs}
+            startIndex={designs.length ? openIndex % designs.length : 0}
+            titleId={`${uid}-${open.id}-title`}
+            onClose={() => setOpenId(null)}
+          />
         </div>
       )}
 
@@ -207,11 +247,13 @@ export default function CyberLookbook({
   editorHref,
   teeProduct,
   hoodieProduct,
+  designs,
 }: {
   active: boolean;
   editorHref: string;
   teeProduct: LookbookProduct | null;
   hoodieProduct: LookbookProduct | null;
+  designs: LookbookDesign[];
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const uid = useId();
@@ -284,7 +326,7 @@ export default function CyberLookbook({
       {/* Desktop / tablet: one continuous photo fills the whole hero; the copy sits directly on top of
           it (left side), same as the reference the owner is matching. */}
       <div className="relative hidden lg:block" style={{ aspectRatio: "1230 / 667" }}>
-        <PhotoStage uid={uid} openId={openId} setOpenId={setOpenId} productFor={productFor} showDesktopCard />
+        <PhotoStage uid={uid} openId={openId} setOpenId={setOpenId} productFor={productFor} designs={designs} showDesktopCard />
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
         <div className="pointer-events-none absolute inset-y-0 left-0 flex max-w-md flex-col justify-center px-10">
           <div className="pointer-events-auto">{copy}</div>
@@ -297,11 +339,19 @@ export default function CyberLookbook({
       <div className="lg:hidden">
         <div className="px-5 pb-6 pt-10">{copy}</div>
         <div className="relative w-full" style={{ aspectRatio: "1230 / 667" }}>
-          <PhotoStage uid={uid} openId={openId} setOpenId={setOpenId} productFor={productFor} showDesktopCard={false} />
+          <PhotoStage uid={uid} openId={openId} setOpenId={setOpenId} productFor={productFor} designs={designs} showDesktopCard={false} />
         </div>
         {open && (
           <div id={`${uid}-${open.id}-mobile`} className="flex justify-center px-5 py-6">
-            <Card garment={open} product={productFor(open)} titleId={`${uid}-${open.id}-title-m`} onClose={() => setOpenId(null)} />
+            <Card
+              key={open.id}
+              garment={open}
+              product={productFor(open)}
+              designs={designs}
+              startIndex={designs.length ? GARMENTS.indexOf(open) % designs.length : 0}
+              titleId={`${uid}-${open.id}-title-m`}
+              onClose={() => setOpenId(null)}
+            />
           </div>
         )}
       </div>
