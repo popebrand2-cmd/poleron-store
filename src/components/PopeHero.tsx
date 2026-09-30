@@ -11,10 +11,28 @@ export default function PopeHero({ editorHref, cyberActive = false }: { editorHr
       <IntroSplash />
 
       <section className="relative isolate overflow-hidden bg-black">
+        {/* Cyber campaign photo, behind the whole hero (headline + hoodie), not just one side — the
+            owner wants it as one full backdrop, not confined behind a single column. Dimmed and
+            darkened toward the left so the headline stays readable; auto-hides with the rest of the
+            campaign the moment isCyberActive(...) goes false. */}
+        {cyberActive && (
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-20 overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/promo/cyber-banner.webp" alt="" className="h-full w-full object-cover object-[68%_35%] opacity-55" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/75 to-black/35" />
+            <div className="absolute inset-0 bg-black/15" />
+          </div>
+        )}
+        {/* The usual green brand glow — dialed back while the Cyber photo is showing (full strength
+            would mostly paint over it), left at full strength the rest of the year. */}
         <div
           aria-hidden="true"
           className="absolute inset-0 -z-10"
-          style={{ background: "radial-gradient(70% 65% at 70% 58%, color-mix(in srgb, var(--neon) 48%, #102200) 0%, color-mix(in srgb, var(--neon) 18%, #102200) 28%, #102200 45%, rgba(16,34,0,0.6) 65%, transparent 85%)" }}
+          style={{
+            background:
+              "radial-gradient(70% 65% at 70% 58%, color-mix(in srgb, var(--neon) 48%, #102200) 0%, color-mix(in srgb, var(--neon) 18%, #102200) 28%, #102200 45%, rgba(16,34,0,0.6) 65%, transparent 85%)",
+            opacity: cyberActive ? 0.35 : 1,
+          }}
         />
 
         <div className="mx-auto grid min-h-[calc(100svh-7rem)] max-w-6xl items-center gap-6 px-5 py-8 lg:grid-cols-2 lg:gap-10 lg:py-12">
@@ -48,20 +66,6 @@ export default function PopeHero({ editorHref, cyberActive = false }: { editorHr
           </div>
 
           <div className="pope-rise relative" style={{ animationDelay: "1s" }}>
-            {/* Cyber campaign photo, sitting behind the hoodie (not its own banner up top anymore —
-                the owner found two stacked banners felt out of sync). Auto-hides with the rest of
-                the campaign the moment isCyberActive(...) goes false. */}
-            {cyberActive && (
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute -inset-x-6 -inset-y-10 z-0 overflow-hidden rounded-[2rem] sm:-inset-x-10 sm:-inset-y-14"
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/promo/cyber-banner.webp" alt="" className="h-full w-full object-cover object-[75%_38%] opacity-40" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-black/10" />
-                <div className="absolute inset-0 bg-black/25" />
-              </div>
-            )}
             <HeroSignature />
             <div className="relative z-10">
               <RevealStage alt="Polerón POPE" />
