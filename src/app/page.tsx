@@ -6,6 +6,7 @@ import EditableLink from "@/components/edit/EditableLink";
 import Txt from "@/components/edit/Txt";
 import PopeHero from "@/components/PopeHero";
 import CyberGate from "@/components/CyberGate";
+import CyberLookbook from "@/components/CyberLookbook";
 import { isCyberActive } from "@/lib/cyber";
 import RealWorks from "@/components/RealWorks";
 import RealVideos from "@/components/RealVideos";
@@ -37,6 +38,12 @@ export default async function Home() {
   const collectionsWithDesigns = designCollections.filter((c) => c.designs.length > 0);
   const cyberProducts = products.map((p) => ({ id: p.id, slug: p.slug, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice }));
   const cyberActive = isCyberActive(cyberProducts);
+  // The Cyber lookbook links each garment to a REAL product/garment type it actually matches — a tee
+  // for the 5 t-shirt designs, a hoodie for the 2 hoodie ones — never a made-up one.
+  const isHoodieProduct = (p: { name: string; slug: string }) => /hoodie|poler[oó]n/i.test(`${p.name} ${p.slug}`);
+  const lookbookHoodie = products.find((p) => isHoodieProduct(p) && /oversize/i.test(p.slug)) ?? products.find(isHoodieProduct) ?? null;
+  const lookbookTee = products.find((p) => !isHoodieProduct(p)) ?? null;
+  const toLookbookProduct = (p: (typeof products)[number] | null) => (p ? { slug: p.slug, colors: p.colors.map((c) => ({ name: c.name, hex: c.hex })) } : null);
 
   const textMap = Object.fromEntries(siteTextRows.map((t) => [t.key, t.value]));
   const t = (key: string) => siteText(textMap, key);
@@ -52,6 +59,13 @@ export default async function Home() {
       <CyberGate products={cyberProducts} active={cyberActive} />
 
       <PopeHero editorHref={editorHref} cyberActive={cyberActive} />
+
+      <CyberLookbook
+        active={cyberActive}
+        editorHref={editorHref}
+        teeProduct={toLookbookProduct(lookbookTee)}
+        hoodieProduct={toLookbookProduct(lookbookHoodie)}
+      />
 
       {/* Artist collections: 3D carousel (each card opens its own catalog page) */}
       {collectionsWithDesigns.length > 0 && (
