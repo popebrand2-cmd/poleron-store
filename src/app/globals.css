@@ -178,6 +178,20 @@ h1, h2, h3 {
 .pope-word { display: inline-block; opacity: 0; animation: popeWord 0.5s ease forwards; }
 @keyframes popeRise { from { opacity: 0; transform: translateY(40px) scale(0.92); } to { opacity: 1; transform: none; } }
 .pope-rise { opacity: 0; animation: popeRise 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+
+/* Cyber intro CTA: rises in like everything else in the gate, then settles into a slow ambient glow
+   pulse so it keeps drawing the eye without feeling like a flashing ad. */
+@keyframes cyberCtaGlow {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--neon) 0%, transparent); }
+  50% { box-shadow: 0 0 26px 6px color-mix(in srgb, var(--neon) 45%, transparent); }
+}
+.cyber-cta {
+  opacity: 0;
+  animation: popeRise 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 1.05s forwards, cyberCtaGlow 2.4s ease-in-out 1.85s infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cyber-cta { animation: none; opacity: 1; box-shadow: none; }
+}
 @keyframes popeBgText { from { transform: translateY(35%); opacity: 0; } to { transform: none; opacity: 1; } }
 .pope-bgtext { animation: popeBgText 1s cubic-bezier(0.16, 1, 0.3, 1) 0.9s both; }
 @keyframes popeNudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(6px); } }
