@@ -85,7 +85,10 @@ export default function CyberGate({ products, active }: { products: CyberProduct
           faint grain — same materials as the rest of the site (see PopeHero, .pcol), not a one-off. */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/promo/cyber-banner.webp" alt="" className="h-full w-full scale-110 object-cover opacity-25 blur-sm" />
+        {/* The cropped, text-free version — the original (cyber-banner.webp) has its own logo/headline
+            baked into its left side, which showed through as a ghost behind the hero's real headline
+            (see that fix in PopeHero.tsx); this avoids the same issue here. */}
+        <img src="/promo/cyber-lookbook.webp" alt="" className="h-full w-full scale-110 object-cover opacity-25 blur-sm" />
         <div className="absolute inset-0 bg-black/55" />
         <div
           className="absolute inset-0"
