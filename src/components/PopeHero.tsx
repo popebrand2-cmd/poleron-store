@@ -5,7 +5,20 @@ import EditableLink from "@/components/edit/EditableLink";
 import Txt from "@/components/edit/Txt";
 import HeroSignature from "@/components/preview/HeroSignature";
 
-export default function PopeHero({ editorHref, cyberActive = false }: { editorHref: string; cyberActive?: boolean }) {
+export default function PopeHero({
+  editorHref,
+  cyberActive = false,
+  hidden = false,
+}: {
+  editorHref: string;
+  cyberActive?: boolean;
+  // Owner asked to make the Cyber lookbook the primary hero and hide this one while the campaign
+  // runs — not delete it, just skip rendering it. The intro splash still plays either way, since it's
+  // a site-wide touch, not something tied to this particular hero. Goes back to normal the moment
+  // isCyberActive(...) is false again — no manual step to "undo" this later.
+  hidden?: boolean;
+}) {
+  if (hidden) return <IntroSplash />;
   return (
     <>
       <IntroSplash />

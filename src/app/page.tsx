@@ -58,14 +58,17 @@ export default async function Home() {
     <main>
       <CyberGate products={cyberProducts} active={cyberActive} />
 
-      <PopeHero editorHref={editorHref} cyberActive={cyberActive} />
-
+      {/* While the Cyber campaign runs, this interactive lookbook IS the hero — the usual hoodie hero
+          just hides (hidden, not removed: PopeHero renders itself again the moment isCyberActive is
+          false, with nothing to undo by hand). */}
       <CyberLookbook
         active={cyberActive}
         editorHref={editorHref}
         teeProduct={toLookbookProduct(lookbookTee)}
         hoodieProduct={toLookbookProduct(lookbookHoodie)}
       />
+
+      <PopeHero editorHref={editorHref} cyberActive={cyberActive} hidden={cyberActive} />
 
       {/* Artist collections: 3D carousel (each card opens its own catalog page) */}
       {collectionsWithDesigns.length > 0 && (

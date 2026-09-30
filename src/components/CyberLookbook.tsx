@@ -157,7 +157,7 @@ export default function CyberLookbook({
   const productFor = (g: Garment) => (g.type === "tee" ? teeProduct : hoodieProduct);
 
   return (
-    <section aria-label="Cyber POPE: elige una prenda" className="relative overflow-hidden border-y border-white/10 bg-black text-white">
+    <section aria-label="Cyber POPE: elige una prenda" className="relative isolate overflow-hidden border-b border-white/10 bg-black text-white">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
