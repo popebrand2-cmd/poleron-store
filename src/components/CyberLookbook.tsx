@@ -158,10 +158,37 @@ export default function CyberLookbook({
 
   return (
     <section aria-label="Cyber POPE: elige una prenda" className="relative isolate overflow-hidden border-b border-white/10 bg-black text-white">
+      {/* The campaign photo as one continuous backdrop behind the whole section (copy + photo box),
+          not boxed to one side — duotoned green/black + a grain, so it reads as texture rather than a
+          plain dimmed photo. The crisp, full-colour copy the hotspots sit on (further down) is a
+          separate layer, so this decorative one can be pushed around freely without ever touching
+          hotspot alignment. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/promo/cyber-lookbook.webp"
+          alt=""
+          className="h-full w-full scale-110 object-cover object-[72%_38%]"
+          style={{ filter: "grayscale(1) contrast(1.2) brightness(0.6)" }}
+        />
+        <div
+          className="absolute inset-0 mix-blend-color"
+          style={{ background: "linear-gradient(115deg, color-mix(in srgb, var(--neon) 65%, black) 0%, black 75%)" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/25" />
+        <div className="absolute inset-0 bg-black/20" />
+        <div
+          className="absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          }}
+        />
+      </div>
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
-        style={{ background: "radial-gradient(55% 70% at 15% 40%, color-mix(in srgb, var(--neon) 10%, transparent), transparent 70%)" }}
+        style={{ background: "radial-gradient(55% 70% at 15% 40%, color-mix(in srgb, var(--neon) 14%, transparent), transparent 70%)" }}
       />
 
       <div className="relative mx-auto grid max-w-6xl items-center gap-8 px-5 py-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.4fr)] lg:gap-10 lg:py-16">
