@@ -7,7 +7,7 @@ import { garmentPhoto } from "@/lib/garment-photo";
 
 // Deep-green halo (a darker take of the brand green) around every garment, so all cards look the same.
 const BACK_SHADOW = "drop-shadow(-12px 8px 14px rgba(0,0,0,0.38))";
-const GARMENT_GLOW = "drop-shadow(0 0 1px rgba(0,0,0,0.45)) drop-shadow(0 0 9px color-mix(in srgb, var(--neon) 42%, #000)) drop-shadow(0 6px 26px color-mix(in srgb, var(--neon) 34%, #000))";
+const GARMENT_GLOW = "drop-shadow(0 0 1px rgba(0,0,0,0.45)) drop-shadow(0 0 6px color-mix(in srgb, var(--neon) 34%, #000)) drop-shadow(0 4px 16px color-mix(in srgb, var(--neon) 24%, #000))";
 const BACK_GLOW = `${BACK_SHADOW} ${GARMENT_GLOW}`;
 
 export type GarmentView = {
