@@ -40,6 +40,10 @@ async function clean(buf: Buffer): Promise<Buffer> {
   let sum = 0, count = 0;
   for (let i = 0; i < N; i++) if (alphaAt(i) > 200 && lum[i] < 235) { sum += lum[i]; count++; }
   const dark = count > 0 && sum / count < 110;
+  // Core colour of a dark garment (ignoring the light fringe), used to separate the garment from the white.
+  let coreSum = 0, coreCount = 0;
+  for (let i = 0; i < N; i++) if (alphaAt(i) > 200 && lum[i] < 90) { coreSum += lum[i]; coreCount++; }
+  const core = coreCount > 0 ? coreSum / coreCount : 30;
 
   const bg = new Uint8Array(N);
   if (!hasTransparency) {
@@ -59,6 +63,27 @@ async function clean(buf: Buffer): Promise<Buffer> {
       if (y > 0) push(p - W);
       if (y < H - 1) push(p + W);
     }
+    // Dark garments: white pockets fully enclosed by the garment (a gap between an arm and the body) are
+    // background too. Any sizeable near-white island is removed; tiny ones (stitching highlights) are kept.
+    if (dark) {
+      const seen = new Uint8Array(N);
+      const island: number[] = [];
+      for (let s0 = 0; s0 < N; s0++) {
+        if (bg[s0] || seen[s0] || minC[s0] < thr) continue;
+        island.length = 0;
+        let sp2 = 0;
+        stack[sp2++] = s0;
+        seen[s0] = 1;
+        while (sp2) {
+          const p = stack[--sp2];
+          island.push(p);
+          const x = p % W, y = (p / W) | 0;
+          const nb = [x > 0 ? p - 1 : -1, x < W - 1 ? p + 1 : -1, y > 0 ? p - W : -1, y < H - 1 ? p + W : -1];
+          for (const q of nb) if (q >= 0 && !bg[q] && !seen[q] && minC[q] >= thr) { seen[q] = 1; stack[sp2++] = q; }
+        }
+        if (island.length >= 600) for (const p of island) bg[p] = 1;
+      }
+    }
     // Only trust the cut when it removed a real background, not half the garment.
     let removed = 0;
     for (let i = 0; i < N; i++) removed += bg[i];
@@ -68,10 +93,12 @@ async function clean(buf: Buffer): Promise<Buffer> {
 
   const out = Buffer.from(data);
   if (cut) {
-    // Two-pixel fringe next to the background: un-mix the white so no light halo is left around the garment.
+    // Fringe next to the background: the edge pixels are a blend of garment and white. Work out how much
+    // garment each one really has and remove the white, so no light outline is left around the garment.
+    const passes = dark ? 4 : 2;
     const ring = new Uint8Array(N);
     let prev = bg;
-    for (let pass = 0; pass < 2; pass++) {
+    for (let pass = 0; pass < passes; pass++) {
       const next = new Uint8Array(N);
       for (let y = 1; y < H - 1; y++) for (let x = 1; x < W - 1; x++) {
         const i = y * W + x;
@@ -84,7 +111,8 @@ async function clean(buf: Buffer): Promise<Buffer> {
     for (let i = 0; i < N; i++) {
       if (bg[i]) { out[i * 4 + 3] = 0; continue; }
       if (!ring[i]) continue;
-      const a = Math.min(1, Math.max(0.15, (250 - lum[i]) / 130));
+      const a = dark ? Math.min(1, Math.max(0, (255 - lum[i]) / (255 - core))) : Math.min(1, Math.max(0.15, (250 - lum[i]) / 130));
+      if (a < 0.1) { out[i * 4 + 3] = 0; continue; }
       for (let c = 0; c < 3; c++) out[i * 4 + c] = Math.max(0, Math.min(255, Math.round((data[i * 4 + c] - 255 * (1 - a)) / a)));
       out[i * 4 + 3] = Math.round(a * 255);
     }
@@ -114,7 +142,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const key = createHash("sha1").update(`${f}:${mtime}:v1`).digest("hex");
+  const key = createHash("sha1").update(`${f}:${mtime}:v2`).digest("hex");
   const cached = path.join(CACHE_DIR, `${key}.png`);
   let body: Buffer;
   try {

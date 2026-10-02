@@ -3,5 +3,5 @@
 // Bump `v` to refresh browser/CDN caches when the cleaning changes.
 export function garmentPhoto(url: string): string {
   const m = /^\/uploads\/([A-Za-z0-9._-]+\.(?:png|jpe?g|webp))$/i.exec(url);
-  return m ? `/api/garment-photo?f=${m[1]}&v=1` : url;
+  return m ? `/api/garment-photo?f=${m[1]}&v=2` : url;
 }
