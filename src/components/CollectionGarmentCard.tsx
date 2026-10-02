@@ -120,7 +120,7 @@ export default function CollectionGarmentCard({
       {description && <p className="mt-1 line-clamp-2 text-sm leading-snug text-neutral-400">{description}</p>}
       {basePrice != null && (
         <p className="mt-1 flex items-baseline gap-2">
-          <span className={`font-semibold ${pct > 0 ? "text-[#ff6b6f]" : "text-white"}`}>{formatCLP(basePrice)}</span>
+          <span className="text-lg font-semibold text-[#ff6b6f]">{formatCLP(basePrice)}</span>
           {pct > 0 && <span className="text-sm text-neutral-500 line-through">{formatCLP(compareAtPrice as number)}</span>}
         </p>
       )}
