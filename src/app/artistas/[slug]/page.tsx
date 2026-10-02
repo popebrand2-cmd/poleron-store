@@ -8,7 +8,7 @@ import EditableLink from "@/components/edit/EditableLink";
 import Txt from "@/components/edit/Txt";
 import CollectionGarmentsGrid, { type GarmentKind, type GarmentItem } from "@/components/CollectionGarmentsGrid";
 import { getCollectionMockups } from "@/lib/collection-mockups";
-import { garmentKind } from "@/lib/garments";
+import { garmentKind, kindDescription } from "@/lib/garments";
 
 const KIND_TITLE: Record<GarmentKind, string> = { polera: "Polera", poleron: "Polerón oversize", boxy: "Polerón boxy fit" };
 
@@ -71,20 +71,23 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
         kind,
         href: `${base}${base.includes("?") ? "&" : "?"}diseno=${artist.designs[0].id}`,
         title: `${KIND_TITLE[kind]} ${artist.name}`,
-        description: product?.description || undefined,
+        description: product?.description || kindDescription(kind),
         basePrice: product?.basePrice ?? null,
         compareAtPrice: product?.compareAtPrice ?? null,
         colors: list.map((m) => ({ name: m.name, hex: m.hex, views: [], imageUrl: m.imageUrl })),
       },
     ];
   });
-  const overlayItems: GarmentItem[] = artist.designs.flatMap((d) =>
+  // The finished mockups cover the collection's first design; every other design still gets its own
+  // garments, with the art printed front and back on the product photos.
+  const overlayDesigns = mockupItems.length > 0 ? artist.designs.slice(1) : artist.designs;
+  const overlayItems: GarmentItem[] = overlayDesigns.flatMap((d) =>
     garments.map((p) => ({
       key: `${d.id}-${p.id}`,
       kind: garmentKind(p),
       href: `/productos/${p.slug}?diseno=${d.id}`,
-      title: `${p.name} ${d.name}`,
-      description: p.description || undefined,
+      title: `${KIND_TITLE[garmentKind(p)]} ${d.name}`,
+      description: p.description || kindDescription(garmentKind(p)),
       frontArt: d.showFront ? d.imageUrl : "",
       backArt: d.showBack ? d.backImageUrl || d.imageUrl : "",
       frontScale: d.frontScale,
@@ -94,7 +97,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
       colors: p.colors,
     })),
   );
-  const garmentItems = mockupItems.length > 0 ? mockupItems : overlayItems;
+  const garmentItems = [...mockupItems, ...overlayItems];
 
   const cover = artist.designs[0];
   // The artist's own photo leads the page; the first design is only the fallback when none was uploaded.

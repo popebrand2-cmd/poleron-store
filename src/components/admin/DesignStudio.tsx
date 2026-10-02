@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import CollectionGarmentsGrid, { type GarmentItem } from "@/components/CollectionGarmentsGrid";
-import type { StudioGarment } from "@/lib/garments";
+import { kindDescription, type StudioGarment } from "@/lib/garments";
 import { removeColorBackground } from "@/lib/remove-color-bg";
 import { segmentSubject, preloadSubjectSegmenter } from "@/lib/segment-subject";
 import { cornerColor, enhanceImage, imageSize } from "@/lib/studio-image";
@@ -203,7 +203,7 @@ export default function DesignStudio({ garments, collections, sections }: { garm
         kind: g.kind,
         href: "#",
         title: `${g.name} ${designName || "tu diseño"}`,
-        description: g.description || undefined,
+        description: g.description || kindDescription(g.kind),
         frontArt: front?.url ?? "",
         backArt: back?.url ?? "",
         frontScale,

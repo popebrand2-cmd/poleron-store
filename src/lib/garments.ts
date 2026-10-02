@@ -2,12 +2,19 @@ import { prisma } from "@/lib/prisma";
 import type { GarmentKind } from "@/components/CollectionGarmentsGrid";
 import type { GarmentColor } from "@/components/CollectionGarmentCard";
 
-// Garment type from the product's own name/slug: "boxy" wins, then hoodies/polerones, everything else is a polera.
+// Garment type from the product's own name/slug: boxy fit ("boxy", "boxifit", "box fit") wins, then hoodies/polerones,
+// everything else is a polera. The real slugs are tee-oversize, hoodie-oversize and hoodie-boxifit.
 export function garmentKind(p: { name: string; slug: string }): GarmentKind {
   const s = `${p.name} ${p.slug}`;
-  if (/boxy/i.test(s)) return "boxy";
+  if (/box[iy]|box[\s-]*fit/i.test(s)) return "boxy";
   if (/hoodie|poler[oó]n/i.test(s)) return "poleron";
   return "polera";
+}
+
+// Shown under the name when the product has no description of its own (no materials or claims invented).
+export function kindDescription(kind: GarmentKind): string {
+  const what = kind === "polera" ? "Polera oversize" : kind === "boxy" ? "Polerón boxy fit" : "Polerón oversize";
+  return `${what}, con tu diseño estampado en frente y/o espalda.`;
 }
 
 export type StudioGarment = {
