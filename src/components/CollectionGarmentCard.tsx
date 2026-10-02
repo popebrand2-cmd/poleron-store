@@ -6,7 +6,9 @@ import { formatCLP } from "@/lib/money";
 import { garmentPhoto } from "@/lib/garment-photo";
 
 // Deep-green halo (a darker take of the brand green) around every garment, so all cards look the same.
+const BACK_SHADOW = "drop-shadow(-12px 8px 14px rgba(0,0,0,0.38))";
 const GARMENT_GLOW = "drop-shadow(0 0 1px rgba(0,0,0,0.45)) drop-shadow(0 0 9px color-mix(in srgb, var(--neon) 42%, #000)) drop-shadow(0 6px 26px color-mix(in srgb, var(--neon) 34%, #000))";
+const BACK_GLOW = `${BACK_SHADOW} ${GARMENT_GLOW}`;
 
 export type GarmentView = {
   label: string;
@@ -98,12 +100,12 @@ export default function CollectionGarmentCard({
           <img src={color.imageUrl} alt={title} loading="lazy" decoding="async" draggable={false} className="absolute inset-0 h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]" style={{ filter: GARMENT_GLOW }} />
         )}
         {!color?.imageUrl && front && (
-          <div style={{ filter: GARMENT_GLOW }} className={`absolute flex items-start justify-start transition duration-500 group-hover:scale-[1.03] ${back ? "left-[4%] top-[6%] h-[68%] w-[68%]" : "inset-[8%]"}`}>
+          <div style={{ filter: GARMENT_GLOW }} className={`absolute flex items-start justify-start transition duration-500 group-hover:scale-[1.03] ${back ? "left-[2%] top-[3%] h-[78%] w-[78%]" : "inset-[6%]"}`}>
             <Mock view={front} design={frontArt} scale={frontScale} />
           </div>
         )}
         {!color?.imageUrl && back && (
-          <div style={{ filter: GARMENT_GLOW }} className="absolute bottom-[4%] right-[3%] flex h-[68%] w-[68%] items-end justify-end transition duration-500 group-hover:scale-[1.03]">
+          <div style={{ filter: BACK_GLOW }} className="absolute bottom-[2%] right-[1%] flex h-[78%] w-[78%] items-end justify-end transition duration-500 group-hover:scale-[1.03]">
             <Mock view={back} design={backArt} scale={backScale} />
           </div>
         )}
@@ -115,7 +117,7 @@ export default function CollectionGarmentCard({
           + Personalizar
         </span>
       </Link>
-      <Link href={href} className="mt-4 block text-base font-semibold leading-snug text-white hover:text-neon">
+      <Link href={href} className="mt-4 line-clamp-2 block text-base font-semibold leading-snug text-white hover:text-neon">
         {title}
       </Link>
       {description && <p className="mt-1 line-clamp-2 text-sm leading-snug text-neutral-400">{description}</p>}
