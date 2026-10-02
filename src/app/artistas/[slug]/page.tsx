@@ -8,7 +8,7 @@ import EditableLink from "@/components/edit/EditableLink";
 import Txt from "@/components/edit/Txt";
 import CollectionGarmentsGrid, { type GarmentKind, type GarmentItem } from "@/components/CollectionGarmentsGrid";
 import { getCollectionMockups } from "@/lib/collection-mockups";
-import { garmentKind, kindDescription } from "@/lib/garments";
+import { garmentKind, kindDescription, pickProductForKind } from "@/lib/garments";
 
 const KIND_TITLE: Record<GarmentKind, string> = { polera: "Polera", poleron: "Polerón oversize", boxy: "Polerón boxifit" };
 
@@ -63,7 +63,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
   const mockupItems: GarmentItem[] = (Object.keys(KIND_TITLE) as GarmentKind[]).flatMap((kind) => {
     const list = mockups[kind];
     if (!list || list.length === 0) return [];
-    const product = products.find((p) => garmentKind(p) === kind);
+    const product = pickProductForKind(products, kind);
     const base = product ? `/productos/${product.slug}` : editorHref;
     return [
       {

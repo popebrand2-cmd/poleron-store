@@ -11,6 +11,14 @@ export function garmentKind(p: { name: string; slug: string }): GarmentKind {
   return "polera";
 }
 
+// The product that represents a garment type on the collection pages: the main store product of that type
+// first, otherwise one that is on sale (so the savings badge shows), otherwise the first one.
+const MAIN_SLUG: Record<GarmentKind, string> = { polera: "tee-oversize", poleron: "hoodie-oversize", boxy: "hoodie-boxifit" };
+export function pickProductForKind<T extends { name: string; slug: string; basePrice: number; compareAtPrice: number | null }>(products: T[], kind: GarmentKind): T | undefined {
+  const ofKind = products.filter((p) => garmentKind(p) === kind);
+  return ofKind.find((p) => p.slug === MAIN_SLUG[kind]) ?? ofKind.find((p) => p.compareAtPrice != null && p.compareAtPrice > p.basePrice) ?? ofKind[0];
+}
+
 // Shown under the name when the product has no description of its own. The wording is the owner's own for the
 // polera, applied identically to both polerones (only the garment name changes).
 export function kindDescription(kind: GarmentKind): string {
