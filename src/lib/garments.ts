@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { GarmentKind } from "@/components/CollectionGarmentsGrid";
-import type { GarmentColor } from "@/components/CollectionGarmentCard";
+import type { GarmentColor, GarmentView } from "@/components/CollectionGarmentCard";
+import { garmentBox } from "@/lib/garment-box";
 
 // Garment type from the product's own name/slug: boxy fit ("boxy", "boxifit", "box fit") wins, then hoodies/polerones,
 // everything else is a polera. The real slugs are tee-oversize, hoodie-oversize and hoodie-boxifit.
@@ -9,6 +10,36 @@ export function garmentKind(p: { name: string; slug: string }): GarmentKind {
   if (/box[iy]|box[\s-]*fit/i.test(s)) return "boxy";
   if (/hoodie|poler[oó]n/i.test(s)) return "poleron";
   return "polera";
+}
+
+// Each colour of a product carries its own photo and print zone, and those rarely match exactly (a white photo
+// framed a little closer, a zone drawn a bit bigger), so the same design looked bigger on one colour than on
+// another. The first colour's zone is taken as the reference, measured against the garment itself, and laid
+// on the garment of every other colour: the print comes out the same size on all of them.
+export async function normalizeZones(colors: GarmentColor[]): Promise<GarmentColor[]> {
+  const ref = new Map<string, { view: GarmentView; box: NonNullable<Awaited<ReturnType<typeof garmentBox>>> }>();
+  const out: GarmentColor[] = [];
+  for (const c of colors) {
+    const views: GarmentView[] = [];
+    for (const v of c.views) {
+      const box = await garmentBox(v.imageUrl);
+      const r = ref.get(v.label);
+      if (!box) {
+        views.push(v);
+      } else if (!r) {
+        ref.set(v.label, { view: v, box });
+        views.push(v);
+      } else {
+        const rx = (r.view.zoneXPct / 100 - r.box.x) / r.box.w;
+        const ry = (r.view.zoneYPct / 100 - r.box.y) / r.box.h;
+        const rw = r.view.zoneWidthPct / 100 / r.box.w;
+        const rh = r.view.zoneHeightPct / 100 / r.box.h;
+        views.push({ ...v, zoneXPct: (box.x + rx * box.w) * 100, zoneYPct: (box.y + ry * box.h) * 100, zoneWidthPct: rw * box.w * 100, zoneHeightPct: rh * box.h * 100 });
+      }
+    }
+    out.push({ ...c, views });
+  }
+  return out;
 }
 
 // The product that represents a garment type on the collection pages: the main store product of that type
@@ -45,7 +76,7 @@ export async function loadGarments(): Promise<StudioGarment[]> {
     orderBy: { createdAt: "desc" },
     include: { colors: { orderBy: { sortOrder: "asc" }, include: { views: { orderBy: { sortOrder: "asc" } } } } },
   });
-  return products
+  const mapped = products
     .map((p) => ({
       id: p.id,
       slug: p.slug,
@@ -66,4 +97,5 @@ export async function loadGarments(): Promise<StudioGarment[]> {
         .filter((c) => c.views.length > 0),
     }))
     .filter((p) => p.colors.length > 0);
+  return Promise.all(mapped.map(async (p) => ({ ...p, colors: await normalizeZones(p.colors) })));
 }

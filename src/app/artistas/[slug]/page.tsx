@@ -8,7 +8,7 @@ import EditableLink from "@/components/edit/EditableLink";
 import Txt from "@/components/edit/Txt";
 import CollectionGarmentsGrid, { type GarmentKind, type GarmentItem } from "@/components/CollectionGarmentsGrid";
 import { getCollectionMockups } from "@/lib/collection-mockups";
-import { garmentKind, kindDescription, pickProductForKind } from "@/lib/garments";
+import { garmentKind, kindDescription, normalizeZones, pickProductForKind } from "@/lib/garments";
 
 const KIND_TITLE: Record<GarmentKind, string> = { polera: "Polera", poleron: "Polerón oversize", boxy: "Polerón boxifit" };
 
@@ -43,7 +43,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
   if (!artist) notFound();
 
   // Every garment that has a photo to print on, shown with each of this collection's designs already on it.
-  const garments = products
+  const garmentsRaw = products
     .map((p) => ({
       ...p,
       colors: p.colors
@@ -57,6 +57,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
         .filter((c) => c.views.length > 0),
     }))
     .filter((p) => p.colors.length > 0);
+  const garments = await Promise.all(garmentsRaw.map(async (p) => ({ ...p, colors: await normalizeZones(p.colors) })));
 
   // Finished mockups (one image per garment type and color, made outside the site) win when they exist for
   // this collection; each links to the real product of that type with the collection's first design loaded.
