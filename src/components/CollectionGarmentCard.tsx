@@ -4,16 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { formatCLP } from "@/lib/money";
 
-// Deep-green halo (a darker take of the brand green) that lifts white garments off the light card.
-const LIGHT_GLOW = "drop-shadow(0 0 1px rgba(0,0,0,0.45)) drop-shadow(0 0 9px color-mix(in srgb, var(--neon) 42%, #000)) drop-shadow(0 6px 26px color-mix(in srgb, var(--neon) 34%, #000))";
-const DARK_SHADOW = "drop-shadow(0 14px 16px rgba(0,0,0,0.3))";
-
-const isLight = (hex: string) => {
-  const h = hex.replace("#", "");
-  if (h.length < 6) return false;
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16));
-  return 0.299 * r + 0.587 * g + 0.114 * b > 200;
-};
+// Deep-green halo (a darker take of the brand green) around every garment, so all cards look the same.
+const GARMENT_GLOW = "drop-shadow(0 0 1px rgba(0,0,0,0.45)) drop-shadow(0 0 9px color-mix(in srgb, var(--neon) 42%, #000)) drop-shadow(0 6px 26px color-mix(in srgb, var(--neon) 34%, #000))";
 
 export type GarmentView = {
   label: string;
@@ -88,8 +80,6 @@ export default function CollectionGarmentCard({
   // A real back view only: if the "Espalda" photo is just the front photo again, it is not shown as a back.
   const backView = color?.views.find((v) => v.label === "Espalda");
   const back = backView && backView.imageUrl !== front?.imageUrl ? backView : undefined;
-  // Light garments get a crisper edge and a deeper shadow on a darker card, otherwise white melts into the background.
-  const light = !!color && isLight(color.hex);
   const pct = basePrice != null && compareAtPrice && compareAtPrice > basePrice ? Math.round(100 - (basePrice / compareAtPrice) * 100) : 0;
 
   return (
@@ -100,15 +90,15 @@ export default function CollectionGarmentCard({
         )}
         {color?.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={color.imageUrl} alt={title} loading="lazy" decoding="async" draggable={false} className="absolute inset-0 h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]" style={{ filter: light ? LIGHT_GLOW : DARK_SHADOW }} />
+          <img src={color.imageUrl} alt={title} loading="lazy" decoding="async" draggable={false} className="absolute inset-0 h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]" style={{ filter: GARMENT_GLOW }} />
         )}
         {!color?.imageUrl && front && (
-          <div style={{ filter: light ? LIGHT_GLOW : undefined }} className={`absolute flex items-start justify-start transition duration-500 group-hover:scale-[1.03] ${back ? "left-[4%] top-[6%] h-[68%] w-[68%]" : "inset-[8%]"}`}>
+          <div style={{ filter: GARMENT_GLOW }} className={`absolute flex items-start justify-start transition duration-500 group-hover:scale-[1.03] ${back ? "left-[4%] top-[6%] h-[68%] w-[68%]" : "inset-[8%]"}`}>
             <Mock view={front} design={frontArt} scale={frontScale} />
           </div>
         )}
         {!color?.imageUrl && back && (
-          <div style={{ filter: light ? LIGHT_GLOW : undefined }} className="absolute bottom-[4%] right-[3%] flex h-[68%] w-[68%] items-end justify-end transition duration-500 group-hover:scale-[1.03]">
+          <div style={{ filter: GARMENT_GLOW }} className="absolute bottom-[4%] right-[3%] flex h-[68%] w-[68%] items-end justify-end transition duration-500 group-hover:scale-[1.03]">
             <Mock view={back} design={backArt} scale={backScale} />
           </div>
         )}
