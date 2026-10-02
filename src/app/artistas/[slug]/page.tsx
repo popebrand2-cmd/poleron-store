@@ -10,6 +10,7 @@ import CollectionGarmentsGrid, { type GarmentKind, type GarmentItem } from "@/co
 import { getCollectionMockups } from "@/lib/collection-mockups";
 import { garmentKind, kindDescription, normalizeZones, pickProductForKind } from "@/lib/garments";
 
+const KIND_ORDER: Record<GarmentKind, number> = { polera: 0, poleron: 1, boxy: 2 };
 const KIND_TITLE: Record<GarmentKind, string> = { polera: "Polera", poleron: "Polerón oversize", boxy: "Polerón boxifit" };
 
 export const dynamic = "force-dynamic";
@@ -84,7 +85,9 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
   // garments, with the art printed front and back on the product photos.
   const overlayDesigns = mockupItems.length > 0 ? artist.designs.slice(1) : artist.designs;
   const overlayItems: GarmentItem[] = overlayDesigns.flatMap((d) =>
-    garments.map((p) => ({
+    [...garments]
+      .sort((a, b) => KIND_ORDER[garmentKind(a)] - KIND_ORDER[garmentKind(b)])
+      .map((p) => ({
       key: `${d.id}-${p.id}`,
       kind: garmentKind(p),
       href: `/productos/${p.slug}?diseno=${d.id}`,

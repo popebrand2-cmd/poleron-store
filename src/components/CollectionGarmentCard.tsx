@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { formatCLP } from "@/lib/money";
 import { garmentPhoto } from "@/lib/garment-photo";
@@ -24,6 +24,14 @@ export type GarmentColor = { name: string; hex: string; views: GarmentView[]; im
 // A garment photo with the collection design laid over its print zone. The wrapper hugs the photo
 // (inline-block + a plain <img>), so the zone's percentages line up with the garment exactly.
 function Mock({ view, design, scale = 1 }: { view: GarmentView; design: string; scale?: number }) {
+  // The art stays hidden until the garment photo is there: the first time a photo is cleaned it takes a moment,
+  // and a design floating on its own looks broken.
+  const photo = useRef<HTMLImageElement>(null);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    // A new colour brings a new photo: wait for it again (it may already be in the browser cache).
+    setReady(!!(photo.current?.complete && photo.current.naturalWidth > 0));
+  }, [view.imageUrl]);
   if (!design) {
     // eslint-disable-next-line @next/next/no-img-element
     return <img src={garmentPhoto(view.imageUrl)} alt="" loading="lazy" decoding="async" draggable={false} className="block h-auto max-h-full w-auto max-w-full" />;
@@ -31,9 +39,9 @@ function Mock({ view, design, scale = 1 }: { view: GarmentView; design: string; 
   const w = view.zoneWidthPct * scale;
   const h = view.zoneHeightPct * scale;
   return (
-    <div className="relative inline-block max-w-full leading-[0]">
+    <div className={`relative inline-block max-w-full leading-[0] transition-opacity duration-300 ${ready ? "opacity-100" : "opacity-0"}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={garmentPhoto(view.imageUrl)} alt="" loading="lazy" decoding="async" draggable={false} className="block h-auto max-h-full w-auto max-w-full" />
+      <img ref={photo} onLoad={() => setReady(true)} onError={() => setReady(true)} src={garmentPhoto(view.imageUrl)} alt="" loading="lazy" decoding="async" draggable={false} className="block h-auto max-h-full w-auto max-w-full" />
       <div
         className="absolute"
         style={{
