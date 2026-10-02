@@ -41,6 +41,7 @@ export type ProductFormInitial = {
   description: string;
   basePrice: number;
   compareAtPrice: number | null;
+  badgeText: string;
   active: boolean;
   sizes: SizeFormState[];
   materials: MaterialFormState[];
@@ -74,6 +75,7 @@ export default function ProductForm({ initial }: { initial?: ProductFormInitial 
   const [description, setDescription] = useState(initial?.description ?? "");
   const [basePrice, setBasePrice] = useState(initial?.basePrice ?? 25000);
   const [compareAtPrice, setCompareAtPrice] = useState(initial?.compareAtPrice != null ? String(initial.compareAtPrice) : "");
+  const [badgeText, setBadgeText] = useState(initial?.badgeText ?? "");
   const [active, setActive] = useState(initial?.active ?? true);
   const [sizes, setSizes] = useState<SizeFormState[]>(
     initial?.sizes ?? [
@@ -152,6 +154,7 @@ export default function ProductForm({ initial }: { initial?: ProductFormInitial 
       description,
       basePrice,
       compareAtPrice: compareAtPrice.trim() ? Number(compareAtPrice) : null,
+      badgeText: badgeText.trim(),
       active,
       sizes,
       materials,
@@ -231,6 +234,20 @@ export default function ProductForm({ initial }: { initial?: ProductFormInitial 
             />
             <p className="mt-1 text-xs text-neutral-500">
               Si lo llenas, en la tienda se muestra tachado junto al precio base (ej. Cyber). Bórralo para terminar la oferta.
+            </p>
+          </div>
+          <div className="col-span-2">
+            <label className="mb-1 block text-sm font-medium">Etiqueta en las colecciones (opcional)</label>
+            <input
+              type="text"
+              maxLength={30}
+              value={badgeText}
+              onChange={(e) => setBadgeText(e.target.value)}
+              placeholder="Vacío = automática («Ahorra X%» si hay precio antes de descuento)"
+              className="w-full rounded-md border border-neutral-300 px-3 py-2"
+            />
+            <p className="mt-1 text-xs text-neutral-500">
+              Es la etiqueta roja que aparece arriba a la izquierda de la prenda en las páginas de colección. Escribe tu propio texto (ej. «Ahorra 30%», «Cyber», «Nuevo») para que se muestre siempre.
             </p>
           </div>
           <div className="flex items-center gap-2 pt-6">

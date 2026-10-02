@@ -204,6 +204,7 @@ export default function DesignStudio({ garments, collections, sections }: { garm
         href: "#",
         title: `${g.name} ${designName || "tu diseño"}`,
         description: g.description || kindDescription(g.kind),
+        badge: g.badgeText || undefined,
         frontArt: front?.url ?? "",
         backArt: back?.url ?? "",
         frontScale,

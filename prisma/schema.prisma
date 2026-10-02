@@ -17,6 +17,9 @@ model Product {
   // The crossed-out "before" price shown next to basePrice when this is on sale (e.g. a Cyber
   // promotion). Null = no sale, basePrice shows on its own. Set/cleared from Admin > Productos.
   compareAtPrice Int?
+  // Optional text for the corner badge on the collection cards (e.g. "Ahorra 30%", "Nuevo"). Empty = the badge
+  // is calculated as "Ahorra X%" from compareAtPrice, and not shown when there is no sale.
+  badgeText   String   @default("")
   active      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

@@ -10,6 +10,7 @@ export type GarmentItem = {
   href: string;
   title: string;
   description?: string;
+  badge?: string;
   frontArt?: string;
   backArt?: string;
   frontScale?: number;
@@ -59,6 +60,7 @@ export default function CollectionGarmentsGrid({ items }: { items: GarmentItem[]
             href={i.href}
             title={i.title}
             description={i.description}
+            badge={i.badge}
             frontArt={i.frontArt}
             backArt={i.backArt}
             frontScale={i.frontScale}

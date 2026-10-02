@@ -53,6 +53,7 @@ export default function CollectionGarmentCard({
   href,
   title,
   description,
+  badge,
   frontArt = "",
   backArt = "",
   frontScale = 0.6,
@@ -64,6 +65,8 @@ export default function CollectionGarmentCard({
   href: string;
   title: string;
   description?: string;
+  // Owner-written corner label; empty = "Ahorra X%" from the previous price (none when there is no sale).
+  badge?: string;
   // The art printed on the front / back views (empty = that side stays plain) and how big, relative to the print zone.
   frontArt?: string;
   backArt?: string;
@@ -80,13 +83,14 @@ export default function CollectionGarmentCard({
   // A real back view only: if the "Espalda" photo is just the front photo again, it is not shown as a back.
   const backView = color?.views.find((v) => v.label === "Espalda");
   const back = backView && backView.imageUrl !== front?.imageUrl ? backView : undefined;
+  const badgeLabel = badge?.trim() || "";
   const pct = basePrice != null && compareAtPrice && compareAtPrice > basePrice ? Math.round(100 - (basePrice / compareAtPrice) * 100) : 0;
 
   return (
     <li className="group">
       <Link href={href} className={`relative block aspect-square overflow-hidden rounded-xl bg-[#f1f1f1]`}>
-        {pct > 0 && (
-          <span className="absolute left-3 top-3 z-10 rounded-full bg-[#e5484d] px-3 py-1 text-xs font-bold text-white">Ahorra {pct}%</span>
+        {(badgeLabel || pct > 0) && (
+          <span className="absolute left-3 top-3 z-10 rounded-full bg-[#e5484d] px-3 py-1 text-xs font-bold text-white">{badgeLabel || `Ahorra ${pct}%`}</span>
         )}
         {color?.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element

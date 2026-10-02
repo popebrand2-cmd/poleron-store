@@ -31,6 +31,7 @@ export type StudioGarment = {
   slug: string;
   name: string;
   description: string;
+  badgeText: string;
   basePrice: number;
   compareAtPrice: number | null;
   kind: GarmentKind;
@@ -50,6 +51,7 @@ export async function loadGarments(): Promise<StudioGarment[]> {
       slug: p.slug,
       name: p.name,
       description: p.description,
+      badgeText: p.badgeText,
       basePrice: p.basePrice,
       compareAtPrice: p.compareAtPrice,
       kind: garmentKind(p),
