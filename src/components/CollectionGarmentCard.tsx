@@ -121,7 +121,7 @@ export default function CollectionGarmentCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img key={c.imageUrl} src={c.imageUrl} alt="" aria-hidden="true" decoding="async" className="hidden" />
         ))}
-        <span className="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2 translate-y-2 whitespace-nowrap rounded-full bg-black px-6 py-3 text-sm font-bold text-white opacity-0 shadow-lg transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100">
+        <span className="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2 translate-y-2 whitespace-nowrap rounded-full bg-neon px-6 py-3 text-sm font-bold text-black opacity-0 shadow-[0_6px_18px_rgba(0,0,0,0.45)] ring-1 ring-black/20 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100">
           + Personalizar
         </span>
       </Link>
