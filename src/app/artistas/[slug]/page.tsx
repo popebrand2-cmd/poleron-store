@@ -10,7 +10,7 @@ import CollectionGarmentsGrid, { type GarmentKind, type GarmentItem } from "@/co
 import { getCollectionMockups } from "@/lib/collection-mockups";
 import { garmentKind, kindDescription } from "@/lib/garments";
 
-const KIND_TITLE: Record<GarmentKind, string> = { polera: "Polera", poleron: "Polerón oversize", boxy: "Polerón boxy fit" };
+const KIND_TITLE: Record<GarmentKind, string> = { polera: "Polera", poleron: "Polerón oversize", boxy: "Polerón boxifit" };
 
 export const dynamic = "force-dynamic";
 

@@ -11,10 +11,11 @@ export function garmentKind(p: { name: string; slug: string }): GarmentKind {
   return "polera";
 }
 
-// Shown under the name when the product has no description of its own (no materials or claims invented).
+// Shown under the name when the product has no description of its own. The wording is the owner's own for the
+// polera, applied identically to both polerones (only the garment name changes).
 export function kindDescription(kind: GarmentKind): string {
-  const what = kind === "polera" ? "Polera oversize" : kind === "boxy" ? "Polerón boxy fit" : "Polerón oversize";
-  return `${what}, con tu diseño estampado en frente y/o espalda.`;
+  const what = kind === "polera" ? "Polera oversize" : kind === "boxy" ? "Polerón boxifit" : "Polerón oversize";
+  return `${what} 100% algodón, con tu diseño estampado en frente y/o espalda.`;
 }
 
 export type StudioGarment = {

@@ -19,7 +19,7 @@ export type GarmentItem = {
   colors: GarmentColor[];
 };
 
-const KIND_LABEL: Record<GarmentKind, string> = { polera: "Polera", poleron: "Polerón oversize", boxy: "Boxy fit" };
+const KIND_LABEL: Record<GarmentKind, string> = { polera: "Polera", poleron: "Polerón oversize", boxy: "Boxifit" };
 const KIND_ORDER: GarmentKind[] = ["polera", "poleron", "boxy"];
 
 // Garment type picker over the collection's ready-made pieces. Only types that actually exist in the
