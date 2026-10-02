@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { formatCLP } from "@/lib/money";
+import { garmentPhoto } from "@/lib/garment-photo";
 
 // Deep-green halo (a darker take of the brand green) around every garment, so all cards look the same.
 const GARMENT_GLOW = "drop-shadow(0 0 1px rgba(0,0,0,0.45)) drop-shadow(0 0 9px color-mix(in srgb, var(--neon) 42%, #000)) drop-shadow(0 6px 26px color-mix(in srgb, var(--neon) 34%, #000))";
@@ -23,14 +24,14 @@ export type GarmentColor = { name: string; hex: string; views: GarmentView[]; im
 function Mock({ view, design, scale = 1 }: { view: GarmentView; design: string; scale?: number }) {
   if (!design) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={view.imageUrl} alt="" loading="lazy" decoding="async" draggable={false} className="block h-auto max-h-full w-auto max-w-full" />;
+    return <img src={garmentPhoto(view.imageUrl)} alt="" loading="lazy" decoding="async" draggable={false} className="block h-auto max-h-full w-auto max-w-full" />;
   }
   const w = view.zoneWidthPct * scale;
   const h = view.zoneHeightPct * scale;
   return (
     <div className="relative inline-block max-w-full leading-[0]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={view.imageUrl} alt="" loading="lazy" decoding="async" draggable={false} className="block h-auto max-h-full w-auto max-w-full" />
+      <img src={garmentPhoto(view.imageUrl)} alt="" loading="lazy" decoding="async" draggable={false} className="block h-auto max-h-full w-auto max-w-full" />
       <div
         className="absolute"
         style={{
