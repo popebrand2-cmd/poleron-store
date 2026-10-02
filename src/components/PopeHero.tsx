@@ -40,14 +40,26 @@ export default function PopeHero({
           </div>
         )}
         {/* The usual green brand glow — dialed back while the Cyber photo is showing (full strength
-            would mostly paint over it), left at full strength the rest of the year. */}
+            would mostly paint over it), left at full strength the rest of the year. A second, fainter
+            glow sits near the headline (top-left) so that side of the hero isn't flat black — it was
+            only ever lit on the hoodie's side before. */}
         <div
           aria-hidden="true"
           className="absolute inset-0 -z-10"
           style={{
             background:
-              "radial-gradient(70% 65% at 70% 58%, color-mix(in srgb, var(--neon) 48%, #102200) 0%, color-mix(in srgb, var(--neon) 18%, #102200) 28%, #102200 45%, rgba(16,34,0,0.6) 65%, transparent 85%)",
+              "radial-gradient(70% 65% at 70% 58%, color-mix(in srgb, var(--neon) 48%, #102200) 0%, color-mix(in srgb, var(--neon) 18%, #102200) 28%, #102200 45%, rgba(16,34,0,0.6) 65%, transparent 85%), radial-gradient(45% 50% at 12% 22%, color-mix(in srgb, var(--neon) 20%, transparent) 0%, transparent 70%)",
             opacity: cyberActive ? 0.35 : 1,
+          }}
+        />
+        {/* Faint grain so the glow reads as an atmosphere instead of a flat gradient — same technique
+            used on the Cyber gate/popup, kept subtle enough not to compete with the product photo. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-10 opacity-[0.05]"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
           }}
         />
 

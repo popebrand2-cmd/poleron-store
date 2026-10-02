@@ -10,6 +10,8 @@ import CyberLookbook from "@/components/CyberLookbook";
 import { isCyberActive } from "@/lib/cyber";
 import RealWorks from "@/components/RealWorks";
 import RealVideos from "@/components/RealVideos";
+import ReviewsSection from "@/components/ReviewsSection";
+import InstagramFeed from "@/components/InstagramFeed";
 import HowItWorks from "@/components/preview/HowItWorks";
 import TrustBadgesList from "@/components/edit/TrustBadgesList";
 import FaqList from "@/components/edit/FaqList";
@@ -20,7 +22,7 @@ export const dynamic = "force-dynamic";
 
 
 export default async function Home() {
-  const [products, designCollections, contentItems, siteTextRows] = await Promise.all([
+  const [products, designCollections, contentItems, siteTextRows, reviews] = await Promise.all([
     prisma.product.findMany({
       where: { active: true },
       orderBy: { createdAt: "desc" },
@@ -33,6 +35,7 @@ export default async function Home() {
     }),
     prisma.contentItem.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } }),
     prisma.siteText.findMany(),
+    prisma.review.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } }),
   ]);
   const editorHref = await getEditorHref();
   const collectionsWithDesigns = designCollections.filter((c) => c.designs.length > 0);
@@ -49,6 +52,18 @@ export default async function Home() {
   const lookbookDesigns = designCollections.flatMap((c) =>
     c.designs.map((d) => ({ id: d.id, name: d.name, imageUrl: d.imageUrl, placement: d.placement as "FRONT" | "BACK" })),
   );
+  // Lets a review card link to the real product it's about — never a made-up one.
+  const reviewProducts = products.map((p) => ({ slug: p.slug, name: p.name, imageUrl: p.colors[0]?.views[0]?.imageUrl ?? "" }));
+  const reviewRows = reviews.map((r) => ({
+    id: r.id,
+    customerName: r.customerName,
+    rating: r.rating,
+    text: r.text,
+    photoUrl: r.photoUrl,
+    productSlug: r.productSlug,
+    verified: r.verified,
+    reviewDate: r.reviewDate.toISOString(),
+  }));
 
   const textMap = Object.fromEntries(siteTextRows.map((t) => [t.key, t.value]));
   const t = (key: string) => siteText(textMap, key);
@@ -83,7 +98,7 @@ export default async function Home() {
             id: c.id,
             slug: c.slug,
             name: c.name,
-            imageUrl: c.designs[0].imageUrl,
+            imageUrl: c.photoUrl || c.designs[0].imageUrl,
             category: c.category,
             count: c.designs.length,
           }))}
@@ -131,6 +146,9 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Real customer reviews (hidden until the owner adds real ones) */}
+      <ReviewsSection initialItems={reviewRows} products={reviewProducts} />
+
       <HowItWorks editorHref={editorHref} />
 
       {/* Vertical videos of finished garments, as a hand of cards (hidden until the owner uploads some) */}
@@ -138,6 +156,9 @@ export default async function Home() {
 
       {/* Photos of real, finished garments (hidden until the owner uploads some) */}
       <RealWorks />
+
+      {/* Live Instagram carousel via an owner-connected widget (hidden until one is configured) */}
+      <InstagramFeed />
 
       {/* FAQ */}
       <section className="border-t border-neutral-800 bg-neutral-950">

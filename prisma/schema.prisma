@@ -199,6 +199,24 @@ model ContentItem {
   createdAt DateTime @default(now())
 }
 
+// A real customer review shown on the homepage. Admin-managed (add/edit/delete/reorder from
+// edit mode) — never auto-generated, since a fabricated testimonial attributed to a "customer"
+// would be dishonest. productSlug optionally tags a real Product so the card can link to it;
+// empty means no product tag, never a made-up one.
+model Review {
+  id           String   @id @default(cuid())
+  customerName String   @default("")
+  rating       Int      @default(5) // 1-5
+  text         String   @default("")
+  photoUrl     String   @default("") // the reviewer's own photo, optional
+  productSlug  String   @default("")
+  verified     Boolean  @default(true)
+  reviewDate   DateTime @default(now())
+  sortOrder    Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+}
+
 // A themed group of ready-made designs the customer can pick instead of
 // uploading their own artwork (e.g. "Urbano", "Navidad"). Admin-managed.
 model DesignCollection {
@@ -207,6 +225,9 @@ model DesignCollection {
   name      String
   // Section shown as a tab on the homepage carousel (e.g. "Reguetón", "Anime"); free text, empty = "Otros".
   category  String   @default("")
+  // Photo of the artist / cover of the collection (shown on its page and in the homepage carousel).
+  // Empty = fall back to the first design.
+  photoUrl  String   @default("")
   active    Boolean  @default(true)
   sortOrder Int      @default(0)
   createdAt DateTime @default(now())
@@ -228,6 +249,16 @@ model PresetDesign {
   placement String // "FRONT" | "BACK"
   sortOrder Int     @default(0)
   active    Boolean @default(true)
+
+  // Set by the design studio (Admin > Colecciones > Estudio). imageUrl is the front art (or the only
+  // art); backImageUrl is a separate back art. When empty, the same image is used on both sides.
+  // showFront/showBack decide which sides get printed on the collection's garment cards, and
+  // frontScale/backScale how big the art is relative to each print zone.
+  backImageUrl String  @default("")
+  showFront    Boolean @default(true)
+  showBack     Boolean @default(true)
+  frontScale   Float   @default(0.6)
+  backScale    Float   @default(1)
 }
 
 model OrderItem {

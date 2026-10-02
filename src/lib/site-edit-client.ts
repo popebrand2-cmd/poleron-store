@@ -46,6 +46,41 @@ export async function reorderContentItems(orderedIds: string[]) {
   });
 }
 
+export async function createReview() {
+  const res = await fetch("/api/admin/reviews", { method: "POST" });
+  const data = await res.json();
+  return data.item as {
+    id: string;
+    customerName: string;
+    rating: number;
+    text: string;
+    photoUrl: string;
+    productSlug: string;
+    verified: boolean;
+    reviewDate: string;
+  };
+}
+
+export async function patchReview(id: string, fields: Record<string, string | number | boolean>) {
+  await fetch(`/api/admin/reviews/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(fields),
+  });
+}
+
+export async function deleteReview(id: string) {
+  await fetch(`/api/admin/reviews/${id}`, { method: "DELETE" });
+}
+
+export async function reorderReviews(orderedIds: string[]) {
+  await fetch("/api/admin/reviews/reorder", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ orderedIds }),
+  });
+}
+
 // Videos are big, so this uses XHR to report upload progress.
 export function uploadSiteVideo(file: File, onProgress?: (pct: number) => void): Promise<string> {
   return new Promise((resolve, reject) => {

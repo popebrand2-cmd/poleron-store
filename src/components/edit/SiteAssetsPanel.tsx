@@ -252,6 +252,14 @@ export default function SiteAssetsPanel({ defaultOpen = false }: { defaultOpen?:
           <SettingField k="setting.whatsappNumber" label="Número de WhatsApp (con código de país)" />
           <SettingField k="setting.whatsappMessage" label="Mensaje inicial de WhatsApp" multiline />
         </div>
+        <div className="space-y-3 border-t border-white/10 pt-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-neon">Instagram en vivo</p>
+          <p className="text-[11px] leading-tight text-neutral-400">
+            Crea un widget gratis en snapwidget.com o lightwidget.com, conecta ahí tu cuenta real de Instagram, y pega el
+            enlace de inserción (embed URL) que te dan — se actualiza solo, sin que tengas que subir nada aquí.
+          </p>
+          <SettingField k="setting.instagramWidgetUrl" label="Enlace de inserción del widget" optional placeholder="https://snapwidget.com/embed/123456" />
+        </div>
         <PopupSettings />
       </div>
     </details>

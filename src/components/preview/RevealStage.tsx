@@ -233,8 +233,8 @@ export default function RevealStage({ alt }: { alt: string }) {
         <div role="radiogroup" aria-label="Color del polerón" className="glass-dark flex gap-1 rounded-full p-1.5">
           {variants.map((v) => {
             const on = v.id === active;
-            const cls = `flex items-center gap-2 rounded-full px-4 py-2 font-display text-2xl uppercase leading-none tracking-wide transition-colors ${
-              on ? "glass-neon text-black" : "text-white hover:text-neon"
+            const cls = `flex items-center gap-2 rounded-full px-4 py-2 font-display text-2xl uppercase leading-none tracking-wide transition ${
+              on ? "glass-neon text-black" : "text-white hover:text-neon hover:scale-105 active:scale-95"
             }`;
             const swatch = (
               <span aria-hidden="true" className="h-5 w-5 rounded-full border border-white/40" style={{ background: v.swatch }} />

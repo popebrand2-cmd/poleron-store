@@ -16,6 +16,7 @@ type Collection = {
   name: string;
   active: boolean;
   category: string;
+  photoUrl: string;
   designs: Design[];
 };
 
@@ -40,6 +41,37 @@ export default function CollectionEditor({ collection, categories }: { collectio
       router.refresh();
     } finally {
       setSavingCategory(false);
+    }
+  }
+
+  const [photoUrl, setPhotoUrl] = useState(collection.photoUrl);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+
+  async function savePhoto(file: File | null) {
+    setPhotoBusy(true);
+    setPhotoError("");
+    try {
+      let url = "";
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const up = await fetch("/api/upload", { method: "POST", body: formData });
+        const data = await up.json();
+        if (!up.ok || !data.url) throw new Error(data.error ?? "No se pudo subir la foto.");
+        url = data.url;
+      }
+      await fetch(`/api/admin/collections/${collection.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photoUrl: url }),
+      });
+      setPhotoUrl(url);
+      router.refresh();
+    } catch (e) {
+      setPhotoError(e instanceof Error ? e.message : "No se pudo guardar la foto.");
+    } finally {
+      setPhotoBusy(false);
     }
   }
 
@@ -125,6 +157,41 @@ export default function CollectionEditor({ collection, categories }: { collectio
           <input type="checkbox" checked={active} disabled={savingActive} onChange={toggleActive} />
           Colección visible para clientes
         </label>
+      </div>
+
+      <div className="space-y-2 rounded-xl border border-neutral-200 bg-white p-4">
+        <label className="block text-sm font-medium">Foto del artista</label>
+        <p className="text-sm text-neutral-500">
+          Es la imagen grande que se ve arriba en la página de la colección y en el carrusel de la portada. Si no subes ninguna, se usa el primer diseño.
+        </p>
+        <div className="flex items-center gap-4">
+          {photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={photoUrl} alt="Foto del artista" className="h-28 w-20 rounded-lg object-cover" />
+          ) : (
+            <div className="flex h-28 w-20 items-center justify-center rounded-lg border border-dashed border-neutral-300 text-xs text-neutral-400">Sin foto</div>
+          )}
+          <div className="flex flex-col items-start gap-2">
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              disabled={photoBusy}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                e.target.value = "";
+                if (f) savePhoto(f);
+              }}
+              className="text-sm"
+            />
+            {photoUrl && (
+              <button type="button" disabled={photoBusy} onClick={() => savePhoto(null)} className="text-xs text-neutral-500 underline">
+                Quitar foto
+              </button>
+            )}
+            {photoBusy && <span className="text-xs text-neutral-500">Guardando…</span>}
+            {photoError && <span className="text-xs text-red-600">{photoError}</span>}
+          </div>
+        </div>
       </div>
 
       <div className="space-y-2 rounded-xl border border-neutral-200 bg-white p-4">

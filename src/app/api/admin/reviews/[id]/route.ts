@@ -3,10 +3,14 @@ import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 
 const updateSchema = z.object({
-  name: z.string().min(1).optional(),
-  active: z.boolean().optional(),
-  category: z.string().trim().max(40).optional(),
+  customerName: z.string().optional(),
+  rating: z.number().int().min(1).max(5).optional(),
+  text: z.string().optional(),
   photoUrl: z.string().optional(),
+  productSlug: z.string().optional(),
+  verified: z.boolean().optional(),
+  reviewDate: z.string().optional(),
+  active: z.boolean().optional(),
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -17,12 +21,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Datos inválidos." }, { status: 400 });
   }
 
-  await prisma.designCollection.update({ where: { id }, data: parsed.data });
+  const { reviewDate, ...rest } = parsed.data;
+  await prisma.review.update({
+    where: { id },
+    data: { ...rest, ...(reviewDate ? { reviewDate: new Date(reviewDate) } : {}) },
+  });
   return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  await prisma.designCollection.delete({ where: { id } });
+  await prisma.review.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }

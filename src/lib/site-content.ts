@@ -92,6 +92,8 @@ export const SITE_TEXT_DEFAULTS: Record<string, string> = {
   "artist.catalogTitle": "Catálogo de diseños",
   "artist.catalogText": "Elige un diseño y personalízalo en tu prenda: muévelo, cámbiale el tamaño y mira cómo queda antes de comprar.",
   "artist.designCta": "Personalizar",
+  "artist.garmentsTitle": "Prendas de la colección",
+  "artist.garmentsText": "Así queda este diseño en nuestros polerones y poleras, por delante y por detrás. Elige una y personalízala a tu medida.",
 
   "info.production": "Cada prenda se confecciona bajo pedido con tu diseño.",
   "info.lead": "",
@@ -133,6 +135,9 @@ export const SITE_TEXT_DEFAULTS: Record<string, string> = {
   "works.eyebrow": "Trabajos reales",
   "works.heading": "Hechos por POPE",
   "works.subtext": "Prendas que ya fueron confeccionadas para nuestros clientes.",
+  "reviews.eyebrow": "Lo que dicen",
+  "reviews.heading": "Reseñas reales",
+  "setting.instagramWidgetUrl": "",
   "popup.enabled": "0",
   "popup.delay": "4",
   "popup.link": "/#tienda",

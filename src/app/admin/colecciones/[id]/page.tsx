@@ -33,6 +33,7 @@ export default async function AdminCollectionPage({ params }: { params: Promise<
           name: collection.name,
           active: collection.active,
           category: collection.category,
+          photoUrl: collection.photoUrl,
           designs: collection.designs.map((d) => ({
             id: d.id,
             name: d.name,

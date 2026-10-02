@@ -28,7 +28,7 @@ export default function HeroHeadline() {
       <span className="block">
         {editMode ? <EditableText value={line1} siteKey="hero.line1" /> : <Words text={line1} start={1.1} />}
       </span>
-      <span className="block text-neon">
+      <span className="pope-headline-glow block text-neon">
         {editMode ? <EditableText value={line2} siteKey="hero.line2" /> : <Words text={line2} start={1.4} />}
       </span>
     </h1>

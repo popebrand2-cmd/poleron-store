@@ -6,6 +6,11 @@ const designSchema = z.object({
   name: z.string().min(1),
   imageUrl: z.string().min(1),
   placement: z.enum(["FRONT", "BACK"]),
+  backImageUrl: z.string().default(""),
+  showFront: z.boolean().default(true),
+  showBack: z.boolean().default(true),
+  frontScale: z.number().min(0.1).max(1.5).default(0.6),
+  backScale: z.number().min(0.1).max(1.5).default(1),
 });
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -29,6 +34,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       name: data.name,
       imageUrl: data.imageUrl,
       placement: data.placement,
+      backImageUrl: data.backImageUrl,
+      showFront: data.showFront,
+      showBack: data.showBack,
+      frontScale: data.frontScale,
+      backScale: data.backScale,
       sortOrder: count,
     },
   });

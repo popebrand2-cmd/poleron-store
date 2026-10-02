@@ -192,6 +192,13 @@ h1, h2, h3 {
 @media (prefers-reduced-motion: reduce) {
   .cyber-cta { animation: none; opacity: 1; box-shadow: none; }
 }
+/* Soft neon bloom behind the accent line of the hero headline — a tight glow plus a wider, fainter
+   one so it reads as lit rather than just colored. */
+.pope-headline-glow {
+  text-shadow:
+    0 0 30px color-mix(in srgb, var(--neon) 55%, transparent),
+    0 0 80px color-mix(in srgb, var(--neon) 25%, transparent);
+}
 @keyframes popeBgText { from { transform: translateY(35%); opacity: 0; } to { transform: none; opacity: 1; } }
 .pope-bgtext { animation: popeBgText 1s cubic-bezier(0.16, 1, 0.3, 1) 0.9s both; }
 @keyframes popeNudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(6px); } }

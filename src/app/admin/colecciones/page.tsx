@@ -20,6 +20,10 @@ export default async function AdminCollectionsPage() {
         <AdminNav current="/admin/colecciones" />
       </div>
 
+      <Link href="/admin/colecciones/estudio" className="mb-6 inline-flex items-center gap-2 rounded-full bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white">
+        Estudio de diseños: subir, quitar fondo y publicar rápido →
+      </Link>
+
       <p className="mb-6 max-w-2xl text-sm text-neutral-500">
         Cada colección es un artista o tema (ej. &quot;Karol G&quot;, &quot;Navidad&quot;) y se agrupa en una <strong>sección</strong> (ej. &quot;Reguetón&quot;, &quot;Anime&quot;) que aparece como pestaña en la página principal. Sus diseños predeterminados son los que el cliente puede elegir
         en el personalizador en vez de subir su propio diseño. Los diseños marcados &quot;Adelante&quot; dejan
