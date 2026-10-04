@@ -5,7 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { uploadsDir } from "@/lib/storage";
 import { garmentKind, kindDescription, pickProductForKind } from "@/lib/garments";
 import { normalizeZones } from "@/lib/garments-server";
-import type { MockupColor } from "@/lib/collection-mockups";
+import { getCollectionMockups, type MockupColor } from "@/lib/collection-mockups";
+import { getEditorHref } from "@/lib/editor-product";
 import type { GarmentItem, GarmentKind } from "@/components/CollectionGarmentsGrid";
 
 export const KIND_ORDER: Record<GarmentKind, number> = { polera: 0, poleron: 1, boxy: 2 };
@@ -113,6 +114,41 @@ export function buildArtistItems(opts: {
       })),
   );
   return [...mockupItems, ...overlayItems];
+}
+
+// The ready-made garments of the active collections (design printed front and back), for the homepage and the product
+// page. Only collections with a finished mockup or a cut-out design appear — a full poster laid on a shirt looks pasted on.
+export async function loadShowcaseItems(limit = 8): Promise<GarmentItem[]> {
+  const [collections, catalog, editorHref] = await Promise.all([
+    prisma.designCollection.findMany({
+      where: { active: true },
+      orderBy: { sortOrder: "asc" },
+      include: { designs: { where: { active: true }, orderBy: { sortOrder: "asc" } } },
+    }),
+    loadGarmentCatalog(),
+    getEditorHref(),
+  ]);
+  const items = await Promise.all(
+    collections
+      .filter((c) => c.designs.length > 0)
+      .map(async (c) => {
+        const mockups = await getCollectionMockups(c.slug);
+        const cutOut = await Promise.all(c.designs.map((d) => isCutOutDesign(d.imageUrl)));
+        const designs = c.designs.filter((_, i) => cutOut[i]);
+        if (designs.length === 0 && Object.keys(mockups).length === 0) return [];
+        return buildArtistItems({
+          artistId: c.id,
+          artistName: c.name,
+          designs,
+          coverDesignId: c.designs[0].id,
+          garments: catalog.garments,
+          products: catalog.products,
+          mockups,
+          editorHref,
+        });
+      }),
+  );
+  return items.flat().slice(0, limit);
 }
 
 // The designs of a collection that should get garment cards next to its finished mockups: the cut-out ones only (a full

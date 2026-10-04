@@ -18,8 +18,7 @@ import HowItWorks from "@/components/preview/HowItWorks";
 import TrustBadgesList from "@/components/edit/TrustBadgesList";
 import FaqList from "@/components/edit/FaqList";
 import CollectionGarmentsGrid from "@/components/CollectionGarmentsGrid";
-import { getCollectionMockups } from "@/lib/collection-mockups";
-import { buildArtistItems, isCutOutDesign, loadGarmentCatalog } from "@/lib/collection-items";
+import { loadShowcaseItems } from "@/lib/collection-items";
 import { getEditorHref } from "@/lib/editor-product";
 import { siteText, CONTENT_DEFAULTS, type ContentSection } from "@/lib/site-content";
 
@@ -49,31 +48,8 @@ export default async function Home() {
   const collectionsWithDesigns = designCollections.filter((c) => c.designs.length > 0);
 
   // The garments of the collections, ready-made (design printed front and back), right under the hero: the same cards as
-  // the collection pages. Only collections with a finished mockup or a cut-out design (transparent background) appear —
-  // a full poster laid on a shirt looks pasted on.
-  const catalog = await loadGarmentCatalog();
-  const homeItems = (
-    await Promise.all(
-      collectionsWithDesigns.map(async (c) => {
-        const mockups = await getCollectionMockups(c.slug);
-        const cutOut = await Promise.all(c.designs.map((d) => isCutOutDesign(d.imageUrl)));
-        const designs = c.designs.filter((_, i) => cutOut[i]);
-        if (designs.length === 0 && Object.keys(mockups).length === 0) return [];
-        return buildArtistItems({
-          artistId: c.id,
-          artistName: c.name,
-          designs,
-          coverDesignId: c.designs[0].id,
-          garments: catalog.garments,
-          products: catalog.products,
-          mockups,
-          editorHref,
-        });
-      }),
-    )
-  )
-    .flat()
-    .slice(0, 8);
+  // the collection pages.
+  const homeItems = await loadShowcaseItems(8);
   const cyberProducts = products.map((p) => ({ id: p.id, slug: p.slug, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice }));
   const cyberActive = isCyberActive(cyberProducts);
   // The Cyber lookbook links each garment to a REAL product/garment type it actually matches — a tee
