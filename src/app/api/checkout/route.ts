@@ -6,6 +6,7 @@ import path from "path";
 import { prisma } from "@/lib/prisma";
 import { uploadsDir } from "@/lib/storage";
 import { createMercadoPagoPreference, isMercadoPagoConfigured } from "@/lib/mercadopago";
+import { deliveryCost } from "@/lib/shipping-rules";
 
 const placementSchema = z.object({
   designUrl: z.string(),
@@ -118,13 +119,14 @@ export async function POST(request: Request) {
 
   // Shipping cost is always looked up server-side — never trust a
   // client-sent amount here either.
+  const itemsTotal = orderItemsData.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
   let shippingCost = 0;
   if (data.shippingMethod === "DELIVERY") {
     const rate = await prisma.shippingComunaRate.findUnique({ where: { comuna: data.shippingComuna } });
     if (!rate) {
       return NextResponse.json({ error: "Esa comuna no tiene envío configurado." }, { status: 409 });
     }
-    shippingCost = rate.priceCLP;
+    shippingCost = deliveryCost(itemsTotal, rate);
   } else {
     const settings = await prisma.storeSettings.findUnique({ where: { id: "singleton" } });
     if (!settings?.pickupEnabled) {
@@ -132,7 +134,6 @@ export async function POST(request: Request) {
     }
   }
 
-  const itemsTotal = orderItemsData.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
   const totalAmount = itemsTotal + shippingCost;
 
   const order = await prisma.$transaction(async (tx) => {

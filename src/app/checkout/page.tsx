@@ -7,6 +7,7 @@ import { once, trackEvent } from "@/lib/track";
 import { VatNote } from "@/components/ProductInfo";
 import { CHILE_COMUNAS } from "@/lib/chile-comunas";
 import ComunaCombobox from "@/components/ComunaCombobox";
+import { deliveryCost, FREE_SHIPPING_MIN } from "@/lib/shipping-rules";
 
 type ShippingRate = { region: string; comuna: string; priceCLP: number };
 type ShippingInfo = {
@@ -68,7 +69,8 @@ export default function CheckoutPage() {
   const addressComplete = Boolean(matchedRate && calle.trim() && numero.trim());
 
   const subtotal = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
-  const shippingCost = method === "PICKUP" ? 0 : addressComplete ? matchedRate!.priceCLP : null;
+  const shippingCost = method === "PICKUP" ? 0 : addressComplete ? deliveryCost(subtotal, matchedRate!) : null;
+  const freeByAmount = method === "DELIVERY" && matchedRate != null && shippingCost === 0 && matchedRate.priceCLP > 0;
   const total = subtotal + (shippingCost ?? 0);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -327,9 +329,14 @@ export default function CheckoutPage() {
                 ? "Gratis"
                 : shippingCost === null
                   ? "Completa tu dirección"
-                  : formatCLP(shippingCost)}
+                  : shippingCost === 0
+                    ? "Gratis"
+                    : formatCLP(shippingCost)}
             </p>
           </div>
+          {freeByAmount && (
+            <p className="text-xs font-semibold text-green-700">Envío gratis por compras sobre {formatCLP(FREE_SHIPPING_MIN)} en la Región Metropolitana.</p>
+          )}
           <div className="flex items-center justify-between pt-1 font-semibold">
             <p>Total</p>
             <p>{formatCLP(total)}</p>

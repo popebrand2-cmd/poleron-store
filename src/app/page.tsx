@@ -7,7 +7,7 @@ import Txt from "@/components/edit/Txt";
 import PopeHero from "@/components/PopeHero";
 import CyberGate from "@/components/CyberGate";
 import CyberLookbook from "@/components/CyberLookbook";
-import { isCyberActive } from "@/lib/cyber";
+import { isCyberActive, getCyberSaleItems } from "@/lib/cyber";
 import RealWorks from "@/components/RealWorks";
 import RealVideos from "@/components/RealVideos";
 import ReviewsSection from "@/components/ReviewsSection";
@@ -76,7 +76,7 @@ export default async function Home() {
 
   return (
     <main>
-      <CyberGate products={cyberProducts} active={cyberActive} />
+      <CyberGate active={cyberActive} />
 
       {/* While the Cyber campaign runs, this interactive lookbook IS the hero — the usual hoodie hero
           just hides (hidden, not removed: PopeHero renders itself again the moment isCyberActive is
@@ -87,29 +87,23 @@ export default async function Home() {
         teeProduct={toLookbookProduct(lookbookTee)}
         hoodieProduct={toLookbookProduct(lookbookHoodie)}
         designs={lookbookDesigns}
+        sale={getCyberSaleItems(cyberProducts)
+          .slice(0, 3)
+          .map((p) => ({ id: p.id, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice as number }))}
       />
 
       <PopeHero editorHref={editorHref} cyberActive={cyberActive} hidden={cyberActive} />
 
-      {/* Artist collections: 3D carousel (each card opens its own catalog page) */}
-      {collectionsWithDesigns.length > 0 && (
-        <CollectionsShowcase
-          artists={collectionsWithDesigns.map((c) => ({
-            id: c.id,
-            slug: c.slug,
-            name: c.name,
-            imageUrl: c.photoUrl || c.designs[0].imageUrl,
-            category: c.category,
-            count: c.designs.length,
-          }))}
-          eyebrow={<EditableText value={t("collections.eyebrow")} siteKey="collections.eyebrow" as="span" />}
-          heading={<EditableText value={t("collections.heading")} siteKey="collections.heading" as="span" />}
-          ctaLabel={<Txt k="collections.cta" />}
-        />
-      )}
+      {/* Trust right under the hero (shipping, secure payment, guarantee) — before the visitor has to scroll
+          to doubt anything. Same editable badges that used to sit at the very bottom. */}
+      <section className="border-y border-neutral-800 bg-neutral-950">
+        <div className="mx-auto max-w-6xl px-6 py-7">
+          <TrustBadgesList initialItems={itemsFor("trustBadges")} />
+        </div>
+      </section>
 
-      {/* Featured */}
-      <section id="tienda" className="bg-black">
+      {/* Featured: the base garments with their price come first — this is what is being sold */}
+      <section id="tienda" className="scroll-mt-24 bg-black">
         <div className="mx-auto max-w-6xl px-6 py-16">
           <div className="mb-10 text-center">
             <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-neon">
@@ -146,6 +140,23 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Artist collections: 3D carousel (each card opens its own catalog page) */}
+      {collectionsWithDesigns.length > 0 && (
+        <CollectionsShowcase
+          artists={collectionsWithDesigns.map((c) => ({
+            id: c.id,
+            slug: c.slug,
+            name: c.name,
+            imageUrl: c.photoUrl || c.designs[0].imageUrl,
+            category: c.category,
+            count: c.designs.length,
+          }))}
+          eyebrow={<EditableText value={t("collections.eyebrow")} siteKey="collections.eyebrow" as="span" />}
+          heading={<EditableText value={t("collections.heading")} siteKey="collections.heading" as="span" />}
+          ctaLabel={<Txt k="collections.cta" />}
+        />
+      )}
+
       {/* Real customer reviews (hidden until the owner adds real ones) */}
       <ReviewsSection initialItems={reviewRows} products={reviewProducts} />
 
@@ -177,12 +188,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Trust badges */}
-      <section className="border-t border-neutral-800 bg-black">
-        <div className="mx-auto max-w-6xl px-6 py-12">
-          <TrustBadgesList initialItems={itemsFor("trustBadges")} />
-        </div>
-      </section>
     </main>
   );
 }

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useCartStore } from "@/lib/cart-store";
 import { formatCLP } from "@/lib/money";
 import { VatNote } from "@/components/ProductInfo";
+import { FREE_SHIPPING_MIN } from "@/lib/shipping-rules";
 
 export default function CartPage() {
   const { items, removeItem, setQuantity } = useCartStore();
@@ -14,6 +15,7 @@ export default function CartPage() {
   if (!mounted) return null;
 
   const subtotal = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
+  const remaining = Math.max(0, FREE_SHIPPING_MIN - subtotal);
 
   if (items.length === 0) {
     return (
@@ -83,7 +85,21 @@ export default function CartPage() {
         <p className="text-lg font-semibold">Subtotal</p>
         <p className="text-lg font-semibold">{formatCLP(subtotal)}</p>
       </div>
-      <p className="mt-1 text-sm text-neutral-500">El costo de envío se calcula en el siguiente paso, según tu comuna.</p>
+      <div className="mt-4 rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+        <p className="text-sm font-semibold">
+          {remaining > 0 ? (
+            <>
+              Te faltan <span className="text-green-700">{formatCLP(remaining)}</span> para el envío gratis en la Región Metropolitana
+            </>
+          ) : (
+            <span className="text-green-700">🎉 ¡Tienes envío gratis en la Región Metropolitana!</span>
+          )}
+        </p>
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-neutral-200" role="progressbar" aria-valuemin={0} aria-valuemax={FREE_SHIPPING_MIN} aria-valuenow={Math.min(subtotal, FREE_SHIPPING_MIN)}>
+          <div className="h-full rounded-full bg-neon transition-all duration-500 motion-reduce:transition-none" style={{ width: `${Math.min(100, (subtotal / FREE_SHIPPING_MIN) * 100)}%` }} />
+        </div>
+        <p className="mt-1.5 text-xs text-neutral-500">Retiro en tienda siempre gratis. Para otras comunas, el costo se calcula en el siguiente paso.</p>
+      </div>
       <VatNote className="mt-1" />
 
       <Link

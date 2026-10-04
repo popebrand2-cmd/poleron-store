@@ -3,6 +3,8 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import Txt from "@/components/edit/Txt";
+import { formatCLP } from "@/lib/money";
+import { FREE_SHIPPING_MIN } from "@/lib/shipping-rules";
 
 export type LookbookProduct = { slug: string; colors: { name: string; hex: string }[] };
 export type LookbookDesign = { id: string; name: string; imageUrl: string; placement: "FRONT" | "BACK" };
@@ -263,12 +265,14 @@ export default function CyberLookbook({
   teeProduct,
   hoodieProduct,
   designs,
+  sale,
 }: {
   active: boolean;
   editorHref: string;
   teeProduct: LookbookProduct | null;
   hoodieProduct: LookbookProduct | null;
   designs: LookbookDesign[];
+  sale: { id: string; name: string; basePrice: number; compareAtPrice: number }[];
 }) {
   const [openId, setOpenId] = useState<string | null>(null);
   const uid = useId();
@@ -315,10 +319,36 @@ export default function CyberLookbook({
         <Txt k="lookbook.subtext" as="span" />
       </p>
 
-      <div className="mt-6">
+      {/* The offer itself, in the first screen: every sale price with the one it replaces, the deadline and
+          the free-shipping rule — nobody should have to scroll to find out what the Cyber costs. */}
+      {sale.length > 0 && (
+        <div className="mt-5 max-w-sm">
+          <ul className="space-y-1.5">
+            {sale.map((p) => (
+              <li key={p.id} className="flex items-baseline gap-2.5">
+                <span className="w-36 shrink-0 text-sm font-semibold text-neutral-200">{p.name}</span>
+                <span className="font-display text-3xl font-bold leading-none text-neon">{formatCLP(p.basePrice)}</span>
+                <span className="text-sm text-neutral-400 line-through">{formatCLP(p.compareAtPrice)}</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2.5 text-xs text-neutral-300">
+            Envío gratis desde {formatCLP(FREE_SHIPPING_MIN)} en la Región Metropolitana · <Txt k="cyber.until" as="span" />
+          </p>
+        </div>
+      )}
+
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <a
+          href="#tienda"
+          className="inline-flex min-h-12 items-center gap-2 rounded-full bg-neon px-7 text-sm font-bold uppercase tracking-wide text-black transition hover:brightness-90"
+        >
+          <Txt k="cyber.stripCta" as="span" />
+          <span aria-hidden="true">↓</span>
+        </a>
         <Link
           href={editorHref}
-          className="inline-flex min-h-12 items-center gap-2 rounded-full bg-neon px-7 text-sm font-bold uppercase tracking-wide text-black transition hover:brightness-90"
+          className="inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-white/60 px-6 text-sm font-bold uppercase tracking-wide text-white transition hover:border-neon hover:text-neon"
         >
           <Txt k="lookbook.cta" as="span" />
           <span aria-hidden="true">→</span>

@@ -7,6 +7,8 @@ import MockupEditor, { type MockupEditorHandle, type MockupView, type PresetPosi
 import TryOnEditor from "./TryOnEditor";
 import CollectionPicker from "./CollectionPicker";
 import ProductInfo, { VatNote } from "./ProductInfo";
+import CyberCountdown from "./CyberCountdown";
+import { CYBER_ENDS_AT } from "@/lib/cyber";
 import { useCartStore } from "@/lib/cart-store";
 import { formatCLP } from "@/lib/money";
 import { trackEvent } from "@/lib/track";
@@ -222,7 +224,8 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     if (snapshot) setTryOnSnapshot(snapshot);
   }
 
-  async function handleAddToCart() {
+  // `destination`: the cart (default) or straight to the checkout for "Comprar ahora".
+  async function handleAddToCart(destination: "/carrito" | "/checkout" = "/carrito") {
     if (addingRef.current) return;
     if (product.sizes.length > 0 && !size) {
       setSizeMissing(true);
@@ -287,7 +290,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
         value: unitPrice * quantity,
         currency: "CLP",
       });
-      router.push("/carrito");
+      router.push(destination);
     } catch (e) {
       // A plain Error we (or MockupEditor's getPlacement) threw on purpose is already in Spanish
       // and safe to show; anything else (a native browser exception) gets a generic fallback
@@ -302,6 +305,10 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
       setAdding(false);
     }
   }
+
+  // The Cyber countdown only shows while the sale really runs: a marked-down price and a campaign that
+  // has not ended (the countdown component itself renders nothing after the end date).
+  const onCyberSale = product.compareAtPrice != null && product.compareAtPrice > product.basePrice && Date.now() <= CYBER_ENDS_AT.getTime();
 
   const hasMeasurements = product.sizes.some((s) => s.chestCm || s.lengthCm || s.sleeveCm);
 
@@ -341,6 +348,11 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
             </>
           )}
         </p>
+        {onCyberSale && (
+          <p className="mt-1.5 inline-flex items-center gap-2 rounded-full bg-red-600/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-red-700">
+            🔥 La oferta Cyber termina en <CyberCountdown className="font-display text-base leading-none" />
+          </p>
+        )}
         <VatNote />
         {editing && (
           <p className="mt-3 rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
@@ -570,12 +582,24 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
 
         <button
           type="button"
-          onClick={handleAddToCart}
+          onClick={() => handleAddToCart()}
           disabled={adding}
           className="mt-5 hidden min-h-12 w-full rounded-full bg-neon px-6 py-3 text-sm font-bold uppercase tracking-wide text-black transition hover:brightness-90 disabled:opacity-50 lg:block"
         >
           {adding ? "Agregando..." : editing ? "Guardar cambios" : "Agregar al carrito"}
         </button>
+
+        {/* Straight to the payment step: adds this piece and skips the cart page */}
+        {!editing && (
+          <button
+            type="button"
+            onClick={() => handleAddToCart("/checkout")}
+            disabled={adding}
+            className="mt-3 min-h-12 w-full rounded-full bg-black px-6 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-neutral-800 disabled:opacity-50"
+          >
+            Comprar ahora
+          </button>
+        )}
 
         <button
           type="button"
@@ -606,14 +630,36 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
               {formatCLP(unitPrice)}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleAddToCart}
-            disabled={adding}
-            className="min-h-12 flex-1 rounded-full bg-neon px-4 py-2.5 text-sm font-bold uppercase tracking-wide text-black transition active:brightness-90 disabled:opacity-50"
-          >
-            {adding ? "Agregando..." : editing ? "Guardar cambios" : "Agregar al carrito"}
-          </button>
+          {editing ? (
+            <button
+              type="button"
+              onClick={() => handleAddToCart()}
+              disabled={adding}
+              className="min-h-12 flex-1 rounded-full bg-neon px-4 py-2.5 text-sm font-bold uppercase tracking-wide text-black transition active:brightness-90 disabled:opacity-50"
+            >
+              {adding ? "Guardando..." : "Guardar cambios"}
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => handleAddToCart()}
+                disabled={adding}
+                aria-label="Agregar al carrito"
+                className="min-h-12 shrink-0 rounded-full border-2 border-neon px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-neon transition active:bg-neon active:text-black disabled:opacity-50"
+              >
+                Al carrito
+              </button>
+              <button
+                type="button"
+                onClick={() => handleAddToCart("/checkout")}
+                disabled={adding}
+                className="min-h-12 flex-1 rounded-full bg-neon px-3 py-2.5 text-sm font-bold uppercase tracking-wide text-black transition active:brightness-90 disabled:opacity-50"
+              >
+                {adding ? "Agregando..." : "Comprar ahora"}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

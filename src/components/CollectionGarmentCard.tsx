@@ -72,7 +72,10 @@ export default function CollectionGarmentCard({
   basePrice,
   compareAtPrice,
   colors,
+  preferColor = "",
 }: {
+  // Color picked in the collection's color filter: the card opens on it (when it has it).
+  preferColor?: string;
   href: string;
   title: string;
   description?: string;
@@ -89,6 +92,10 @@ export default function CollectionGarmentCard({
 }) {
   const [i, setI] = useState(0);
   const [peek, setPeek] = useState<number | null>(null);
+  useEffect(() => {
+    const idx = preferColor ? colors.findIndex((c) => c.name === preferColor) : -1;
+    setI(idx >= 0 ? idx : 0);
+  }, [preferColor, colors]);
   const color = colors[peek ?? i] ?? colors[0];
   const front = color?.views.find((v) => v.label === "Frente") ?? color?.views[0];
   // A real back view only: if the "Espalda" photo is just the front photo again, it is not shown as a back.

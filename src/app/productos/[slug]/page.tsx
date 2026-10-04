@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { thumb } from "@/lib/thumb";
+import { formatCLP } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import ProductPersonalizer from "@/components/ProductPersonalizer";
 
@@ -29,6 +32,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   });
 
   if (!product || !product.active || product.colors.length === 0) notFound();
+
+  // "Completa tu look": the store's other garments, each one a link to its own personalizer (a design is
+  // placed per garment, so this is a shortcut to the next piece, not a one-click add).
+  const others = await prisma.product.findMany({
+    where: { active: true, id: { not: product.id }, colors: { some: {} } },
+    orderBy: { createdAt: "desc" },
+    take: 3,
+    include: { colors: { orderBy: { sortOrder: "asc" }, take: 1, include: { views: { orderBy: { sortOrder: "asc" }, take: 1 } } } },
+  });
 
   return (
     <main className="bg-black px-6 py-10">
@@ -66,6 +78,39 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           })),
         }}
       />
+      {others.length > 0 && (
+        <section aria-label="Completa tu look" className="mt-12 border-t border-neutral-200 pt-8">
+          <h2 className="font-display text-3xl font-bold uppercase leading-none text-black">Completa tu look</h2>
+          <p className="mt-1 text-sm text-neutral-600">Otras prendas POPE para personalizar con tu diseño.</p>
+          <ul className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            {others.map((o) => {
+              const img = o.colors[0]?.views[0]?.imageUrl;
+              const sale = o.compareAtPrice != null && o.compareAtPrice > o.basePrice;
+              return (
+                <li key={o.id}>
+                  <Link href={`/productos/${o.slug}`} className="group flex items-center gap-4 rounded-xl border border-neutral-200 p-3 transition hover:border-black">
+                    <span className="block h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-[#f1f1f1]">
+                      {img && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={thumb(img, 256)} alt={o.name} loading="lazy" className="h-full w-full object-contain transition group-hover:scale-105" />
+                      )}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-bold uppercase tracking-tight text-black">{o.name}</span>
+                      <span className="mt-0.5 flex items-baseline gap-2 text-sm">
+                        <span className={`font-semibold ${sale ? "text-[#e5484d]" : "text-black"}`}>{formatCLP(o.basePrice)}</span>
+                        {sale && <span className="text-xs text-neutral-400 line-through">{formatCLP(o.compareAtPrice as number)}</span>}
+                      </span>
+                      <span className="mt-1 block text-xs font-bold uppercase tracking-wide text-[#0b6b25]">Personalizar →</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       {product.description && <p className="mt-12 max-w-2xl text-neutral-600">{product.description}</p>}
     </div>
     </main>
