@@ -91,6 +91,9 @@ const PRESET_POSITIONS: Record<PresetPosition | "back", { xPct: number; yPct: nu
 export type MockupEditorHandle = {
   getPlacement: () => Promise<ViewPlacement | null>;
   getSnapshot: () => string | null;
+  // The customer's design (image and text) alone, on a transparent canvas the size of the garment photo — what the 3D view
+  // projects onto the 3D garment. Null when nothing is placed yet.
+  getDesignLayer: () => string | null;
   applyPresetDesign: (url: string, position: PresetPosition | "back") => boolean;
   // True when the design still has an opaque white background AND the garment itself is white —
   // the print would be essentially invisible, so the caller should block checkout on this view.
@@ -1104,6 +1107,24 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         const canvas = fabricCanvasRef.current;
         if (!canvas) return null;
         return canvas.toDataURL({ format: "png", multiplier: 1 });
+      },
+      getDesignLayer() {
+        const canvas = fabricCanvasRef.current;
+        if (!canvas || (!designRef.current && !textRef.current)) return null;
+        const bg = canvas.getObjects().find((o) => getRole(o) === "background");
+        if (textRef.current?.isEditing) textRef.current.exitEditing();
+        canvas.discardActiveObject();
+        if (bg) bg.visible = false;
+        // Re-rendered from the original design pixels at a higher multiplier, so it stays sharp once wrapped on the 3D garment.
+        const multiplier = Math.min(4, Math.max(1, 1600 / (canvas.getWidth() || 1)));
+        let url: string | null = null;
+        try {
+          url = canvas.toDataURL({ format: "png", multiplier });
+        } finally {
+          if (bg) bg.visible = true;
+          canvas.renderAll();
+        }
+        return url;
       },
       applyPresetDesign(url, position) {
         const canvas = fabricCanvasRef.current;

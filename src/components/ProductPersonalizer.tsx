@@ -7,12 +7,17 @@ import MockupEditor, { type MockupEditorHandle, type MockupView, type PresetPosi
 import TryOnEditor from "./TryOnEditor";
 import CollectionPicker from "./CollectionPicker";
 import ProductInfo, { VatNote } from "./ProductInfo";
+import dynamic from "next/dynamic";
 import CyberCountdown from "./CyberCountdown";
+import { MODELS_3D } from "@/lib/product-3d";
 import { CYBER_ENDS_AT } from "@/lib/cyber";
 import { useCartStore } from "@/lib/cart-store";
 import { formatCLP } from "@/lib/money";
 import { trackEvent } from "@/lib/track";
 import type { DesignPlacementMap } from "@/types";
+
+// three.js is only downloaded when someone opens the 3D view.
+const HoodieViewer3D = dynamic(() => import("./HoodieViewer3D"), { ssr: false });
 
 export type PersonalizerProduct = {
   id: string;
@@ -217,6 +222,24 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     setActiveViewLabel(label);
     setActivatedViews((prev) => (prev.has(label) ? prev : new Set(prev).add(label)));
     setPresetFront(null);
+  }
+
+  // 3D preview: freeze what the editors hold right now (design layer per view) and hand it to the viewer.
+  const model3d = MODELS_3D[product.slug] ?? null;
+  const [webgl, setWebgl] = useState(false);
+  const [view3d, setView3d] = useState<{ layers: Record<string, string | null> } | null>(null);
+  useEffect(() => {
+    try {
+      const c = document.createElement("canvas");
+      setWebgl(!!(c.getContext("webgl2") || c.getContext("webgl")));
+    } catch {
+      setWebgl(false);
+    }
+  }, []);
+  function open3d() {
+    const layers: Record<string, string | null> = {};
+    for (const v of color.views) layers[v.label] = editorRefs.current[v.label]?.getDesignLayer() ?? null;
+    setView3d({ layers });
   }
 
   function handleTryOn() {
@@ -549,6 +572,20 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
               {v.label}
             </button>
           ))}
+          {/* The same garment in 3D with the design as it is in the editor: turn it around, front and back. */}
+          {model3d && webgl && (
+            <button
+              type="button"
+              onClick={open3d}
+              className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-md bg-black px-3.5 py-1.5 text-sm font-bold text-neon transition hover:brightness-125"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" aria-hidden="true">
+                <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z" />
+                <path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" />
+              </svg>
+              Ver en 3D
+            </button>
+          )}
         </div>
 
         <div key={`${color.name}-${editorNonce}`} className="relative">
@@ -614,6 +651,18 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
       <div className="order-5 min-w-0 lg:order-none lg:col-span-2 lg:row-start-5">
         <ProductInfo />
       </div>
+
+      {view3d && model3d && (
+        <HoodieViewer3D
+          modelUrl={model3d.url}
+          frontSign={model3d.frontSign}
+          colorHex={color.hex}
+          title={`${product.name} · ${color.name}`}
+          views={color.views.filter((v) => v.label === "Frente" || v.label === "Espalda").map((v) => ({ label: v.label, photoUrl: v.imageUrl }))}
+          getLayer={(label) => view3d.layers[label] ?? null}
+          onClose={() => setView3d(null)}
+        />
+      )}
 
       {tryOnSnapshot && (
         <div className="order-6 min-w-0 lg:order-none lg:col-span-2">
