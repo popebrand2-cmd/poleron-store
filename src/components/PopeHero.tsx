@@ -23,7 +23,7 @@ export default function PopeHero({
     <>
       <IntroSplash />
 
-      <section className="relative isolate overflow-hidden bg-black">
+      <section className="relative isolate overflow-hidden bg-black md:hidden">
         {/* Cyber campaign photo, behind the whole hero (headline + hoodie), not just one side — the
             owner wants it as one full backdrop, not confined behind a single column. Dimmed and
             darkened toward the left so the headline stays readable; auto-hides with the rest of the

@@ -89,8 +89,9 @@ export default async function Home() {
     <main>
       <CyberGate active={cyberActive} />
 
-      {/* The brand banner (its headline and button are part of the picture). Computer and tablet only: on a phone the
-          text inside would be tiny, so phones keep the hero below. The whole banner is the "Diseña la tuya" button. */}
+      {/* The brand banner (its headline and button are part of the picture). It IS the hero on computer and tablet (the
+          Cyber lookbook and the usual hero are phone-only now); on a phone the text inside would be tiny, so phones keep
+          the hero below. The whole banner is the "Diseña la tuya" button. */}
       <section aria-label="Tu idea. Tu prenda." className="hidden bg-black md:block">
         <Link href={editorHref} className="mx-auto block max-w-[1600px]">
           <picture>
@@ -112,6 +113,7 @@ export default async function Home() {
       {/* While the Cyber campaign runs, this interactive lookbook IS the hero — the usual hoodie hero
           just hides (hidden, not removed: PopeHero renders itself again the moment isCyberActive is
           false, with nothing to undo by hand). */}
+      <div className="md:hidden">
       <CyberLookbook
         active={cyberActive}
         editorHref={editorHref}
@@ -123,6 +125,7 @@ export default async function Home() {
           .sort((a, b) => KIND_ORDER[garmentKind(a)] - KIND_ORDER[garmentKind(b)])
           .map((p) => ({ id: p.id, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice as number }))}
       />
+      </div>
 
       <PopeHero editorHref={editorHref} cyberActive={cyberActive} hidden={cyberActive} />
 
