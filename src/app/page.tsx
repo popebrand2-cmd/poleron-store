@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import FeaturedCarousel from "@/components/FeaturedCarousel";
 import CollectionsShowcase from "@/components/CollectionsShowcase";
@@ -16,6 +17,9 @@ import InstagramFeed from "@/components/InstagramFeed";
 import HowItWorks from "@/components/preview/HowItWorks";
 import TrustBadgesList from "@/components/edit/TrustBadgesList";
 import FaqList from "@/components/edit/FaqList";
+import CollectionGarmentsGrid from "@/components/CollectionGarmentsGrid";
+import { getCollectionMockups } from "@/lib/collection-mockups";
+import { buildArtistItems, isCutOutDesign, loadGarmentCatalog } from "@/lib/collection-items";
 import { getEditorHref } from "@/lib/editor-product";
 import { siteText, CONTENT_DEFAULTS, type ContentSection } from "@/lib/site-content";
 
@@ -43,6 +47,33 @@ export default async function Home() {
   ]);
   const editorHref = await getEditorHref();
   const collectionsWithDesigns = designCollections.filter((c) => c.designs.length > 0);
+
+  // The garments of the collections, ready-made (design printed front and back), right under the hero: the same cards as
+  // the collection pages. Only collections with a finished mockup or a cut-out design (transparent background) appear —
+  // a full poster laid on a shirt looks pasted on.
+  const catalog = await loadGarmentCatalog();
+  const homeItems = (
+    await Promise.all(
+      collectionsWithDesigns.map(async (c) => {
+        const mockups = await getCollectionMockups(c.slug);
+        const cutOut = await Promise.all(c.designs.map((d) => isCutOutDesign(d.imageUrl)));
+        const designs = c.designs.filter((_, i) => cutOut[i]);
+        if (designs.length === 0 && Object.keys(mockups).length === 0) return [];
+        return buildArtistItems({
+          artistId: c.id,
+          artistName: c.name,
+          designs,
+          coverDesignId: c.designs[0].id,
+          garments: catalog.garments,
+          products: catalog.products,
+          mockups,
+          editorHref,
+        });
+      }),
+    )
+  )
+    .flat()
+    .slice(0, 8);
   const cyberProducts = products.map((p) => ({ id: p.id, slug: p.slug, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice }));
   const cyberActive = isCyberActive(cyberProducts);
   // The Cyber lookbook links each garment to a REAL product/garment type it actually matches — a tee
@@ -99,6 +130,27 @@ export default async function Home() {
 
       <PopeHero editorHref={editorHref} cyberActive={cyberActive} hidden={cyberActive} />
 
+      {/* The ready-made garments of the collections, right under the offer: seeing the finished piece is what makes
+          people buy faster. "Ver ofertas" lands here. */}
+      {homeItems.length > 0 && (
+        <section id="tienda" className="scroll-mt-24 border-b border-neutral-800 bg-black">
+          <div className="mx-auto max-w-6xl px-6 py-10 sm:py-14">
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+              <div className="max-w-2xl">
+                <h2 className="font-display text-4xl font-bold uppercase leading-none sm:text-5xl">
+                  <Txt k="home.garmentsTitle" />
+                </h2>
+                <Txt k="home.garmentsText" as="p" multiline className="mt-2 block text-sm text-neutral-400" />
+              </div>
+              <Link href="/#colecciones" className="text-xs font-bold uppercase tracking-[0.18em] text-neon transition hover:underline">
+                <Txt k="home.garmentsCta" /> →
+              </Link>
+            </div>
+            <CollectionGarmentsGrid items={homeItems} compact />
+          </div>
+        </section>
+      )}
+
       {/* Trust right under the hero (shipping, secure payment, guarantee) — before the visitor has to scroll
           to doubt anything. Same editable badges that used to sit at the very bottom. */}
       <section className="border-y border-neutral-800 bg-neutral-950">
@@ -108,7 +160,7 @@ export default async function Home() {
       </section>
 
       {/* Featured: the base garments with their price come first — this is what is being sold */}
-      <section id="tienda" className="scroll-mt-24 bg-black">
+      <section id={homeItems.length > 0 ? "base" : "tienda"} className="scroll-mt-24 bg-black">
         <div className="mx-auto max-w-6xl px-6 py-16">
           <div className="mb-10 text-center">
             <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-neon">

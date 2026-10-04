@@ -6,13 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { getEditorHref } from "@/lib/editor-product";
 import EditableLink from "@/components/edit/EditableLink";
 import Txt from "@/components/edit/Txt";
-import CollectionGarmentsGrid, { type GarmentKind, type GarmentItem } from "@/components/CollectionGarmentsGrid";
+import CollectionGarmentsGrid from "@/components/CollectionGarmentsGrid";
 import { getCollectionMockups } from "@/lib/collection-mockups";
-import { garmentKind, kindDescription, pickProductForKind } from "@/lib/garments";
-import { normalizeZones } from "@/lib/garments-server";
-
-const KIND_ORDER: Record<GarmentKind, number> = { polera: 0, poleron: 1, boxy: 2 };
-const KIND_TITLE: Record<GarmentKind, string> = { polera: "Polera", poleron: "Polerón oversize", boxy: "Polerón boxifit" };
+import { buildArtistItems, loadGarmentCatalog } from "@/lib/collection-items";
 
 export const dynamic = "force-dynamic";
 
@@ -32,79 +28,26 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ArtistPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const [artist, editorHref, products, mockups] = await Promise.all([
+  const [artist, editorHref, catalog, mockups] = await Promise.all([
     loadArtist(slug),
     getEditorHref(),
-    prisma.product.findMany({
-      where: { active: true },
-      orderBy: { createdAt: "desc" },
-      include: { colors: { orderBy: { sortOrder: "asc" }, include: { views: { orderBy: { sortOrder: "asc" } } } } },
-    }),
+    loadGarmentCatalog(),
     getCollectionMockups(slug),
   ]);
   if (!artist) notFound();
 
-  // Every garment that has a photo to print on, shown with each of this collection's designs already on it.
-  const garmentsRaw = products
-    .map((p) => ({
-      ...p,
-      colors: p.colors
-        .map((c) => ({
-          name: c.name,
-          hex: c.hex,
-          views: c.views
-            .filter((v) => v.imageUrl)
-            .map((v) => ({ label: v.label, imageUrl: v.imageUrl, zoneXPct: v.zoneXPct, zoneYPct: v.zoneYPct, zoneWidthPct: v.zoneWidthPct, zoneHeightPct: v.zoneHeightPct })),
-        }))
-        .filter((c) => c.views.length > 0),
-    }))
-    .filter((p) => p.colors.length > 0);
-  const garments = await Promise.all(garmentsRaw.map(async (p) => ({ ...p, colors: await normalizeZones(p.colors) })));
-
-  // Finished mockups (one image per garment type and color, made outside the site) win when they exist for
-  // this collection; each links to the real product of that type with the collection's first design loaded.
-  const mockupItems: GarmentItem[] = (Object.keys(KIND_TITLE) as GarmentKind[]).flatMap((kind) => {
-    const list = mockups[kind];
-    if (!list || list.length === 0) return [];
-    const product = pickProductForKind(products, kind);
-    const base = product ? `/productos/${product.slug}` : editorHref;
-    return [
-      {
-        key: `${artist.id}-${kind}`,
-        kind,
-        href: `${base}${base.includes("?") ? "&" : "?"}diseno=${artist.designs[0].id}`,
-        title: `${KIND_TITLE[kind]} ${artist.name}`,
-        description: product?.description || kindDescription(kind),
-        badge: product?.badgeText || undefined,
-        basePrice: product?.basePrice ?? null,
-        compareAtPrice: product?.compareAtPrice ?? null,
-        colors: list.map((m) => ({ name: m.name, hex: m.hex, views: [], imageUrl: m.imageUrl })),
-      },
-    ];
+  // Every garment that has a photo to print on, shown with each of this collection's designs already on it
+  // (and the owner's finished mockups, when the collection has them).
+  const garmentItems = buildArtistItems({
+    artistId: artist.id,
+    artistName: artist.name,
+    designs: artist.designs,
+    coverDesignId: artist.designs[0].id,
+    garments: catalog.garments,
+    products: catalog.products,
+    mockups,
+    editorHref,
   });
-  // The finished mockups cover the collection's first design; every other design still gets its own
-  // garments, with the art printed front and back on the product photos.
-  const overlayDesigns = mockupItems.length > 0 ? artist.designs.slice(1) : artist.designs;
-  const overlayItems: GarmentItem[] = overlayDesigns.flatMap((d) =>
-    [...garments]
-      .sort((a, b) => KIND_ORDER[garmentKind(a)] - KIND_ORDER[garmentKind(b)])
-      .map((p) => ({
-      key: `${d.id}-${p.id}`,
-      kind: garmentKind(p),
-      href: `/productos/${p.slug}?diseno=${d.id}`,
-      title: `${KIND_TITLE[garmentKind(p)]} ${d.name}`,
-      description: p.description || kindDescription(garmentKind(p)),
-      badge: p.badgeText || undefined,
-      frontArt: d.showFront ? d.imageUrl : "",
-      backArt: d.showBack ? d.backImageUrl || d.imageUrl : "",
-      frontScale: d.frontScale,
-      backScale: d.backScale,
-      basePrice: p.basePrice,
-      compareAtPrice: p.compareAtPrice,
-      colors: p.colors,
-    })),
-  );
-  const garmentItems = [...mockupItems, ...overlayItems];
 
   const cover = artist.designs[0];
   // The artist's own photo leads the page; the first design is only the fallback when none was uploaded.

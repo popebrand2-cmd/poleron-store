@@ -23,7 +23,7 @@ export type GarmentColor = { name: string; hex: string; views: GarmentView[]; im
 
 // A garment photo with the collection design laid over its print zone. The wrapper hugs the photo
 // (inline-block + a plain <img>), so the zone's percentages line up with the garment exactly.
-function Mock({ view, design, scale = 1 }: { view: GarmentView; design: string; scale?: number }) {
+function Mock({ view, design, scale = 1, fallback = "" }: { view: GarmentView; design: string; scale?: number; fallback?: string }) {
   // The art stays hidden until the garment photo is there: the first time a photo is cleaned it takes a moment,
   // and a design floating on its own looks broken.
   const photo = useRef<HTMLImageElement>(null);
@@ -32,7 +32,18 @@ function Mock({ view, design, scale = 1 }: { view: GarmentView; design: string; 
     // A new colour brings a new photo: wait for it again (it may already be in the browser cache).
     setReady(!!(photo.current?.complete && photo.current.naturalWidth > 0));
   }, [view.imageUrl]);
-  if (!design) {
+  // If the art file is gone from the server, show the fallback art (the other side's) instead of a broken-image
+  // icon, and nothing at all if that fails too.
+  const [artState, setArtState] = useState<0 | 1 | 2>(0);
+  useEffect(() => setArtState(0), [design]);
+  const art = artState === 0 ? design : artState === 1 ? fallback : "";
+  const artImg = useRef<HTMLImageElement>(null);
+  useEffect(() => {
+    // The failure may already have happened before React attached the error handler (server-rendered page).
+    const i = artImg.current;
+    if (i && i.complete && i.naturalWidth === 0) setArtState((s) => (s === 0 && fallback ? 1 : 2));
+  }, [art, fallback]);
+  if (!art) {
     // eslint-disable-next-line @next/next/no-img-element
     return <img src={garmentPhoto(view.imageUrl)} alt="" loading="lazy" decoding="async" draggable={false} className="block h-auto max-h-full w-auto max-w-full" />;
   }
@@ -52,7 +63,16 @@ function Mock({ view, design, scale = 1 }: { view: GarmentView; design: string; 
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={design} alt="" loading="lazy" decoding="async" draggable={false} className="h-full w-full object-contain" />
+        <img
+          ref={artImg}
+          src={art}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          onError={() => setArtState((s) => (s === 0 && fallback ? 1 : 2))}
+          className="h-full w-full object-contain"
+        />
       </div>
     </div>
   );
@@ -73,7 +93,9 @@ export default function CollectionGarmentCard({
   compareAtPrice,
   colors,
   preferColor = "",
+  className = "",
 }: {
+  className?: string;
   // Color picked in the collection's color filter: the card opens on it (when it has it).
   preferColor?: string;
   href: string;
@@ -105,7 +127,7 @@ export default function CollectionGarmentCard({
   const pct = basePrice != null && compareAtPrice && compareAtPrice > basePrice ? Math.round(100 - (basePrice / compareAtPrice) * 100) : 0;
 
   return (
-    <li className="group">
+    <li className={`group ${className}`}>
       <Link href={href} className={`relative block aspect-square overflow-hidden rounded-xl bg-[#f1f1f1]`}>
         {(badgeLabel || pct > 0) && (
           <span className="absolute left-3 top-3 z-10 rounded-full bg-[#e5484d] px-3 py-1 text-xs font-bold text-white">{badgeLabel || `Ahorra ${pct}%`}</span>
@@ -121,7 +143,7 @@ export default function CollectionGarmentCard({
         )}
         {!color?.imageUrl && back && (
           <div style={{ filter: BACK_GLOW }} className="absolute bottom-[2%] right-[1%] flex h-[78%] w-[78%] items-end justify-end transition duration-500 group-hover:scale-[1.03]">
-            <Mock view={back} design={backArt} scale={backScale} />
+            <Mock view={back} design={backArt} scale={backScale} fallback={frontArt} />
           </div>
         )}
         {colors.map((c) => c.imageUrl && c !== color && (

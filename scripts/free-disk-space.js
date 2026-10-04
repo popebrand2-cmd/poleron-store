@@ -24,7 +24,12 @@ const mb = (b) => (b / 1048576).toFixed(1) + " MB";
       if (u && u.startsWith("/uploads/")) urls.add(u.slice("/uploads/".length));
     };
     for (const v of await prisma.productView.findMany({ select: { imageUrl: true } })) add(v.imageUrl);
-    for (const p of await prisma.presetDesign.findMany({ select: { imageUrl: true } })) add(p.imageUrl);
+    for (const p of await prisma.presetDesign.findMany({ select: { imageUrl: true, backImageUrl: true } })) {
+      add(p.imageUrl);
+      add(p.backImageUrl);
+    }
+    for (const c of await prisma.designCollection.findMany({ select: { photoUrl: true } })) add(c.photoUrl);
+    for (const r of await prisma.review.findMany({ select: { photoUrl: true } })) add(r.photoUrl);
     const settings = await prisma.storeSettings.findUnique({ where: { id: "singleton" }, select: { heroImageUrl: true } });
     if (settings) add(settings.heroImageUrl);
     const texts = await prisma.siteText.findMany({ where: { OR: [{ key: { startsWith: "image." } }, { key: { startsWith: "video." } }] }, select: { value: true } });

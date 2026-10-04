@@ -32,9 +32,14 @@ export function orderItemNames(item: { previewImageUrl: string; designPlacement:
 // hero photo, editable-content images/videos (including the defaults shipped in code) and every
 // order that still holds its files.
 export async function referencedFilenames(): Promise<Set<string>> {
-  const [views, presets, orderItems, settings, siteTexts] = await Promise.all([
+  const [views, presets, collections, reviews, orderItems, settings, siteTexts] = await Promise.all([
     prisma.productView.findMany({ select: { imageUrl: true } }),
-    prisma.presetDesign.findMany({ select: { imageUrl: true } }),
+    // The back art of a design (Design Studio) is a separate file from its front art.
+    prisma.presetDesign.findMany({ select: { imageUrl: true, backImageUrl: true } }),
+    // The artist photo shown as the collection's cover.
+    prisma.designCollection.findMany({ select: { photoUrl: true } }),
+    // The reviewer's own photo.
+    prisma.review.findMany({ select: { photoUrl: true } }),
     prisma.orderItem.findMany({ select: { previewImageUrl: true, designPlacement: true } }),
     prisma.storeSettings.findUnique({ where: { id: "singleton" }, select: { heroImageUrl: true } }),
     prisma.siteText.findMany({ where: { OR: [{ key: { startsWith: "image." } }, { key: { startsWith: "video." } }] }, select: { value: true } }),
@@ -45,7 +50,12 @@ export async function referencedFilenames(): Promise<Set<string>> {
     if (n) names.add(n);
   };
   for (const v of views) add(v.imageUrl);
-  for (const p of presets) add(p.imageUrl);
+  for (const p of presets) {
+    add(p.imageUrl);
+    add(p.backImageUrl);
+  }
+  for (const c of collections) add(c.photoUrl);
+  for (const r of reviews) add(r.photoUrl);
   if (settings) add(settings.heroImageUrl);
   for (const t of siteTexts) add(t.value);
   for (const d of Object.values(SITE_TEXT_DEFAULTS)) add(d);

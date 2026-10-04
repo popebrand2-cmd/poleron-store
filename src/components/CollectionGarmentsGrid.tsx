@@ -25,7 +25,14 @@ const KIND_ORDER: GarmentKind[] = ["polera", "poleron", "boxy"];
 
 // Garment type picker over the collection's ready-made pieces. Only types that actually exist in the
 // catalog get a tab, so there is never an empty option.
-export default function CollectionGarmentsGrid({ items }: { items: GarmentItem[] }) {
+export default function CollectionGarmentsGrid({
+  items,
+  compact = false,
+}: {
+  items: GarmentItem[];
+  // Homepage layout: no color filter, a swipeable row on phones and tablets, a 4-column grid on desktop.
+  compact?: boolean;
+}) {
   const kinds = KIND_ORDER.filter((k) => items.some((i) => i.kind === k));
   const [active, setActive] = useState<GarmentKind | "all">("all");
   const [colorName, setColorName] = useState("");
@@ -35,7 +42,7 @@ export default function CollectionGarmentsGrid({ items }: { items: GarmentItem[]
 
   return (
     <>
-      {colorChoices.length > 1 && (
+      {!compact && colorChoices.length > 1 && (
         <div role="group" aria-label="Color" className="mb-4 flex flex-wrap items-center gap-2">
           <span className="mr-1 text-xs font-bold uppercase tracking-wide text-neutral-400">Color</span>
           {[["", ""] as const, ...colorChoices].map(([name, hex]) => {
@@ -58,7 +65,7 @@ export default function CollectionGarmentsGrid({ items }: { items: GarmentItem[]
         </div>
       )}
       {kinds.length > 1 && (
-        <div role="tablist" aria-label="Tipo de prenda" className="mb-8 flex flex-wrap gap-2">
+        <div role="tablist" aria-label="Tipo de prenda" className={`flex gap-2 ${compact ? "scrollbar-none mb-5 overflow-x-auto" : "mb-8 flex-wrap"}`}>
           {(["all", ...kinds] as const).map((k) => {
             const on = active === k;
             return (
@@ -68,7 +75,7 @@ export default function CollectionGarmentsGrid({ items }: { items: GarmentItem[]
                 role="tab"
                 aria-selected={on}
                 onClick={() => setActive(k)}
-                className={`min-h-11 rounded-full border-2 px-5 text-xs font-bold uppercase tracking-wide transition ${
+                className={`min-h-11 shrink-0 whitespace-nowrap rounded-full border-2 px-5 text-xs font-bold uppercase tracking-wide transition ${
                   on ? "border-neon bg-neon text-black" : "border-white/25 text-white hover:border-neon hover:text-neon"
                 }`}
               >
@@ -78,7 +85,14 @@ export default function CollectionGarmentsGrid({ items }: { items: GarmentItem[]
           })}
         </div>
       )}
-      <ul className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+      <ul
+        className={
+          compact
+            ? "scrollbar-none -mx-6 flex snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto scroll-smooth px-6 pb-4 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-x-6 lg:gap-y-12 lg:overflow-visible lg:px-0 lg:pb-0"
+            : "grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4"
+        }
+        style={compact ? { scrollbarWidth: "none" } : undefined}
+      >
         {shown.map((i) => (
           <CollectionGarmentCard
             key={i.key}
@@ -94,6 +108,7 @@ export default function CollectionGarmentsGrid({ items }: { items: GarmentItem[]
             compareAtPrice={i.compareAtPrice}
             colors={i.colors}
             preferColor={colorName}
+            className={compact ? "w-[72vw] max-w-[320px] shrink-0 snap-start lg:w-auto lg:max-w-none" : ""}
           />
         ))}
       </ul>

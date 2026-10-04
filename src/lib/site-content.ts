@@ -94,6 +94,9 @@ export const SITE_TEXT_DEFAULTS: Record<string, string> = {
   "artist.catalogTitle": "Catálogo de diseños",
   "artist.catalogText": "Elige un diseño y personalízalo en tu prenda: muévelo, cámbiale el tamaño y mira cómo queda antes de comprar.",
   "artist.designCta": "Personalizar",
+  "home.garmentsTitle": "Prendas de nuestras colecciones",
+  "home.garmentsText": "Diseños de artistas ya estampados por delante y por detrás. Elige uno y personalízalo a tu medida.",
+  "home.garmentsCta": "Ver todas las colecciones",
   "artist.garmentsTitle": "Prendas de la colección",
   "artist.garmentsText": "Así queda este diseño en nuestros polerones y poleras, por delante y por detrás. Elige una y personalízala a tu medida.",
 
