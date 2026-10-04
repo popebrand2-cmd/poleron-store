@@ -244,11 +244,14 @@ function PhotoStage({
         </div>
       )}
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent py-3">
-        <p className="text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-300">
-          <Txt k="lookbook.steps" as="span" />
-        </p>
-      </div>
+      {/* Desktop only: on phones the frame is cropped around the middle of the photo and this line would be cut */}
+      {showDesktopCard && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent py-3">
+          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-neutral-300">
+            <Txt k="lookbook.steps" as="span" />
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -301,42 +304,43 @@ export default function CyberLookbook({
   const open = GARMENTS.find((g) => g.id === openId) ?? null;
   const productFor = (g: Garment) => (g.type === "tee" ? teeProduct : hoodieProduct);
 
-  // Rendered twice (desktop overlay / mobile block, one of them always hidden), so only the desktop copy
-  // carries the page's h1 — two h1s with the same text would confuse search engines.
-  const copy = (Heading: "h1" | "h2") => (
+  const bestPct = sale.length > 0 ? Math.max(...sale.map((p) => Math.round(100 - (p.basePrice / p.compareAtPrice) * 100))) : 0;
+
+  // Rendered twice (desktop overlay / mobile), one of them always hidden, so only the desktop copy carries
+  // the page's h1 — two h1s with the same text would confuse search engines.
+  const headline = (Heading: "h1" | "h2", className: string) => (
+    <Heading className={`font-display font-bold uppercase text-white ${className}`}>
+      <span className="block">
+        <Txt k="hero.line1" as="span" />
+      </span>
+      <span className="block text-neon">
+        <Txt k="hero.line2" as="span" />
+      </span>
+    </Heading>
+  );
+
+  // The offer itself, in the first screen: the biggest discount, every sale price next to the one it
+  // replaces, the deadline and the free-shipping rule — nobody should have to scroll to find what the Cyber
+  // costs. Laid out like Zoan's Cyber banner: a red headline, then name / old price / new price in a grid.
+  const offer = (
     <>
-      {/* No "Cyber POPE" badge here: the Cyber strip right above the hero already says it */}
-      <Heading className="font-display text-6xl font-bold uppercase leading-[0.88] text-white sm:text-7xl">
-        <span className="block">
-          <Txt k="hero.line1" as="span" />
-        </span>
-        <span className="block text-neon">
-          <Txt k="hero.line2" as="span" />
-        </span>
-      </Heading>
+      {bestPct > 0 && <p className="font-display text-3xl font-bold uppercase leading-none text-[#ff5a5f]">Hasta {bestPct}% de descuento</p>}
 
-      <p className="mt-3 max-w-sm text-lg text-neutral-100 xl:text-xl">
-        <Txt k="lookbook.subtext" as="span" />
-      </p>
-
-      {/* The offer itself, in the first screen: every sale price with the one it replaces, the deadline and
-          the free-shipping rule — nobody should have to scroll to find out what the Cyber costs. */}
       {sale.length > 0 && (
-        <div className="mt-5 max-w-sm">
-          <ul className="space-y-1.5">
-            {sale.map((p) => (
-              <li key={p.id} className="flex items-baseline gap-2.5">
-                <span className="w-36 shrink-0 text-sm font-semibold text-neutral-200">{p.name}</span>
-                <span className="font-display text-3xl font-bold leading-none text-neon">{formatCLP(p.basePrice)}</span>
-                <span className="text-sm text-neutral-400 line-through">{formatCLP(p.compareAtPrice)}</span>
-              </li>
-            ))}
-          </ul>
-          <p className="mt-2.5 text-xs text-neutral-300">
-            Envío gratis desde {formatCLP(FREE_SHIPPING_MIN)} en la Región Metropolitana · <Txt k="cyber.until" as="span" />
-          </p>
-        </div>
+        <ul className="mt-3 grid max-w-md grid-cols-[1fr_auto_auto] items-baseline gap-x-4 gap-y-1.5">
+          {sale.map((p) => (
+            <li key={p.id} className="col-span-3 grid grid-cols-subgrid items-baseline">
+              <span className="font-display text-xl font-semibold uppercase leading-none text-white sm:text-2xl">{p.name}</span>
+              <span className="text-base text-neutral-400 line-through">{formatCLP(p.compareAtPrice)}</span>
+              <span className="font-display text-[1.7rem] font-bold leading-none text-[#ff5a5f] sm:text-3xl">{formatCLP(p.basePrice)}</span>
+            </li>
+          ))}
+        </ul>
       )}
+
+      <p className="mt-3 max-w-sm text-sm text-neutral-300">
+        Envío gratis desde {formatCLP(FREE_SHIPPING_MIN)} en la Región Metropolitana · <Txt k="cyber.until" as="span" />
+      </p>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <a
@@ -355,7 +359,7 @@ export default function CyberLookbook({
         </Link>
       </div>
 
-      <p className="mt-5 flex items-center gap-2 text-sm font-semibold text-neon">
+      <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-neon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0" aria-hidden="true">
           <path d="M9 9h.01M15 9h.01M8 13c1 1.5 2.5 2.5 4 2.5s3-1 4-2.5" />
           <circle cx="12" cy="12" r="9" />
@@ -367,28 +371,45 @@ export default function CyberLookbook({
 
   return (
     <section aria-label="Cyber POPE: elige una prenda" ref={containerRef} className="relative isolate overflow-hidden border-b border-white/10 bg-black text-white">
-      {/* Desktop / tablet: one continuous photo fills the whole hero; the copy sits directly on top of
-          it (left side), same as the reference the owner is matching. */}
+      {/* Desktop / tablet: one continuous photo fills the whole hero; the offer sits directly on top of it
+          (left side). */}
       <div className="relative hidden lg:block" style={{ aspectRatio: "1230 / 667" }}>
         <PhotoStage uid={uid} openId={openId} setOpenId={setOpenId} productFor={productFor} designs={designs} showDesktopCard />
         {/* Dark only behind the text: the garments (and their prints, which are what's being sold) stay
             bright across the rest of the photo. */}
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/90 via-black/45 via-35% to-transparent to-60%" />
         <div className="pointer-events-none absolute inset-y-0 left-0 flex max-w-md flex-col justify-center px-10 xl:max-w-lg">
-          <div className="pointer-events-auto">{copy("h1")}</div>
+          <div className="pointer-events-auto">
+            {headline("h1", "text-6xl leading-[0.88] xl:text-7xl")}
+            <p className="mt-2 max-w-sm text-base text-neutral-100 xl:text-xl">
+              <Txt k="lookbook.subtext" as="span" />
+            </p>
+            <div className="mt-4">{offer}</div>
+          </div>
         </div>
       </div>
 
-      {/* Mobile: the photo doesn't have room to carry the copy too, so it's its own block below the
-          text, and the picked card renders under the photo instead of floating over it — the same
-          adjustment the original brief asked for. */}
+      {/* Phones, laid out like Zoan's Cyber banner: a tall photo with the headline over its dark top, then
+          the offer on black right underneath. The campaign photo is landscape, so it is shown at the height
+          of the lower part of the frame and cropped on the sides around its middle (the hotspots keep their
+          place on the photo; the ones that fall outside the crop are simply cut off). */}
       <div className="lg:hidden">
-        <div className="px-5 pb-6 pt-10">{copy("h2")}</div>
-        <div className="relative w-full" style={{ aspectRatio: "1230 / 667" }}>
-          <PhotoStage uid={uid} openId={openId} setOpenId={setOpenId} productFor={productFor} designs={designs} showDesktopCard={false} />
+        <div className="relative aspect-[3/4] w-full overflow-hidden bg-black">
+          <div className="absolute inset-x-0 bottom-0 h-[74%] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_38%)] [mask-image:linear-gradient(to_bottom,transparent,black_38%)]">
+            <div className="absolute bottom-0 left-1/2 h-full -translate-x-[44%]" style={{ aspectRatio: "1230 / 667" }}>
+              <PhotoStage uid={uid} openId={openId} setOpenId={setOpenId} productFor={productFor} designs={designs} showDesktopCard={false} />
+            </div>
+          </div>
+          <div className="pointer-events-none absolute inset-x-0 top-0 px-5 pt-6">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-white">
+              🔥 <Txt k="cyber.badge" as="span" />
+            </span>
+            {headline("h2", "mt-3 text-[3.6rem] leading-[0.86]")}
+          </div>
         </div>
+        <div className="border-t-[3px] border-red-600 px-5 pb-8 pt-5">{offer}</div>
         {open && (
-          <div id={`${uid}-${open.id}-mobile`} className="flex justify-center px-5 pb-24 pt-6">
+          <div id={`${uid}-${open.id}-mobile`} className="flex justify-center px-5 pb-24 pt-2">
             <Card
               key={open.id}
               garment={open}

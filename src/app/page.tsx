@@ -8,6 +8,7 @@ import PopeHero from "@/components/PopeHero";
 import CyberGate from "@/components/CyberGate";
 import CyberLookbook from "@/components/CyberLookbook";
 import { isCyberActive, getCyberSaleItems } from "@/lib/cyber";
+import { garmentKind } from "@/lib/garments";
 import RealWorks from "@/components/RealWorks";
 import RealVideos from "@/components/RealVideos";
 import ReviewsSection from "@/components/ReviewsSection";
@@ -19,6 +20,9 @@ import { getEditorHref } from "@/lib/editor-product";
 import { siteText, CONTENT_DEFAULTS, type ContentSection } from "@/lib/site-content";
 
 export const dynamic = "force-dynamic";
+
+// Polera first, then polerón oversize, then boxifit — the same order as the collection pages.
+const KIND_ORDER = { polera: 0, poleron: 1, boxy: 2 } as const;
 
 
 export default async function Home() {
@@ -89,6 +93,7 @@ export default async function Home() {
         designs={lookbookDesigns}
         sale={getCyberSaleItems(cyberProducts)
           .slice(0, 3)
+          .sort((a, b) => KIND_ORDER[garmentKind(a)] - KIND_ORDER[garmentKind(b)])
           .map((p) => ({ id: p.id, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice as number }))}
       />
 
