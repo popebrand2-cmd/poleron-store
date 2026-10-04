@@ -78,6 +78,7 @@ export function buildArtistItems(opts: {
         key: `${artistId}-${kind}`,
         kind,
         href: `${base}${base.includes("?") ? "&" : "?"}diseno=${coverDesignId}`,
+        blankHref: base,
         title: `${KIND_TITLE[kind]} ${artistName}`,
         description: product?.description || kindDescription(kind),
         badge: product?.badgeText || undefined,
@@ -98,6 +99,7 @@ export function buildArtistItems(opts: {
         key: `${d.id}-${p.id}`,
         kind: garmentKind(p),
         href: `/productos/${p.slug}?diseno=${d.id}`,
+        blankHref: `/productos/${p.slug}`,
         title: `${KIND_TITLE[garmentKind(p)]} ${d.name}`,
         description: p.description || kindDescription(garmentKind(p)),
         badge: p.badgeText || undefined,
@@ -111,6 +113,14 @@ export function buildArtistItems(opts: {
       })),
   );
   return [...mockupItems, ...overlayItems];
+}
+
+// The designs of a collection that should get garment cards next to its finished mockups: the cut-out ones only (a full
+// poster printed on a shirt looks pasted on). Without mockups every design keeps its cards, as before.
+export async function overlayDesignsFor<T extends { imageUrl: string }>(designs: T[], hasMockups: boolean): Promise<T[]> {
+  if (!hasMockups) return designs;
+  const flags = await Promise.all(designs.map((d) => isCutOutDesign(d.imageUrl)));
+  return designs.filter((_, i) => flags[i]);
 }
 
 // Does a design image have transparent areas (a cut-out artwork), as opposed to a full poster with its own background?

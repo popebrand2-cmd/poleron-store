@@ -94,8 +94,11 @@ export default function CollectionGarmentCard({
   colors,
   preferColor = "",
   className = "",
+  blankHref,
 }: {
   className?: string;
+  // Where "+ Personalizar" goes: the same garment with nothing printed. `href` (the card itself) opens it with this design on.
+  blankHref?: string;
   // Color picked in the collection's color filter: the card opens on it (when it has it).
   preferColor?: string;
   href: string;
@@ -128,7 +131,9 @@ export default function CollectionGarmentCard({
 
   return (
     <li className={`group ${className}`}>
-      <Link href={href} className={`relative block aspect-square overflow-hidden rounded-xl bg-[#f1f1f1]`}>
+      <div className="relative aspect-square overflow-hidden rounded-xl bg-[#f1f1f1]">
+        {/* The whole picture is a link to the garment with this design already on it */}
+        <Link href={href} aria-label={title} className="absolute inset-0 z-[1]" />
         {(badgeLabel || pct > 0) && (
           <span className="absolute left-3 top-3 z-10 rounded-full bg-[#e5484d] px-3 py-1 text-xs font-bold text-white">{badgeLabel || `Ahorra ${pct}%`}</span>
         )}
@@ -150,10 +155,13 @@ export default function CollectionGarmentCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img key={c.imageUrl} src={c.imageUrl} alt="" aria-hidden="true" decoding="async" className="hidden" />
         ))}
-        <span className="pointer-events-none absolute bottom-4 left-1/2 z-10 -translate-x-1/2 translate-y-2 whitespace-nowrap rounded-full bg-neon px-6 py-3 text-sm font-bold text-black opacity-0 shadow-[0_6px_18px_rgba(0,0,0,0.45)] ring-1 ring-black/20 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100">
+        <Link
+          href={blankHref ?? href}
+          className="absolute bottom-4 left-1/2 z-10 -translate-x-1/2 translate-y-2 whitespace-nowrap rounded-full bg-neon px-6 py-3 text-sm font-bold text-black opacity-0 shadow-[0_6px_18px_rgba(0,0,0,0.45)] ring-1 ring-black/20 transition duration-300 hover:brightness-90 focus-visible:translate-y-0 focus-visible:opacity-100 group-hover:translate-y-0 group-hover:opacity-100 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100"
+        >
           + Personalizar
-        </span>
-      </Link>
+        </Link>
+      </div>
       <Link href={href} className="mt-4 line-clamp-2 block text-base font-semibold leading-snug text-white hover:text-neon">
         {title}
       </Link>

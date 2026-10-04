@@ -8,6 +8,8 @@ export type GarmentItem = {
   key: string;
   kind: GarmentKind;
   href: string;
+  // The same garment with nothing printed on it ("+ Personalizar").
+  blankHref?: string;
   title: string;
   description?: string;
   badge?: string;
@@ -97,6 +99,7 @@ export default function CollectionGarmentsGrid({
           <CollectionGarmentCard
             key={i.key}
             href={i.href}
+            blankHref={i.blankHref}
             title={i.title}
             description={i.description}
             badge={i.badge}

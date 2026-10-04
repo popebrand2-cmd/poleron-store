@@ -22,7 +22,19 @@ export async function GET() {
         id: c.id,
         name: c.name,
         category: c.category,
-        designs: c.designs.map((d) => ({ id: d.id, name: d.name, imageUrl: d.imageUrl, placement: d.placement })),
+        designs: c.designs.map((d) => ({
+          id: d.id,
+          name: d.name,
+          imageUrl: d.imageUrl,
+          placement: d.placement,
+          // How the collection cards print it (front art, optional separate back art, sizes): the product page opens with
+          // the same thing on the garment.
+          backImageUrl: d.backImageUrl,
+          showFront: d.showFront,
+          showBack: d.showBack,
+          frontScale: d.frontScale,
+          backScale: d.backScale,
+        })),
       })),
   });
 }

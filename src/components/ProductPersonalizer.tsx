@@ -110,7 +110,18 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
   const [formError, setFormError] = useState("");
   const [tryOnSnapshot, setTryOnSnapshot] = useState<string | null>(null);
 
-  type PresetDesign = { id: string; name: string; imageUrl: string; placement: "FRONT" | "BACK" };
+  type PresetDesign = {
+    id: string;
+    name: string;
+    imageUrl: string;
+    placement: "FRONT" | "BACK";
+    // How the collection cards print the design (see /api/collections).
+    backImageUrl?: string;
+    showFront?: boolean;
+    showBack?: boolean;
+    frontScale?: number;
+    backScale?: number;
+  };
   type PresetCollection = { id: string; name: string; category?: string; designs: PresetDesign[] };
   const [collections, setCollections] = useState<PresetCollection[]>([]);
   const [presetFront, setPresetFront] = useState<{ url: string; position: PresetPosition | "back" } | null>(null);
@@ -171,32 +182,52 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId]);
 
-  // Arriving from an artist catalog (?diseno=<id>): once the editor canvas is ready, drop that
-  // ready-made design onto the garment (front designs go to the Frente view, back ones to Espalda).
+  // Arriving from a collection card (?diseno=<id>): the garment opens with that design exactly as the card shows it — the
+  // front art on the front, the back art on the back, same size and place — ready to buy as it is. Without ?diseno (the
+  // card's "+ Personalizar" button) the garment opens blank. A color change brings the design along.
   const presetId = searchParams.get("diseno");
-  const presetAppliedRef = useRef(false);
+  const [cardDesign, setCardDesign] = useState<PresetDesign | null>(null);
   useEffect(() => {
-    if (!presetId || presetAppliedRef.current || editId || collections.length === 0) return;
-    const design = collections.flatMap((c) => c.designs).find((d) => d.id === presetId);
-    if (!design) return;
-    const label = design.placement === "BACK" ? "Espalda" : "Frente";
-    if (!color.views.some((v) => v.label === label)) return;
-    if (activeViewLabel !== label) {
-      handleViewChange(label);
-      return;
-    }
+    if (!presetId || editId || cardDesign || collections.length === 0) return;
+    const d = collections.flatMap((c) => c.designs).find((x) => x.id === presetId);
+    if (d) setCardDesign(d);
+  }, [presetId, editId, cardDesign, collections]);
+
+  const cardAppliedRef = useRef("");
+  useEffect(() => {
+    if (!cardDesign) return;
+    const key = `${cardDesign.id}:${colorIndex}`;
+    if (cardAppliedRef.current === key) return;
+    const frontArt = cardDesign.showFront === false ? "" : cardDesign.imageUrl;
+    const backArt = cardDesign.showBack === false ? "" : cardDesign.backImageUrl || cardDesign.imageUrl;
+    const jobs = [
+      { label: "Frente", art: frontArt, position: "center" as const, scale: cardDesign.frontScale ?? 0.6 },
+      { label: "Espalda", art: backArt, position: "back" as const, scale: cardDesign.backScale ?? 1 },
+    ].filter((j) => j.art && color.views.some((v) => v.label === j.label));
+    if (jobs.length === 0) return;
+    // the editors of the sides that get art have to exist
+    setActivatedViews((prev) => {
+      if (jobs.every((j) => prev.has(j.label))) return prev;
+      const next = new Set(prev);
+      jobs.forEach((j) => next.add(j.label));
+      return next;
+    });
+    const pending = new Set(jobs.map((j) => j.label));
     let tries = 0;
     const timer = setInterval(() => {
       tries++;
-      if (editorRefs.current[label]?.applyPresetDesign(design.imageUrl, design.placement === "BACK" ? "back" : "center")) {
-        presetAppliedRef.current = true;
-        if (design.placement === "FRONT") setPresetFront({ url: design.imageUrl, position: "center" });
+      for (const j of jobs) {
+        if (pending.has(j.label) && editorRefs.current[j.label]?.applyPresetDesign(j.art, j.position, j.scale)) pending.delete(j.label);
+      }
+      if (pending.size === 0) {
+        cardAppliedRef.current = key;
         clearInterval(timer);
-      } else if (tries > 40) clearInterval(timer);
+        setPresetFront({ url: cardDesign.imageUrl, position: "center" });
+      } else if (tries > 80) clearInterval(timer);
     }, 250);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [presetId, collections, activeViewLabel]);
+  }, [cardDesign, colorIndex]);
 
   // Any collection design can go on the front or the back: it lands on whichever view is showing.
   const onBackView = activeViewLabel === "Espalda";
@@ -590,7 +621,12 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
 
         <div key={`${color.name}-${editorNonce}`} className="relative">
           {color.views.map((v) => (
-            <div key={v.label} style={{ display: activeViewLabel === v.label ? "block" : "none" }}>
+            <div
+              key={v.label}
+              // A side that is mounted but not shown stays laid out at full width (invisible, no height): with display:none its
+              // canvas would measure a width of 0 and come out the wrong size when the tab is opened.
+              style={activeViewLabel === v.label ? { display: "block" } : { position: "absolute", left: 0, right: 0, top: 0, maxHeight: 0, overflow: "hidden", visibility: "hidden", pointerEvents: "none" }}
+            >
               {activatedViews.has(v.label) && (
                 <MockupEditor
                   view={v}

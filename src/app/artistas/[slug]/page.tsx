@@ -8,7 +8,7 @@ import EditableLink from "@/components/edit/EditableLink";
 import Txt from "@/components/edit/Txt";
 import CollectionGarmentsGrid from "@/components/CollectionGarmentsGrid";
 import { getCollectionMockups } from "@/lib/collection-mockups";
-import { buildArtistItems, loadGarmentCatalog } from "@/lib/collection-items";
+import { buildArtistItems, loadGarmentCatalog, overlayDesignsFor } from "@/lib/collection-items";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +41,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
   const garmentItems = buildArtistItems({
     artistId: artist.id,
     artistName: artist.name,
-    designs: artist.designs,
+    designs: await overlayDesignsFor(artist.designs, Object.keys(mockups).length > 0),
     coverDesignId: artist.designs[0].id,
     garments: catalog.garments,
     products: catalog.products,

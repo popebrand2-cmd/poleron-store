@@ -12,7 +12,7 @@ export const SITE_TEXT_DEFAULTS: Record<string, string> = {
   "howItWorks.heading": "Cómo funciona",
   "browseTypes.heading": "Encuentra tu estilo",
   "featured.eyebrow": "POPE · Hecho para ti",
-  "featured.heading": "Lo más buscado",
+  "featured.heading": "Personaliza el tuyo con estas prendas",
   "featured.subtext": "Elige tu prenda base y hazla completamente tuya",
   "collections.eyebrow": "Explore POPE",
   "collections.heading": "Colecciones",

@@ -94,7 +94,9 @@ export type MockupEditorHandle = {
   // The customer's design (image and text) alone, on a transparent canvas the size of the garment photo — what the 3D view
   // projects onto the 3D garment. Null when nothing is placed yet.
   getDesignLayer: () => string | null;
-  applyPresetDesign: (url: string, position: PresetPosition | "back") => boolean;
+  // `fitScale`: place the art the way the collection cards print it — as large as fits a box of that fraction of the print
+  // zone, centred across and starting at the top of the zone — instead of one of the fixed positions.
+  applyPresetDesign: (url: string, position: PresetPosition | "back", fitScale?: number) => boolean;
   // True when the design still has an opaque white background AND the garment itself is white —
   // the print would be essentially invisible, so the caller should block checkout on this view.
   hasWhiteOnWhiteRisk: () => boolean;
@@ -589,7 +591,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedSizeLabel, JSON.stringify(sizes), view.label]);
 
-    function loadDesign(canvas: fabric.Canvas, url: string, placement?: ViewPlacement) {
+    function loadDesign(canvas: fabric.Canvas, url: string, placement?: ViewPlacement, fitScale?: number) {
       return fabric.FabricImage.fromURL(url, { crossOrigin: "anonymous" }).then((img) => {
         if (designRef.current) {
           canvas.remove(designRef.current);
@@ -613,6 +615,11 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           targetTop = zone.top + (placement.yPct / 100) * zone.height;
           targetScale = ((placement.widthPct / 100) * zone.width) / naturalWidth;
           targetAngle = placement.rotationDeg;
+        }
+        if (fitScale) {
+          targetScale = Math.min((zone.width * fitScale) / naturalWidth, (zone.height * fitScale) / naturalHeight);
+          targetLeft = zone.left + zone.width / 2;
+          targetTop = zone.top + (zone.height * fitScale) / 2;
         }
 
         img.set({
@@ -1126,7 +1133,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         }
         return url;
       },
-      applyPresetDesign(url, position) {
+      applyPresetDesign(url, position, fitScale) {
         const canvas = fabricCanvasRef.current;
         if (!canvas) return false;
         const p = PRESET_POSITIONS[position];
@@ -1139,7 +1146,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           rotationDeg: 0,
           zoneWidthCm: 0,
           zoneHeightCm: 0,
-        });
+        }, fitScale);
         return true;
       },
       hasWhiteOnWhiteRisk() {
