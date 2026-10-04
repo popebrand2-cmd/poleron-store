@@ -89,6 +89,26 @@ export default async function Home() {
     <main>
       <CyberGate active={cyberActive} />
 
+      {/* The brand banner (its headline and button are part of the picture). Computer and tablet only: on a phone the
+          text inside would be tiny, so phones keep the hero below. The whole banner is the "Diseña la tuya" button. */}
+      <section aria-label="Tu idea. Tu prenda." className="hidden bg-black md:block">
+        <Link href={editorHref} className="mx-auto block max-w-[1600px]">
+          <picture>
+            <source media="(min-width: 768px)" srcSet="/promo/banner-pope.webp" />
+            {/* Phones get a 1px placeholder, so the 200 KB banner is never downloaded there. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+              alt="Tu idea. Tu prenda. Elige tu prenda, sube tu diseño y personaliza en vivo. Diseña la tuya en popebrand.cl"
+              width={2000}
+              height={1126}
+              fetchPriority="high"
+              className="h-auto w-full"
+            />
+          </picture>
+        </Link>
+      </section>
+
       {/* While the Cyber campaign runs, this interactive lookbook IS the hero — the usual hoodie hero
           just hides (hidden, not removed: PopeHero renders itself again the moment isCyberActive is
           false, with nothing to undo by hand). */}
