@@ -195,7 +195,7 @@ function PhotoStage({
         }}
       />
 
-      {GARMENTS.map((g) => {
+      {GARMENTS.map((g, i) => {
         const isOpen = g.id === openId;
         return (
           <button
@@ -205,9 +205,17 @@ function PhotoStage({
             aria-expanded={isOpen}
             aria-controls={`${uid}-${g.id}`}
             aria-label={`${g.garmentLabel} ${g.designName}`}
-            className="absolute flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-neon bg-black/55 font-bold text-neon transition hover:bg-black/75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            className="absolute flex h-8 w-8 -translate-x-1/2 lg:h-10 lg:w-10 -translate-y-1/2 items-center justify-center rounded-full border-2 border-neon bg-black/60 text-lg font-bold text-neon shadow-[0_0_14px_color-mix(in_srgb,var(--neon)_55%,transparent)] transition hover:scale-110 hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             style={{ left: `${g.x}%`, top: `${g.y}%` }}
           >
+            {/* Pulse ring until one is opened, so the hotspots read as "tap me" and not as decoration */}
+            {!openId && (
+              <span
+                aria-hidden="true"
+                className="absolute inset-0 animate-ping rounded-full border-2 border-neon opacity-60 motion-reduce:hidden"
+                style={{ animationDuration: "2.4s", animationDelay: `${i * 0.35}s` }}
+              />
+            )}
             +
           </button>
         );
@@ -289,22 +297,21 @@ export default function CyberLookbook({
   const open = GARMENTS.find((g) => g.id === openId) ?? null;
   const productFor = (g: Garment) => (g.type === "tee" ? teeProduct : hoodieProduct);
 
-  const copy = (
+  // Rendered twice (desktop overlay / mobile block, one of them always hidden), so only the desktop copy
+  // carries the page's h1 — two h1s with the same text would confuse search engines.
+  const copy = (Heading: "h1" | "h2") => (
     <>
-      <span className="inline-flex items-center rounded-full bg-neon px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-black">
-        <Txt k="cyber.badge" as="span" />
-      </span>
-
-      <h2 className="mt-4 font-display text-5xl font-bold uppercase leading-[0.92] text-white sm:text-6xl">
+      {/* No "Cyber POPE" badge here: the Cyber strip right above the hero already says it */}
+      <Heading className="font-display text-6xl font-bold uppercase leading-[0.88] text-white sm:text-7xl">
         <span className="block">
           <Txt k="hero.line1" as="span" />
         </span>
         <span className="block text-neon">
           <Txt k="hero.line2" as="span" />
         </span>
-      </h2>
+      </Heading>
 
-      <p className="mt-3 max-w-sm text-lg text-neutral-200">
+      <p className="mt-3 max-w-sm text-lg text-neutral-100 xl:text-xl">
         <Txt k="lookbook.subtext" as="span" />
       </p>
 
@@ -318,7 +325,7 @@ export default function CyberLookbook({
         </Link>
       </div>
 
-      <p className="mt-5 flex items-center gap-2 text-xs text-neutral-300">
+      <p className="mt-5 flex items-center gap-2 text-sm font-semibold text-neon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0" aria-hidden="true">
           <path d="M9 9h.01M15 9h.01M8 13c1 1.5 2.5 2.5 4 2.5s3-1 4-2.5" />
           <circle cx="12" cy="12" r="9" />
@@ -334,9 +341,11 @@ export default function CyberLookbook({
           it (left side), same as the reference the owner is matching. */}
       <div className="relative hidden lg:block" style={{ aspectRatio: "1230 / 667" }}>
         <PhotoStage uid={uid} openId={openId} setOpenId={setOpenId} productFor={productFor} designs={designs} showDesktopCard />
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
-        <div className="pointer-events-none absolute inset-y-0 left-0 flex max-w-md flex-col justify-center px-10">
-          <div className="pointer-events-auto">{copy}</div>
+        {/* Dark only behind the text: the garments (and their prints, which are what's being sold) stay
+            bright across the rest of the photo. */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/90 via-black/45 via-35% to-transparent to-60%" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 flex max-w-md flex-col justify-center px-10 xl:max-w-lg">
+          <div className="pointer-events-auto">{copy("h1")}</div>
         </div>
       </div>
 
@@ -344,7 +353,7 @@ export default function CyberLookbook({
           text, and the picked card renders under the photo instead of floating over it — the same
           adjustment the original brief asked for. */}
       <div className="lg:hidden">
-        <div className="px-5 pb-6 pt-10">{copy}</div>
+        <div className="px-5 pb-6 pt-10">{copy("h2")}</div>
         <div className="relative w-full" style={{ aspectRatio: "1230 / 667" }}>
           <PhotoStage uid={uid} openId={openId} setOpenId={setOpenId} productFor={productFor} designs={designs} showDesktopCard={false} />
         </div>

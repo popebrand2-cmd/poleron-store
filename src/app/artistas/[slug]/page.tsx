@@ -8,7 +8,8 @@ import EditableLink from "@/components/edit/EditableLink";
 import Txt from "@/components/edit/Txt";
 import CollectionGarmentsGrid, { type GarmentKind, type GarmentItem } from "@/components/CollectionGarmentsGrid";
 import { getCollectionMockups } from "@/lib/collection-mockups";
-import { garmentKind, kindDescription, normalizeZones, pickProductForKind } from "@/lib/garments";
+import { garmentKind, kindDescription, pickProductForKind } from "@/lib/garments";
+import { normalizeZones } from "@/lib/garments-server";
 
 const KIND_ORDER: Record<GarmentKind, number> = { polera: 0, poleron: 1, boxy: 2 };
 const KIND_TITLE: Record<GarmentKind, string> = { polera: "Polera", poleron: "Polerón oversize", boxy: "Polerón boxifit" };

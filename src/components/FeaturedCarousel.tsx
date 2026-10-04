@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatCLP } from "@/lib/money";
+import { thumb } from "@/lib/thumb";
 
 export type FeaturedProductColor = { name: string; hex: string; imageUrl: string | null };
 
@@ -61,18 +62,15 @@ function ProductCard({ p }: { p: FeaturedProduct }) {
       <span className="absolute left-3 top-3 z-10 glass-neon rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-black">
         Personalizable
       </span>
-      {p.compareAtPrice != null && p.compareAtPrice > p.basePrice && (
-        <span className="absolute right-3 top-3 z-10 rounded-full bg-red-600 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow-[0_0_14px_rgba(220,38,38,0.55)]">
-          🔥 Cyber
-        </span>
-      )}
       <div className={`aspect-square overflow-hidden p-3 transition-colors ${backdropClass}`}>
         {shown?.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             key={shown.imageUrl}
-            src={shown.imageUrl}
+            // Resized copy: the originals are 1–1.4 MB PNGs for a ~260 px card (2.4 MB for three cards).
+            src={thumb(shown.imageUrl, 640)}
             alt={`${p.name} — ${shown.name}`}
+            loading="lazy"
             style={{ objectPosition: `50% ${garmentPositionY(p.name, shown.name)}` }}
             className="h-full w-full object-contain transition group-hover:scale-105"
           />
@@ -99,6 +97,18 @@ function ProductCard({ p }: { p: FeaturedProduct }) {
 
 export default function FeaturedCarousel({ products }: { products: FeaturedProduct[] }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
+  // The arrows only show when the cards actually overflow — with 3 products on a computer they all
+  // fit, and arrows that move nothing look broken.
+  const [overflows, setOverflows] = useState(false);
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const check = () => setOverflows(el.scrollWidth > el.clientWidth + 4);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [products.length]);
 
   function scrollBy(dir: 1 | -1) {
     const el = scrollerRef.current;
@@ -118,7 +128,7 @@ export default function FeaturedCarousel({ products }: { products: FeaturedProdu
         ))}
       </div>
 
-      {products.length > 2 && (
+      {overflows && (
         <div className="mt-6 flex justify-end gap-2">
           <button
             type="button"

@@ -1,8 +1,18 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import ProductPersonalizer from "@/components/ProductPersonalizer";
 
 export const dynamic = "force-dynamic";
+
+// The product's own name in the tab and in search results (it used to be the generic site title).
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const p = await prisma.product.findUnique({ where: { slug }, select: { name: true, description: true, active: true } });
+  if (!p || !p.active) return { title: "Producto — POPE" };
+  const description = p.description || `${p.name} con tu diseño: súbelo, míralo en la prenda real antes de comprar.`;
+  return { title: `${p.name} con tu diseño — POPE`, description };
+}
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

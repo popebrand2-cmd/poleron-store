@@ -34,6 +34,8 @@ export const SITE_TEXT_DEFAULTS: Record<string, string> = {
   "cyber.subtext": "Por tiempo limitado en toda la tienda. Sube tu diseño y personaliza tu prenda al precio Cyber.",
   "cyber.until": "Válido hasta el 7 de octubre",
   "cyber.cta": "Entra al Cyber",
+  "cyber.stripCta": "Ver ofertas",
+  "cyber.endsIn": "Termina en",
   "lookbook.subtext": "Selecciona una prenda y hazla tuya.",
   "lookbook.cta": "Sube tu diseño",
   "lookbook.hint": "Toca o haz clic en los puntos para explorar",

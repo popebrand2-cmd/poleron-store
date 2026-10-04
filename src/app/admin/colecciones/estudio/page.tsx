@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import AdminNav from "@/components/admin/AdminNav";
 import DesignStudio from "@/components/admin/DesignStudio";
-import { loadGarments } from "@/lib/garments";
+import { loadGarments } from "@/lib/garments-server";
 import { DEFAULT_SECTIONS } from "@/lib/collection-sections";
 
 export const dynamic = "force-dynamic";

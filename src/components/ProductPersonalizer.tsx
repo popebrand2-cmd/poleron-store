@@ -71,7 +71,10 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
   const removeItem = useCartStore((s) => s.removeItem);
 
   const [colorIndex, setColorIndex] = useState(0);
-  const [sizeIndex, setSizeIndex] = useState(0);
+  // No size is picked for the customer: a preselected "S" was getting bought by people who never looked
+  // at the size buttons. Adding to the cart asks for one instead.
+  const [sizeIndex, setSizeIndex] = useState<number | null>(product.sizes.length === 1 ? 0 : null);
+  const [sizeMissing, setSizeMissing] = useState(false);
   const [materialIndex, setMaterialIndex] = useState(0);
   const color = product.colors[colorIndex];
   const [activeViewLabel, setActiveViewLabel] = useState(color.views[0]?.label ?? "");
@@ -112,7 +115,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
       .catch(() => setCollections([]));
   }, []);
 
-  const size = product.sizes[sizeIndex];
+  const size = sizeIndex == null ? undefined : product.sizes[sizeIndex];
   const material = product.materials[materialIndex];
   const unitPrice = product.basePrice + (size?.priceDelta ?? 0) + (material?.priceDelta ?? 0);
 
@@ -145,12 +148,12 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     const item = useCartStore.getState().items.find((i) => i.id === editId && i.productId === product.id);
     if (!item) return;
     const ci = Math.max(0, product.colors.findIndex((c) => c.name === item.colorName));
-    const si = Math.max(0, product.sizes.findIndex((s) => s.label === item.sizeLabel));
+    const si = product.sizes.findIndex((s) => s.label === item.sizeLabel);
     const mi = Math.max(0, product.materials.findIndex((m) => m.label === item.materialLabel));
     const targetColor = product.colors[ci];
     const firstWithDesign = targetColor.views.find((v) => item.designPlacement[v.label])?.label ?? targetColor.views[0]?.label ?? "";
     setColorIndex(ci);
-    setSizeIndex(si);
+    setSizeIndex(si >= 0 ? si : null);
     setMaterialIndex(mi);
     setActiveViewLabel(firstWithDesign);
     // mount every view that has a design so all of them are restored (and re-saved) together
@@ -221,6 +224,11 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
 
   async function handleAddToCart() {
     if (addingRef.current) return;
+    if (product.sizes.length > 0 && !size) {
+      setSizeMissing(true);
+      document.getElementById("paso-1")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     addingRef.current = true;
     setFormError("");
     setAdding(true);
@@ -297,6 +305,26 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
 
   const hasMeasurements = product.sizes.some((s) => s.chestCm || s.lengthCm || s.sleeveCm);
 
+  const colorPicker = (
+    <div>
+      <p className="mb-2 text-sm font-medium">Color: {color.name}</p>
+      <div className="flex flex-wrap gap-3">
+        {product.colors.map((c, i) => (
+          <button
+            key={c.name}
+            type="button"
+            onClick={() => handleColorChange(i)}
+            aria-label={`Color ${c.name}`}
+            aria-pressed={i === colorIndex}
+            className={`h-11 w-11 rounded-full border-2 ${i === colorIndex ? "border-neon ring-2 ring-black" : "border-neutral-300"}`}
+            style={{ backgroundColor: c.hex }}
+            title={c.name}
+          />
+        ))}
+      </div>
+    </div>
+  );
+
   return (
     <div className="grid min-w-0 grid-cols-1 gap-8 pb-28 lg:grid-cols-2 lg:gap-x-10 lg:pb-0">
       {/* Header + the three stages */}
@@ -322,35 +350,25 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
       </header>
 
       {/* 01 — ELIGE */}
-      <section id="paso-1" className="scroll-mt-28 lg:col-start-2 lg:row-start-2">
+      <section id="paso-1" className="order-2 scroll-mt-28 lg:order-none lg:col-start-2 lg:row-start-2">
         <StepTitle title="Elige" hint="Color, talla y técnica" />
 
-        <div>
-          <p className="mb-2 text-sm font-medium">Color: {color.name}</p>
-          <div className="flex flex-wrap gap-3">
-            {product.colors.map((c, i) => (
-              <button
-                key={c.name}
-                type="button"
-                onClick={() => handleColorChange(i)}
-                aria-label={`Color ${c.name}`}
-                aria-pressed={i === colorIndex}
-                className={`h-11 w-11 rounded-full border-2 ${i === colorIndex ? "border-neon ring-2 ring-black" : "border-neutral-300"}`}
-                style={{ backgroundColor: c.hex }}
-                title={c.name}
-              />
-            ))}
-          </div>
-        </div>
+        {/* On phones the color sits right above the garment instead (see paso-2) */}
+        <div className="hidden lg:block">{colorPicker}</div>
 
-        <div className="mt-5">
-          <p className="mb-2 text-sm font-medium">Talla: {size?.label}</p>
-          <div className="flex flex-wrap gap-2">
+        <div className="lg:mt-5">
+          <p className="mb-2 text-sm font-medium">
+            Talla: {size ? size.label : <span className={sizeMissing ? "font-bold text-red-600" : "text-neutral-500"}>elige tu talla</span>}
+          </p>
+          <div className={`flex flex-wrap gap-2 rounded-lg ${sizeMissing ? "ring-2 ring-red-500 ring-offset-2" : ""}`}>
             {product.sizes.map((s, i) => (
               <button
                 key={s.label}
                 type="button"
-                onClick={() => setSizeIndex(i)}
+                onClick={() => {
+                  setSizeIndex(i);
+                  setSizeMissing(false);
+                }}
                 aria-pressed={i === sizeIndex}
                 className={`min-h-11 min-w-11 rounded-md border px-4 py-2 text-sm font-medium ${
                   i === sizeIndex ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-300"
@@ -360,6 +378,11 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
               </button>
             ))}
           </div>
+          {sizeMissing && (
+            <p role="alert" className="mt-2 text-sm font-semibold text-red-600">
+              Elige tu talla para agregar al carrito.
+            </p>
+          )}
 
           {hasMeasurements && (
             <details className="group mt-3">
@@ -423,7 +446,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
 
       {/* Collections: under the size/material choices on phones, full width under both columns on desktop */}
       {collectionsForView.length > 0 && (
-          <div className="relative min-w-0 overflow-hidden rounded-2xl border border-neutral-200 bg-white p-4 text-black sm:p-5 lg:col-span-2 lg:row-start-4 lg:p-8">
+          <div className="relative order-3 min-w-0 overflow-hidden rounded-2xl border border-neutral-200 bg-white p-4 text-black sm:p-5 lg:order-none lg:col-span-2 lg:row-start-4 lg:p-8">
             <div className="relative">
               <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#0b6b25]">POPE · Colecciones</p>
               <h3 className="mt-1 font-display text-2xl font-bold uppercase leading-none sm:text-3xl">O elige de nuestra colección</h3>
@@ -486,7 +509,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
                     onClick={() => document.getElementById("paso-2")?.scrollIntoView({ behavior: "smooth", block: "start" })}
                     className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0b6b25] px-5 text-xs font-bold uppercase tracking-wide text-white lg:hidden"
                   >
-                    Ver en mi prenda ↓
+                    Ver en mi prenda ↑
                   </button>
                 </div>
               )}
@@ -494,9 +517,12 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
           </div>
         )}
 
-      {/* 02 — PERSONALIZA */}
-      <section id="paso-2" className="min-w-0 scroll-mt-28 lg:col-start-1 lg:row-span-2 lg:row-start-2">
+      {/* 02 — PERSONALIZA. First thing under the price on phones: the garment is what sells, the size and
+          material choices can wait below it. */}
+      <section id="paso-2" className="order-1 min-w-0 scroll-mt-28 lg:order-none lg:col-start-1 lg:row-span-2 lg:row-start-2">
         <StepTitle title="Personaliza" hint="Sube tu diseño, muévelo y mira cómo queda" />
+
+        {product.colors.length > 1 && <div className="mb-4 lg:hidden">{colorPicker}</div>}
 
         <div className="mb-4 flex justify-center gap-2 rounded-lg bg-neutral-100 p-1">
           {color.views.map((v) => (
@@ -535,7 +561,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
       </section>
 
       {/* 03 — CONFIRMA */}
-      <section id="paso-3" className="scroll-mt-28 lg:col-start-2 lg:row-start-3">
+      <section id="paso-3" className="order-4 scroll-mt-28 lg:order-none lg:col-start-2 lg:row-start-3">
         {formError && (
           <p role="alert" className="mt-4 text-sm text-red-600">
             {formError}
@@ -561,12 +587,12 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
       </section>
 
       {/* Purchase info: under the buttons on phones, a horizontal strip across both columns on desktop */}
-      <div className="min-w-0 lg:col-span-2 lg:row-start-5">
+      <div className="order-5 min-w-0 lg:order-none lg:col-span-2 lg:row-start-5">
         <ProductInfo />
       </div>
 
       {tryOnSnapshot && (
-        <div className="min-w-0 lg:col-span-2">
+        <div className="order-6 min-w-0 lg:order-none lg:col-span-2">
           <TryOnEditor garmentSnapshotUrl={tryOnSnapshot} onClose={() => setTryOnSnapshot(null)} />
         </div>
       )}
