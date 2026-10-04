@@ -156,9 +156,10 @@ export default function HoodieViewer3D({ modelUrl, frontSign = 1, colorHex, view
           material.color.set(hex);
           const lum = material.color.r * 0.299 + material.color.g * 0.587 + material.color.b * 0.114;
           const dark = lum < 0.1;
-          scene.environmentIntensity = dark ? 0.45 : 0.85;
-          key.intensity = dark ? 1.1 : 1.5;
-          fill.intensity = dark ? 0.35 : 0.55;
+          const light = lum > 0.6; // white would clip to a flat white with the default light and hide the folds
+          scene.environmentIntensity = dark ? 0.45 : light ? 0.5 : 0.85;
+          key.intensity = dark ? 1.1 : light ? 0.85 : 1.5;
+          fill.intensity = dark ? 0.35 : light ? 0.3 : 0.55;
         };
         colorRef.current(colorHex);
 
