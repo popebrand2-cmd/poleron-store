@@ -349,8 +349,8 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
           )}
         </p>
         {onCyberSale && (
-          <p className="mt-1.5 inline-flex items-center gap-2 rounded-full bg-red-600/10 px-3 py-1 text-xs font-bold uppercase tracking-wide text-red-700">
-            🔥 La oferta Cyber termina en <CyberCountdown className="font-display text-base leading-none" />
+          <p className="mt-2 rounded-xl bg-red-600/10 px-3 py-1.5 text-xs font-bold uppercase leading-snug tracking-wide text-red-700 sm:inline-block sm:rounded-full">
+            🔥 Oferta Cyber: termina en <CyberCountdown className="whitespace-nowrap font-display text-base leading-none" />
           </p>
         )}
         <VatNote />
@@ -626,7 +626,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
         <div className="mx-auto flex max-w-md items-center gap-3">
           <div className="leading-none">
             <p className="text-[11px] uppercase tracking-wide text-neutral-400">Total</p>
-            <p className="font-display text-4xl font-bold text-neon" aria-live="polite">
+            <p className="font-display text-3xl font-bold text-neon" aria-live="polite">
               {formatCLP(unitPrice)}
             </p>
           </div>
@@ -646,7 +646,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
                 onClick={() => handleAddToCart()}
                 disabled={adding}
                 aria-label="Agregar al carrito"
-                className="min-h-12 shrink-0 rounded-full border-2 border-neon px-3.5 py-2 text-xs font-bold uppercase tracking-wide text-neon transition active:bg-neon active:text-black disabled:opacity-50"
+                className="min-h-12 shrink-0 whitespace-nowrap rounded-full border-2 border-neon px-3 py-2 text-xs font-bold uppercase tracking-wide text-neon transition active:bg-neon active:text-black disabled:opacity-50"
               >
                 Al carrito
               </button>
@@ -654,7 +654,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
                 type="button"
                 onClick={() => handleAddToCart("/checkout")}
                 disabled={adding}
-                className="min-h-12 flex-1 rounded-full bg-neon px-3 py-2.5 text-sm font-bold uppercase tracking-wide text-black transition active:brightness-90 disabled:opacity-50"
+                className="min-h-12 flex-1 whitespace-nowrap rounded-full bg-neon px-2 py-2.5 text-xs font-bold uppercase tracking-wide text-black transition active:brightness-90 disabled:opacity-50"
               >
                 {adding ? "Agregando..." : "Comprar ahora"}
               </button>
