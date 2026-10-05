@@ -24,10 +24,12 @@ type Staged = {
   width: number;
   height: number;
   transparent: boolean;
+  lum: number | null; // average brightness 0-255 of the visible art (null when it has a background)
   busy: string; // "" or what is being done to it (removing background...)
 };
 
-type Meta = { name?: string; mode?: Mode; origin?: Origin; note?: string };
+type Tone = "" | "negro" | "blanco";
+type Meta = { name?: string; mode?: Mode; origin?: Origin; note?: string; tone?: Tone };
 
 type Row = {
   key: string;
@@ -55,10 +57,11 @@ function parseName(fileName: string): { side: Side; key: string; name: string } 
 }
 
 // Size in pixels and whether the image already has a see-through background, read in the browser.
-async function analyze(file: File): Promise<{ width: number; height: number; transparent: boolean }> {
+async function analyze(file: File): Promise<{ width: number; height: number; transparent: boolean; lum: number | null }> {
   const bmp = await createImageBitmap(file);
   const { width, height } = bmp;
   let transparent = false;
+  let lum: number | null = null;
   if (file.type !== "image/jpeg") {
     const scale = Math.min(1, 160 / Math.max(width, height));
     const w = Math.max(1, Math.round(width * scale));
@@ -71,12 +74,29 @@ async function analyze(file: File): Promise<{ width: number; height: number; tra
       ctx.drawImage(bmp, 0, 0, w, h);
       const data = ctx.getImageData(0, 0, w, h).data;
       let clear = 0;
-      for (let i = 3; i < data.length; i += 4) if (data[i] < 250) clear++;
+      let sum = 0;
+      let seen = 0;
+      for (let i = 3; i < data.length; i += 4) {
+        if (data[i] < 250) clear++;
+        if (data[i] > 128) {
+          sum += 0.299 * data[i - 3] + 0.587 * data[i - 2] + 0.114 * data[i - 1];
+          seen++;
+        }
+      }
       transparent = clear / (w * h) > 0.03;
+      if (transparent && seen > 0) lum = sum / seen;
     }
   }
   bmp.close();
-  return { width, height, transparent };
+  return { width, height, transparent, lum };
+}
+
+// Light art vanishes on a white garment and dark art on a black one: suggest where it will be seen.
+function suggestTone(arts: Staged[]): Tone {
+  const l = arts.map((a) => a.lum).filter((v): v is number => v != null);
+  if (l.length === 0) return "";
+  const mean = l.reduce((a, b) => a + b, 0) / l.length;
+  return mean > 185 ? "negro" : mean < 70 ? "blanco" : "";
 }
 
 function quality(s: Staged): { label: string; tone: "ok" | "warn" | "bad" } {
@@ -154,7 +174,8 @@ export default function BulkDesignUpload({ collectionId, onDone }: { collectionI
       mode: m.mode ?? (r.art ? (isBackOnly(r) ? "back" : "front") : "both"),
       origin: m.origin ?? "sin-confirmar",
       note: m.note ?? "",
-    } as { name: string; mode: Mode; origin: Origin; note: string };
+      tone: (m.tone ?? suggestTone([r.front, r.back, r.art].filter(Boolean) as Staged[])) as Tone,
+    } as { name: string; mode: Mode; origin: Origin; note: string; tone: Tone };
   };
   const setField = (key: string, patch: Meta) => setMeta((m) => ({ ...m, [key]: { ...m[key], ...patch } }));
 
@@ -209,7 +230,7 @@ export default function BulkDesignUpload({ collectionId, onDone }: { collectionI
         const res = await fetch(`/api/admin/collections/${collectionId}/designs`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...body, origin: m.origin, sourceNote: m.note }),
+          body: JSON.stringify({ ...body, origin: m.origin, sourceNote: m.note, garmentColors: m.tone }),
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? "No se pudo guardar el diseño.");
@@ -330,6 +351,16 @@ export default function BulkDesignUpload({ collectionId, onDone }: { collectionI
                         ))}
                       </select>
                       <input value={m.note} onChange={(e) => setField(r.key, { note: e.target.value })} placeholder="Quién lo hizo o de dónde viene (licencia, diseñador, enlace…)" aria-label="Nota de origen" className="w-full rounded-md border border-neutral-300 px-3 py-1.5 text-sm" />
+                      <label className="flex items-center gap-2 text-xs text-neutral-600">
+                        <span className="shrink-0">Se ve bien en</span>
+                        <select value={m.tone} onChange={(e) => setField(r.key, { tone: e.target.value as Tone })} aria-label="Prendas donde se ve bien" className="w-full rounded-md border border-neutral-300 px-2 py-1.5 text-sm">
+                          <option value="">Prendas negras y blancas</option>
+                          <option value="negro">Solo prendas negras (diseño claro)</option>
+                          <option value="blanco">Solo prendas blancas (diseño oscuro)</option>
+                        </select>
+                      </label>
+                      {m.tone === "negro" && <p className="text-[11px] text-neutral-500">Diseño claro: en una prenda blanca no se vería, así que solo se muestra en negras.</p>}
+                      {m.tone === "blanco" && <p className="text-[11px] text-neutral-500">Diseño oscuro: en una prenda negra no se vería, así que solo se muestra en blancas.</p>}
                       <div className="flex items-center justify-between text-xs">
                         <span className={st?.state === "ok" ? "text-emerald-700" : st?.state === "error" ? "text-red-600" : "text-neutral-400"}>
                           {st?.state === "uploading" ? "Subiendo…" : st?.state === "ok" ? "Listo" : st?.state === "error" ? st.error : ""}

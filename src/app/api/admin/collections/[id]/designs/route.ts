@@ -13,6 +13,7 @@ const designSchema = z.object({
   backScale: z.number().min(0.1).max(1.5).default(1),
   origin: z.enum(["", "propio", "encargado", "licencia", "dominio-publico", "sin-confirmar"]).default(""),
   sourceNote: z.string().max(500).default(""),
+  garmentColors: z.enum(["", "negro", "blanco"]).default(""),
 });
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -44,6 +45,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       sortOrder: count,
       origin: data.origin,
       sourceNote: data.sourceNote,
+      garmentColors: data.garmentColors,
       // A design whose origin is not confirmed is saved but not published.
       active: data.origin !== "sin-confirmar",
     },

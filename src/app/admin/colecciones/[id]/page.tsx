@@ -43,6 +43,7 @@ export default async function AdminCollectionPage({ params }: { params: Promise<
             backImageUrl: d.backImageUrl,
             origin: d.origin,
             sourceNote: d.sourceNote,
+            garmentColors: d.garmentColors,
           })),
         }}
       />

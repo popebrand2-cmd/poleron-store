@@ -268,6 +268,10 @@ model PresetDesign {
   // cleared). "" = designs created before this was recorded. sourceNote: who/where (license, designer, link).
   origin     String @default("")
   sourceNote String @default("")
+
+  // Garment colors the art looks right on: "" = all, "negro" = only dark garments (light art that would vanish on
+  // white), "blanco" = only light garments (dark art that would vanish on black).
+  garmentColors String @default("")
 }
 
 model OrderItem {

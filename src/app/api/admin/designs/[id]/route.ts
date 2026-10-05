@@ -9,6 +9,7 @@ const updateSchema = z.object({
   active: z.boolean().optional(),
   origin: z.enum(["", "propio", "encargado", "licencia", "dominio-publico", "sin-confirmar"]).optional(),
   sourceNote: z.string().max(500).optional(),
+  garmentColors: z.enum(["", "negro", "blanco"]).optional(),
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {

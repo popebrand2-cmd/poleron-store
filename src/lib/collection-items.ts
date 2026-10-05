@@ -53,7 +53,22 @@ type Design = {
   showBack: boolean;
   frontScale: number;
   backScale: number;
+  // "" = every garment color, "negro" = dark garments only, "blanco" = light garments only.
+  garmentColors?: string;
 };
+
+// Light art disappears on a white garment and dark art on a black one: a design limited to one tone only shows the
+// garment colors where it reads. If that would leave no color at all, every color stays.
+function colorsFor<T extends { hex: string }>(colors: T[], limit?: string): T[] {
+  if (limit !== "negro" && limit !== "blanco") return colors;
+  const lum = (hex: string) => {
+    const h = hex.replace("#", "");
+    const v = h.length === 3 ? h.split("").map((c) => c + c).join("") : h.padEnd(6, "0");
+    return (0.299 * parseInt(v.slice(0, 2), 16) + 0.587 * parseInt(v.slice(2, 4), 16) + 0.114 * parseInt(v.slice(4, 6), 16)) / 255;
+  };
+  const fit = colors.filter((c) => (limit === "negro" ? lum(c.hex) < 0.45 : lum(c.hex) >= 0.45));
+  return fit.length > 0 ? fit : colors;
+}
 
 // The garment cards of one collection: the owner's finished mockups when the collection has them (they cover the
 // collection's first design, `coverDesignId`), plus every design printed on every garment of the catalog.
@@ -116,7 +131,7 @@ export function buildArtistItems(opts: {
         backScale: d.backScale,
         basePrice: p.basePrice,
         compareAtPrice: p.compareAtPrice,
-        colors: p.colors,
+        colors: colorsFor(p.colors, d.garmentColors),
       })),
   );
   return [...mockupItems, ...overlayItems];

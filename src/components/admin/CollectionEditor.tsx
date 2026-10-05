@@ -13,6 +13,7 @@ type Design = {
   backImageUrl: string;
   origin: string;
   sourceNote: string;
+  garmentColors: string;
 };
 
 type Collection = {
@@ -162,6 +163,15 @@ export default function CollectionEditor({ collection, categories }: { collectio
     router.refresh();
   }
 
+  async function handleTone(design: Design, garmentColors: string) {
+    await fetch(`/api/admin/designs/${design.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ garmentColors }),
+    });
+    router.refresh();
+  }
+
   const front = collection.designs.filter((d) => d.placement === "FRONT");
   const back = collection.designs.filter((d) => d.placement === "BACK");
 
@@ -300,8 +310,8 @@ export default function CollectionEditor({ collection, categories }: { collectio
         </button>
       </form>
 
-      <DesignGrid title="Diseños para adelante" designs={front} onDelete={handleDeleteDesign} onToggle={handleToggleDesignActive} onOrigin={handleOrigin} />
-      <DesignGrid title="Diseños para atrás" designs={back} onDelete={handleDeleteDesign} onToggle={handleToggleDesignActive} onOrigin={handleOrigin} />
+      <DesignGrid title="Diseños para adelante" designs={front} onDelete={handleDeleteDesign} onToggle={handleToggleDesignActive} onOrigin={handleOrigin} onTone={handleTone} />
+      <DesignGrid title="Diseños para atrás" designs={back} onDelete={handleDeleteDesign} onToggle={handleToggleDesignActive} onOrigin={handleOrigin} onTone={handleTone} />
     </div>
   );
 }
@@ -312,12 +322,14 @@ function DesignGrid({
   onDelete,
   onToggle,
   onOrigin,
+  onTone,
 }: {
   title: string;
   designs: Design[];
   onDelete: (id: string) => void;
   onToggle: (d: Design) => void;
   onOrigin: (d: Design, origin: string) => void;
+  onTone: (d: Design, tone: string) => void;
 }) {
   if (designs.length === 0) return null;
   return (
@@ -332,6 +344,17 @@ function DesignGrid({
             </div>
             <p className="truncate text-sm font-medium">{d.name}</p>
             {!d.active && <p className="mt-0.5 text-[11px] font-semibold uppercase text-amber-700">No publicado</p>}
+            <select
+              value={d.garmentColors || ""}
+              onChange={(e) => onTone(d, e.target.value)}
+              aria-label="Prendas donde se ve bien"
+              title="En qué colores de prenda se muestra este diseño"
+              className="mt-1 w-full rounded border border-neutral-300 px-1 py-1 text-[11px]"
+            >
+              <option value="">Negras y blancas</option>
+              <option value="negro">Solo negras</option>
+              <option value="blanco">Solo blancas</option>
+            </select>
             <select
               value={d.origin || ""}
               onChange={(e) => onOrigin(d, e.target.value)}
