@@ -240,14 +240,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Trust (shipping, secure payment, guarantee) right under the base garments ("Personaliza el tuyo…"). Same editable
-          badges that used to sit at the very bottom. */}
-      <section className="border-y border-neutral-800 bg-neutral-950">
-        <div className="mx-auto max-w-6xl px-6 py-7">
-          <TrustBadgesList initialItems={itemsFor("trustBadges")} />
-        </div>
-      </section>
-
       {/* Artist collections: 3D carousel (each card opens its own catalog page) */}
       {collectionsWithDesigns.length > 0 && (
         <CollectionsShowcase
@@ -293,6 +285,13 @@ export default async function Home() {
             </h2>
           </div>
           <FaqList initialItems={itemsFor("faq")} />
+        </div>
+      </section>
+
+      {/* Trust (shipping, secure payment, guarantee): the very last thing on the page, right above the footer. */}
+      <section className="border-y border-neutral-800 bg-neutral-950">
+        <div className="mx-auto max-w-6xl px-6 py-7">
+          <TrustBadgesList initialItems={itemsFor("trustBadges")} />
         </div>
       </section>
 
