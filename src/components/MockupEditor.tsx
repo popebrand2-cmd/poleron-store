@@ -402,6 +402,10 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
     // it's selected or being dragged/scaled — replaces the old fixed
     // dashed-rectangle guide. cm-per-canvas-px is constant for a view
     // (independent of talla — see the comment on updateDesignBadge below).
+    // Phone panel ("Ajusta tu diseño"): which tool is open and the design's size as a percentage of the size it started at.
+    const [tool, setTool] = useState<"size" | "pos" | "edit">("size");
+    const [scalePct, setScalePct] = useState(100);
+    const scaleBaseRef = useRef(new WeakMap<object, number>());
     const [designBadge, setDesignBadge] = useState<{ left: number; top: number; widthCm: number; heightCm: number } | null>(
       null,
     );
@@ -447,6 +451,9 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
         setDesignBadge(null);
         return;
       }
+      const bases = scaleBaseRef.current;
+      if (!bases.has(obj)) bases.set(obj, obj.scaleX ?? 1);
+      setScalePct(Math.round(((obj.scaleX ?? 1) / (bases.get(obj) || 1)) * 100));
       const cmPerPxX = view.maxWidthCm / maxZoneRef.current.width;
       const cmPerPxY = view.maxHeightCm / maxZoneRef.current.height;
       const w = obj.getScaledWidth();
@@ -692,6 +699,24 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       obj.set({ scaleX: (obj.scaleX ?? 1) * factor, scaleY: (obj.scaleY ?? 1) * factor });
       clampObjectToMaxSize(obj);
       finishAdjust(obj);
+    }
+
+    // Size slider of the phone panel: the percentage is relative to the size the design started at. History is saved
+    // when the finger lifts (commitAdjust), not on every step of the drag.
+    function setScalePercent(pct: number) {
+      const obj = adjustTarget();
+      const canvas = fabricCanvasRef.current;
+      if (!obj || !canvas) return;
+      const base = scaleBaseRef.current.get(obj) ?? (obj.scaleX ?? 1);
+      obj.set({ scaleX: (base * pct) / 100, scaleY: (base * pct) / 100 });
+      clampObjectToMaxSize(obj);
+      obj.setCoords();
+      canvas.setActiveObject(obj);
+      updateDesignBadge(obj);
+      canvas.requestRenderAll();
+    }
+    function commitAdjust() {
+      pushHistory();
     }
 
     function centerInZone() {
@@ -1154,10 +1179,19 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
       },
     }));
 
+    // The phone's "Ajusta tu diseño" panel replaces the loose control rows once a design is on the garment.
+    const phonePanel = hasDesign && !cropping && !pickingBgColor;
+    const designThumb = originalDesignUrlRef.current || "";
+
     return (
       <div ref={wrapperRef} className="min-w-0 space-y-3">
         <div className="relative mx-auto w-fit max-w-full overflow-hidden rounded-lg border border-neutral-200">
           <canvas ref={canvasElRef} />
+          {hasDesign && !cropping && !pickingBgColor && (
+            <span className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-black/60 px-3 py-1 text-[11px] font-medium text-white lg:hidden">
+              Arrastra tu diseño para moverlo
+            </span>
+          )}
           {designBadge && (
             <span
               className="pointer-events-none absolute rounded bg-neutral-900/80 px-1.5 py-0.5 text-[10px] font-medium text-white"
@@ -1172,7 +1206,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           )}
         </div>
         {/* Main controls: always visible */}
-        <div className="flex flex-wrap items-center justify-center gap-3">
+        <div className={`flex flex-wrap items-center justify-center gap-3 ${phonePanel ? "max-lg:hidden" : ""}`}>
           <label className="cursor-pointer rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white">
             {uploading ? "Subiendo..." : hasDesign ? "Cambiar diseño" : "Subir tu diseño"}
             <input
@@ -1212,8 +1246,112 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           </p>
         )}
 
+        {phonePanel && (
+          <section aria-label="Ajusta tu diseño" className="mx-auto max-w-md rounded-3xl border border-neutral-200 bg-white p-4 shadow-[0_-6px_24px_rgba(0,0,0,0.08)] lg:hidden">
+            <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-neutral-300" aria-hidden="true" />
+            <h3 className="font-display text-3xl font-bold uppercase leading-none text-black">Ajusta tu diseño</h3>
+            <div role="tablist" aria-label="Herramientas" className="mt-3 grid grid-cols-4 gap-2">
+              {([
+                { id: "size", label: "Tamaño", icon: "M4 20l6-6M20 4l-6 6M14 4h6v6M10 20H4v-6" },
+                { id: "pos", label: "Posición", icon: "M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3" },
+                { id: "edit", label: "Editar", icon: "M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4" },
+              ] as const).map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={tool === t.id}
+                  onClick={() => {
+                    setTool(t.id);
+                    if (t.id === "edit") setToolsOpen(true);
+                  }}
+                  className={`flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-xl border-2 px-0.5 text-[11px] font-bold uppercase transition ${
+                    tool === t.id ? "border-neon bg-neon text-black" : "border-neutral-200 bg-neutral-50 text-black"
+                  }`}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" aria-hidden="true">
+                    <path d={t.icon} />
+                  </svg>
+                  {t.label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={handleUndo}
+                disabled={!canUndo || undoing}
+                className="flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-xl border-2 border-neutral-200 bg-neutral-50 px-0.5 text-[11px] font-bold uppercase text-black transition disabled:opacity-40"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6" aria-hidden="true">
+                  <path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />
+                </svg>
+                Deshacer
+              </button>
+            </div>
+
+            {tool === "size" && (
+              <div className="mt-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-3">
+                <div className="flex items-center gap-3">
+                  <PadButton label="Hacer más pequeño" onStep={() => scaleBy(0.95)}>−</PadButton>
+                  <input
+                    type="range"
+                    min={20}
+                    max={200}
+                    step={1}
+                    value={Math.min(200, Math.max(20, scalePct))}
+                    onChange={(e) => setScalePercent(Number(e.target.value))}
+                    onPointerUp={commitAdjust}
+                    onKeyUp={commitAdjust}
+                    aria-label="Tamaño del diseño"
+                    className="h-11 min-w-0 flex-1 accent-[#b6ff00]"
+                  />
+                  <PadButton label="Hacer más grande" onStep={() => scaleBy(1.05)}>+</PadButton>
+                </div>
+                <p className="mt-1 text-center text-sm font-semibold tabular-nums text-black">{scalePct}%</p>
+              </div>
+            )}
+            {tool === "pos" && (
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-3">
+                <div className="flex gap-1.5">
+                  <PadButton label="Mover a la izquierda" onStep={() => moveBy(-8, 0)}>←</PadButton>
+                  <PadButton label="Mover hacia arriba" onStep={() => moveBy(0, -8)}>↑</PadButton>
+                  <PadButton label="Mover hacia abajo" onStep={() => moveBy(0, 8)}>↓</PadButton>
+                  <PadButton label="Mover a la derecha" onStep={() => moveBy(8, 0)}>→</PadButton>
+                </div>
+                <button
+                  type="button"
+                  onClick={centerInZone}
+                  className="h-11 rounded-full border-2 border-black bg-white px-5 text-xs font-bold uppercase tracking-wide text-black transition active:bg-neon"
+                >
+                  Centrar
+                </button>
+              </div>
+            )}
+            {tool === "edit" && <p className="mt-3 text-center text-sm text-neutral-600">Recorta, quita el fondo o agrega texto aquí abajo.</p>}
+
+            <div className="mt-3 flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-2.5">
+              {designThumb && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={designThumb} alt="" className="h-12 w-12 shrink-0 rounded-lg bg-neutral-900 object-contain" />
+              )}
+              <span className="min-w-0 flex-1 text-[13px] leading-tight text-neutral-800">Diseño seleccionado</span>
+              <label className="flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-black px-3 text-xs font-bold uppercase text-black">
+                {uploading ? "Subiendo..." : "Cambiar"}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleUpload(file);
+                  }}
+                />
+              </label>
+            </div>
+          </section>
+        )}
+
         {hasDesign && !cropping && !pickingBgColor && (
-          <div className="mx-auto flex max-w-md flex-wrap items-center justify-center gap-x-5 gap-y-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3" aria-label="Ajustes del diseño">
+          <div className="mx-auto flex max-w-md flex-wrap items-center justify-center gap-x-5 gap-y-3 rounded-xl border border-neutral-200 bg-neutral-50 p-3 max-lg:hidden" aria-label="Ajustes del diseño">
             <div className="flex flex-col items-center gap-1">
               <span className="text-[11px] font-bold uppercase tracking-wide text-neutral-500">Mover</span>
               <div className="flex gap-1.5">
@@ -1270,7 +1408,7 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
           <details
             open={toolsOpen}
             onToggle={(e) => setToolsOpen(e.currentTarget.open)}
-            className="mx-auto max-w-md rounded-xl border border-neutral-200 bg-white"
+            className={`mx-auto max-w-md rounded-xl border border-neutral-200 bg-white ${phonePanel && tool !== "edit" ? "max-lg:hidden" : ""}`}
           >
             <summary className="cursor-pointer select-none px-4 py-2.5 text-center text-xs font-bold uppercase tracking-wide text-neutral-700">
               Más herramientas (recorte, fondo, texto…)
