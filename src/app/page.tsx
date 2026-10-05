@@ -95,7 +95,7 @@ export default async function Home() {
       <section aria-label="Tu idea. Tu prenda." className="hidden bg-black md:block">
         <Link href={editorHref} className="mx-auto block max-w-[1600px]">
           <picture>
-            <source media="(min-width: 768px)" srcSet="/promo/banner-pope-v2.webp" />
+            <source media="(min-width: 768px)" srcSet="/promo/banner-pope-v3.webp" />
             {/* Phones get a 1px placeholder, so the 200 KB banner is never downloaded there. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
