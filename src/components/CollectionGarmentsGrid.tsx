@@ -10,6 +10,9 @@ export type GarmentItem = {
   href: string;
   // The same garment with nothing printed on it ("+ Personalizar").
   blankHref?: string;
+  // The collection it belongs to (the "all collections" page filters on it).
+  collectionId?: string;
+  collectionName?: string;
   title: string;
   description?: string;
   badge?: string;

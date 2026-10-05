@@ -123,7 +123,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <h2 className="font-display text-4xl font-bold uppercase leading-none text-black sm:text-5xl">Más prendas de nuestras colecciones</h2>
               <p className="mt-2 text-base text-neutral-600">Con el diseño ya puesto, adelante y atrás. Toca una y llévatela.</p>
             </div>
-            <Link href="/#colecciones" className="text-xs font-bold uppercase tracking-[0.18em] text-[#0b6b25] transition hover:underline">
+            <Link href="/colecciones" className="text-xs font-bold uppercase tracking-[0.18em] text-[#0b6b25] transition hover:underline">
               Ver colecciones →
             </Link>
           </div>

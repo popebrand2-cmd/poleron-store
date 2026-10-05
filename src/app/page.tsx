@@ -193,7 +193,7 @@ export default async function Home() {
                 </h2>
                 <Txt k="home.garmentsText" as="p" multiline className="mt-2 block text-sm text-neutral-400" />
               </div>
-              <Link href="/#colecciones" className="text-xs font-bold uppercase tracking-[0.18em] text-neon transition hover:underline">
+              <Link href="/colecciones" className="text-xs font-bold uppercase tracking-[0.18em] text-neon transition hover:underline">
                 <Txt k="home.garmentsCta" /> →
               </Link>
             </div>

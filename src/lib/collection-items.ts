@@ -77,6 +77,8 @@ export function buildArtistItems(opts: {
     return [
       {
         key: `${artistId}-${kind}`,
+        collectionId: artistId,
+        collectionName: artistName,
         kind,
         href: `${base}${base.includes("?") ? "&" : "?"}diseno=${coverDesignId}`,
         blankHref: base,
@@ -98,6 +100,8 @@ export function buildArtistItems(opts: {
       .sort((a, b) => KIND_ORDER[garmentKind(a)] - KIND_ORDER[garmentKind(b)])
       .map((p) => ({
         key: `${d.id}-${p.id}`,
+        collectionId: artistId,
+        collectionName: artistName,
         kind: garmentKind(p),
         href: `/productos/${p.slug}?diseno=${d.id}`,
         blankHref: `/productos/${p.slug}`,
