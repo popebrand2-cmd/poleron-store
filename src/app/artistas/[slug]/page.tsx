@@ -116,7 +116,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
                       className="h-full w-full object-contain object-center transition duration-500 group-hover:scale-[1.04]"
                     />
                   </div>
-                  <p className="mt-1.5 truncate px-0.5 font-display text-base font-bold uppercase leading-none">{d.name}</p>
+                  <p className="mt-1.5 line-clamp-2 min-h-8 px-0.5 font-display text-base font-bold uppercase leading-none">{d.name}</p>
                   <EditableLink
                     href={designHref(d.id)}
                     className="mt-1.5 flex min-h-8 w-full items-center justify-center gap-1 rounded-full border-2 border-black bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-black transition hover:border-neon hover:bg-neon"
