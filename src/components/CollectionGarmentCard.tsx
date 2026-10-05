@@ -9,6 +9,9 @@ import { garmentPhoto } from "@/lib/garment-photo";
 const BACK_SHADOW = "drop-shadow(-12px 8px 14px rgba(0,0,0,0.38))";
 const GARMENT_GLOW = "drop-shadow(0 0 1px rgba(0,0,0,0.45)) drop-shadow(0 0 6px color-mix(in srgb, var(--neon) 34%, #000)) drop-shadow(0 4px 16px color-mix(in srgb, var(--neon) 24%, #000))";
 const BACK_GLOW = `${BACK_SHADOW} ${GARMENT_GLOW}`;
+// Light theme (white garments on a white page): a plain soft shadow instead of the green halo.
+const LIGHT_GLOW = "drop-shadow(0 6px 12px rgba(0,0,0,0.16))";
+const LIGHT_BACK_GLOW = "drop-shadow(-10px 8px 12px rgba(0,0,0,0.2))";
 
 export type GarmentView = {
   label: string;
@@ -95,8 +98,11 @@ export default function CollectionGarmentCard({
   preferColor = "",
   className = "",
   blankHref,
+  light = false,
 }: {
   className?: string;
+  // White page: dark text and a plain shadow instead of the white-on-black look.
+  light?: boolean;
   // Where "+ Personalizar" goes: the same garment with nothing printed. `href` (the card itself) opens it with this design on.
   blankHref?: string;
   // Color picked in the collection's color filter: the card opens on it (when it has it).
@@ -118,7 +124,7 @@ export default function CollectionGarmentCard({
   const [i, setI] = useState(0);
   const [peek, setPeek] = useState<number | null>(null);
   useEffect(() => {
-    const idx = preferColor ? colors.findIndex((c) => c.name === preferColor) : -1;
+    const idx = preferColor ? colors.findIndex((c) => c.name.toLowerCase() === preferColor.toLowerCase()) : -1;
     setI(idx >= 0 ? idx : 0);
   }, [preferColor, colors]);
   const color = colors[peek ?? i] ?? colors[0];
@@ -127,6 +133,8 @@ export default function CollectionGarmentCard({
   const backView = color?.views.find((v) => v.label === "Espalda");
   const back = backView && backView.imageUrl !== front?.imageUrl ? backView : undefined;
   const badgeLabel = badge?.trim() || "";
+  const glow = light ? LIGHT_GLOW : GARMENT_GLOW;
+  const backGlow = light ? LIGHT_BACK_GLOW : BACK_GLOW;
   const pct = basePrice != null && compareAtPrice && compareAtPrice > basePrice ? Math.round(100 - (basePrice / compareAtPrice) * 100) : 0;
 
   return (
@@ -139,15 +147,15 @@ export default function CollectionGarmentCard({
         )}
         {color?.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={color.imageUrl} alt={title} loading="lazy" decoding="async" draggable={false} className="absolute inset-0 h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]" style={{ filter: GARMENT_GLOW }} />
+          <img src={color.imageUrl} alt={title} loading="lazy" decoding="async" draggable={false} className="absolute inset-0 h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]" style={{ filter: glow }} />
         )}
         {!color?.imageUrl && front && (
-          <div style={{ filter: GARMENT_GLOW }} className={`absolute flex items-start justify-start transition duration-500 group-hover:scale-[1.03] ${back ? "left-[2%] top-[3%] h-[78%] w-[78%]" : "inset-[6%]"}`}>
+          <div style={{ filter: glow }} className={`absolute flex items-start justify-start transition duration-500 group-hover:scale-[1.03] ${back ? "left-[2%] top-[3%] h-[78%] w-[78%]" : "inset-[6%]"}`}>
             <Mock view={front} design={frontArt} scale={frontScale} />
           </div>
         )}
         {!color?.imageUrl && back && (
-          <div style={{ filter: BACK_GLOW }} className="absolute bottom-[2%] right-[1%] flex h-[78%] w-[78%] items-end justify-end transition duration-500 group-hover:scale-[1.03]">
+          <div style={{ filter: backGlow }} className="absolute bottom-[2%] right-[1%] flex h-[78%] w-[78%] items-end justify-end transition duration-500 group-hover:scale-[1.03]">
             <Mock view={back} design={backArt} scale={backScale} fallback={frontArt} />
           </div>
         )}
@@ -162,14 +170,14 @@ export default function CollectionGarmentCard({
           + Personalizar
         </Link>
       </div>
-      <Link href={href} className="mt-4 line-clamp-2 block text-base font-semibold leading-snug text-white hover:text-neon">
+      <Link href={href} className={`mt-4 line-clamp-2 block text-base font-semibold leading-snug ${light ? "text-black hover:text-[#0b6b25]" : "text-white hover:text-neon"}`}>
         {title}
       </Link>
-      {description && <p className="mt-1 line-clamp-2 text-sm leading-snug text-neutral-400">{description}</p>}
+      {description && <p className={`mt-1 line-clamp-2 text-sm leading-snug ${light ? "text-neutral-600" : "text-neutral-400"}`}>{description}</p>}
       {basePrice != null && (
         <p className="mt-1 flex items-baseline gap-2">
-          <span className="text-lg font-semibold text-[#ff6b6f]">{formatCLP(basePrice)}</span>
-          {pct > 0 && <span className="text-sm text-neutral-500 line-through">{formatCLP(compareAtPrice as number)}</span>}
+          <span className={`text-lg font-semibold ${light ? "text-[#e5484d]" : "text-[#ff6b6f]"}`}>{formatCLP(basePrice)}</span>
+          {pct > 0 && <span className={`text-sm line-through ${light ? "text-neutral-400" : "text-neutral-500"}`}>{formatCLP(compareAtPrice as number)}</span>}
         </p>
       )}
       {colors.length > 0 && (
@@ -187,7 +195,7 @@ export default function CollectionGarmentCard({
               onMouseLeave={() => setPeek(null)}
               onFocus={() => setPeek(n)}
               onBlur={() => setPeek(null)}
-              className={`h-5 w-5 rounded-full border border-white/40 transition ${n === i ? "ring-2 ring-neon ring-offset-2 ring-offset-black" : "hover:scale-110"}`}
+              className={`h-5 w-5 rounded-full border transition ${light ? "border-black/40" : "border-white/40"} ${n === i ? `ring-2 ring-offset-2 ${light ? "ring-black ring-offset-white" : "ring-neon ring-offset-black"}` : "hover:scale-110"}`}
               style={{ background: c.hex }}
             />
           ))}

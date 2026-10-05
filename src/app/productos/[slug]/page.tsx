@@ -84,29 +84,29 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         }}
       />
       {others.length > 0 && (
-        <section aria-label="Completa tu look" className="mt-12 border-t border-neutral-200 pt-8">
-          <h2 className="font-display text-3xl font-bold uppercase leading-none text-black">Completa tu look</h2>
-          <p className="mt-1 text-sm text-neutral-600">Otras prendas POPE para personalizar con tu diseño.</p>
-          <ul className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <section aria-label="Completa tu look" className="mt-8 border-t border-neutral-200 pt-6">
+          <h2 className="font-display text-4xl font-bold uppercase leading-none text-black sm:text-5xl">Completa tu look</h2>
+          <p className="mt-2 text-base text-neutral-600">Otras prendas POPE para personalizar con tu diseño.</p>
+          <ul className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
             {others.map((o) => {
               const img = o.colors[0]?.views[0]?.imageUrl;
               const sale = o.compareAtPrice != null && o.compareAtPrice > o.basePrice;
               return (
                 <li key={o.id}>
-                  <Link href={`/productos/${o.slug}`} className="group flex items-center gap-4 rounded-xl border border-neutral-200 p-3 transition hover:border-black">
-                    <span className="block h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-[#f1f1f1]">
+                  <Link href={`/productos/${o.slug}`} className="group flex items-center gap-5 rounded-2xl border border-neutral-200 p-4 transition hover:border-black sm:p-5">
+                    <span className="block h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-[#f1f1f1] sm:h-36 sm:w-36">
                       {img && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={thumb(img, 256)} alt={o.name} loading="lazy" className="h-full w-full object-contain transition group-hover:scale-105" />
                       )}
                     </span>
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-bold uppercase tracking-tight text-black">{o.name}</span>
-                      <span className="mt-0.5 flex items-baseline gap-2 text-sm">
+                      <span className="block text-lg font-bold uppercase leading-tight tracking-tight text-black sm:text-xl">{o.name}</span>
+                      <span className="mt-1 flex items-baseline gap-2 text-base sm:text-lg">
                         <span className={`font-semibold ${sale ? "text-[#e5484d]" : "text-black"}`}>{formatCLP(o.basePrice)}</span>
                         {sale && <span className="text-xs text-neutral-400 line-through">{formatCLP(o.compareAtPrice as number)}</span>}
                       </span>
-                      <span className="mt-1 block text-xs font-bold uppercase tracking-wide text-[#0b6b25]">Personalizar →</span>
+                      <span className="mt-2 block text-sm font-bold uppercase tracking-wide text-[#0b6b25]">Personalizar →</span>
                     </span>
                   </Link>
                 </li>
@@ -117,17 +117,17 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       )}
 
       {showcase.length > 0 && (
-        <section aria-label="Más prendas de nuestras colecciones" className="mt-8 overflow-hidden rounded-2xl bg-black p-6">
+        <section aria-label="Más prendas de nuestras colecciones" className="mt-10 border-t border-neutral-200 pt-8">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="font-display text-3xl font-bold uppercase leading-none text-white sm:text-4xl">Más prendas de nuestras colecciones</h2>
-              <p className="mt-2 text-sm text-neutral-400">Con el diseño ya puesto, adelante y atrás. Toca una y llévatela.</p>
+              <h2 className="font-display text-4xl font-bold uppercase leading-none text-black sm:text-5xl">Más prendas de nuestras colecciones</h2>
+              <p className="mt-2 text-base text-neutral-600">Con el diseño ya puesto, adelante y atrás. Toca una y llévatela.</p>
             </div>
-            <Link href="/#colecciones" className="text-xs font-bold uppercase tracking-[0.18em] text-neon transition hover:underline">
+            <Link href="/#colecciones" className="text-xs font-bold uppercase tracking-[0.18em] text-[#0b6b25] transition hover:underline">
               Ver colecciones →
             </Link>
           </div>
-          <CollectionGarmentsGrid items={showcase} compact />
+          <CollectionGarmentsGrid items={showcase} compact light defaultColor="Blanco" />
         </section>
       )}
 

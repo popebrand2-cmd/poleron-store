@@ -30,10 +30,15 @@ const KIND_ORDER: GarmentKind[] = ["polera", "poleron", "boxy"];
 export default function CollectionGarmentsGrid({
   items,
   compact = false,
+  light = false,
+  defaultColor = "",
 }: {
   items: GarmentItem[];
   // Homepage layout: no color filter, a swipeable row on phones and tablets, a 4-column grid on desktop.
   compact?: boolean;
+  // White page: dark text and tabs. `defaultColor`: the color every card opens on (when it has it), e.g. "Blanco".
+  light?: boolean;
+  defaultColor?: string;
 }) {
   const kinds = KIND_ORDER.filter((k) => items.some((i) => i.kind === k));
   const [active, setActive] = useState<GarmentKind | "all">("all");
@@ -78,7 +83,9 @@ export default function CollectionGarmentsGrid({
                 aria-selected={on}
                 onClick={() => setActive(k)}
                 className={`min-h-11 shrink-0 whitespace-nowrap rounded-full border-2 px-5 text-xs font-bold uppercase tracking-wide transition ${
-                  on ? "border-neon bg-neon text-black" : "border-white/25 text-white hover:border-neon hover:text-neon"
+                  on
+                    ? light ? "border-black bg-black text-white" : "border-neon bg-neon text-black"
+                    : light ? "border-neutral-300 text-black hover:border-black" : "border-white/25 text-white hover:border-neon hover:text-neon"
                 }`}
               >
                 {k === "all" ? "Todas" : KIND_LABEL[k]}
@@ -110,12 +117,13 @@ export default function CollectionGarmentsGrid({
             basePrice={i.basePrice}
             compareAtPrice={i.compareAtPrice}
             colors={i.colors}
-            preferColor={colorName}
+            preferColor={colorName || defaultColor}
+            light={light}
             className={compact ? "w-[72vw] max-w-[320px] shrink-0 snap-start lg:w-auto lg:max-w-none" : ""}
           />
         ))}
       </ul>
-      {shown.length === 0 && <p className="py-10 text-center text-neutral-400">No hay prendas con ese filtro. Prueba con otro color o tipo de prenda.</p>}
+      {shown.length === 0 && <p className={`py-10 text-center ${light ? "text-neutral-600" : "text-neutral-400"}`}>No hay prendas con ese filtro. Prueba con otro color o tipo de prenda.</p>}
     </>
   );
 }
