@@ -8,6 +8,7 @@ import Txt from "@/components/edit/Txt";
 import PopeHero from "@/components/PopeHero";
 import BannerOffer from "@/components/BannerOffer";
 import CyberGate from "@/components/CyberGate";
+import CyberIntro from "@/components/CyberIntro";
 import CyberLookbook from "@/components/CyberLookbook";
 import { isCyberActive, getCyberSaleItems } from "@/lib/cyber";
 import { garmentKind } from "@/lib/garments";
@@ -95,6 +96,8 @@ export default async function Home() {
 
   return (
     <main>
+      {/* Full-screen Cyber welcome with the countdown, once per visit; the slim strip below stays for the rest of the visit. */}
+      <CyberIntro products={cyberProducts} active={cyberActive} />
       <CyberGate active={cyberActive} />
 
       {/* The brand banner (its headline and button are part of the picture). It IS the hero on computer and tablet (the
