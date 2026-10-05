@@ -4,7 +4,7 @@ import sharp from "sharp";
 import { prisma } from "@/lib/prisma";
 import { uploadsDir } from "@/lib/storage";
 import { garmentKind, kindDescription, pickProductForKind } from "@/lib/garments";
-import { normalizeZones } from "@/lib/garments-server";
+import { normalizeZones, toCardFrame } from "@/lib/garments-server";
 import { getCollectionMockups, type MockupColor } from "@/lib/collection-mockups";
 import { getEditorHref } from "@/lib/editor-product";
 import type { GarmentItem, GarmentKind } from "@/components/CollectionGarmentsGrid";
@@ -40,7 +40,7 @@ export async function loadGarmentCatalog() {
         .filter((c) => c.views.length > 0),
     }))
     .filter((p) => p.colors.length > 0);
-  const garments = await Promise.all(raw.map(async (p) => ({ ...p, colors: await normalizeZones(p.colors) })));
+  const garments = await Promise.all(raw.map(async (p) => ({ ...p, colors: await toCardFrame(await normalizeZones(p.colors)) })));
   return { products, garments };
 }
 

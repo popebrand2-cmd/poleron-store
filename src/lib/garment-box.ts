@@ -46,3 +46,15 @@ export async function garmentBox(url: string): Promise<GarmentBox | null> {
   cache.set(key, box);
   return box;
 }
+
+// The frame the collection cards cut every garment photo to: the garment's box plus a small even margin, so a white
+// tee shot a little farther away than the black one is shown the same size. The photo route crops to it and the print
+// zones are re-expressed against it (see toCardFrame), both from this one function.
+export function cardFrame(box: GarmentBox): GarmentBox {
+  const pad = 0.035 * Math.max(box.w, box.h);
+  const x0 = Math.max(0, box.x - pad);
+  const y0 = Math.max(0, box.y - pad);
+  const x1 = Math.min(1, box.x + box.w + pad);
+  const y1 = Math.min(1, box.y + box.h + pad);
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}

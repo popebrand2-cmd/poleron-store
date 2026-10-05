@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { GarmentColor, GarmentView } from "@/components/CollectionGarmentCard";
-import { garmentBox } from "@/lib/garment-box";
+import { cardFrame, garmentBox } from "@/lib/garment-box";
 import { garmentKind, type StudioGarment } from "@/lib/garments";
 
 // Server-only half of lib/garments: it measures the garment photos with sharp, which can't be bundled
@@ -35,6 +35,30 @@ export async function normalizeZones(colors: GarmentColor[]): Promise<GarmentCol
     out.push({ ...c, views });
   }
   return out;
+}
+
+// The collection cards show every garment photo cut to the same tight frame (/api/garment-photo), so the print zones
+// are re-expressed against that frame. Photos that are not the owner's uploads are not cut, and keep their zones.
+export async function toCardFrame(colors: GarmentColor[]): Promise<GarmentColor[]> {
+  return Promise.all(
+    colors.map(async (c) => ({
+      ...c,
+      views: await Promise.all(
+        c.views.map(async (v) => {
+          const box = await garmentBox(v.imageUrl);
+          if (!box) return v;
+          const f = cardFrame(box);
+          return {
+            ...v,
+            zoneXPct: ((v.zoneXPct / 100 - f.x) / f.w) * 100,
+            zoneYPct: ((v.zoneYPct / 100 - f.y) / f.h) * 100,
+            zoneWidthPct: (v.zoneWidthPct / 100 / f.w) * 100,
+            zoneHeightPct: (v.zoneHeightPct / 100 / f.h) * 100,
+          };
+        }),
+      ),
+    })),
+  );
 }
 
 // Every active product that has photos to print on (each color with its Frente/Espalda views and print zones).

@@ -5,6 +5,7 @@ import path from "path";
 import sharp from "sharp";
 import { NextResponse } from "next/server";
 import { uploadsDir } from "@/lib/storage";
+import { cardFrame, garmentBox } from "@/lib/garment-box";
 
 export const runtime = "nodejs";
 
@@ -121,6 +122,26 @@ async function clean(buf: Buffer): Promise<Buffer> {
   // Dark garments: studio photos leave them as one flat black blob. A gamma curve lifts the shadows (a near-black 20 ->
   // ~38, a dark grey 60 -> ~90) so the folds, seams and fabric read, and the garment looks charcoal instead of a hole.
   if (dark) {
+    // Some studio photos of the "same" black hoodie come out bluish or a step lighter than the others. Take the
+    // colour cast out of the dark core and bring every dark garment to the same black level before lifting it, so the
+    // oversize one matches the boxifit.
+    let sr = 0, sg = 0, sb = 0, sn = 0;
+    for (let i = 0; i < N; i++) {
+      if (out[i * 4 + 3] < 200) continue;
+      const r = out[i * 4], g = out[i * 4 + 1], b = out[i * 4 + 2];
+      if (0.299 * r + 0.587 * g + 0.114 * b > 110) continue;
+      sr += r; sg += g; sb += b; sn++;
+    }
+    if (sn > 0) {
+      const mr = sr / sn, mg = sg / sn, mb = sb / sn;
+      const ml = 0.299 * mr + 0.587 * mg + 0.114 * mb;
+      const gain = Math.min(1.15, Math.max(0.55, 21 / Math.max(ml, 6)));
+      const off = [mr - ml, mg - ml, mb - ml];
+      for (let i = 0; i < N; i++) {
+        if (out[i * 4 + 3] === 0) continue;
+        for (let c = 0; c < 3; c++) out[i * 4 + c] = Math.max(0, Math.min(255, Math.round((out[i * 4 + c] - off[c]) * gain)));
+      }
+    }
     const lift = new Uint8Array(256);
     for (let v = 0; v < 256; v++) lift[v] = Math.round(255 * Math.pow(v / 255, 0.74));
     for (let i = 0; i < N; i++) {
@@ -148,7 +169,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const key = createHash("sha1").update(`${f}:${mtime}:v3`).digest("hex");
+  const key = createHash("sha1").update(`${f}:${mtime}:v4`).digest("hex");
   const cached = path.join(CACHE_DIR, `${key}.png`);
   let body: Buffer;
   try {
@@ -156,6 +177,21 @@ export async function GET(request: Request) {
   } catch {
     try {
       body = await clean(await readFile(file));
+      // Same tight frame for every garment photo (the print zones are expressed against it too).
+      const box = await garmentBox(`/uploads/${f}`);
+      if (box) {
+        const frame = cardFrame(box);
+        const meta = await sharp(body).metadata();
+        const W = meta.width ?? 0, H = meta.height ?? 0;
+        if (W > 0 && H > 0) {
+          const left = Math.max(0, Math.round(frame.x * W));
+          const top = Math.max(0, Math.round(frame.y * H));
+          body = await sharp(body)
+            .extract({ left, top, width: Math.max(1, Math.min(W - left, Math.round(frame.w * W))), height: Math.max(1, Math.min(H - top, Math.round(frame.h * H))) })
+            .png({ compressionLevel: 8 })
+            .toBuffer();
+        }
+      }
     } catch {
       // Anything unreadable: fall back to the original so a card never loses its photo.
       return NextResponse.redirect(new URL(`/uploads/${f}`, request.url), 307);
