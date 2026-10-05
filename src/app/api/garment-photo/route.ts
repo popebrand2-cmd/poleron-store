@@ -9,8 +9,8 @@ import { uploadsDir } from "@/lib/storage";
 export const runtime = "nodejs";
 
 // Cleans up a product photo for the collection cards: removes a flat white background (so the garment has
-// a real outline for the halo and sits on the card), and deepens the blacks of dark garments, which studio
-// photos tend to leave washed-out grey. The owner's original upload is never touched; the result is cached.
+// a real outline for the halo and sits on the card), and lifts the shadows of dark garments, which studio
+// photos tend to leave as a flat black blob. The owner's original upload is never touched; the result is cached.
 const MAX_WIDTH = 1400;
 const CACHE_DIR = path.join(os.tmpdir(), "pope-garment-cache");
 
@@ -118,14 +118,20 @@ async function clean(buf: Buffer): Promise<Buffer> {
     }
   }
 
+  // Dark garments: studio photos leave them as one flat black blob. A gamma curve lifts the shadows (a near-black 20 ->
+  // ~38, a dark grey 60 -> ~90) so the folds, seams and fabric read, and the garment looks charcoal instead of a hole.
   if (dark) {
+    const lift = new Uint8Array(256);
+    for (let v = 0; v < 256; v++) lift[v] = Math.round(255 * Math.pow(v / 255, 0.74));
     for (let i = 0; i < N; i++) {
       if (out[i * 4 + 3] === 0) continue;
-      for (let c = 0; c < 3; c++) out[i * 4 + c] = Math.max(0, Math.min(255, Math.round((out[i * 4 + c] - 24) * 1.22)));
+      for (let c = 0; c < 3; c++) out[i * 4 + c] = lift[out[i * 4 + c]];
     }
   }
 
-  return sharp(out, { raw: { width: W, height: H, channels: 4 } }).png({ compressionLevel: 8 }).toBuffer();
+  // Local contrast (a wide, gentle sharpen) brings the folds out; the lifted dark garments need it, light ones don't.
+  const img = sharp(out, { raw: { width: W, height: H, channels: 4 } });
+  return (dark ? img.sharpen({ sigma: 2.5, m1: 0.3, m2: 2.2 }) : img).png({ compressionLevel: 8 }).toBuffer();
 }
 
 export async function GET(request: Request) {
@@ -142,7 +148,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const key = createHash("sha1").update(`${f}:${mtime}:v2`).digest("hex");
+  const key = createHash("sha1").update(`${f}:${mtime}:v3`).digest("hex");
   const cached = path.join(CACHE_DIR, `${key}.png`);
   let body: Buffer;
   try {
