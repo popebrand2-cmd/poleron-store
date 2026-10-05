@@ -5,6 +5,8 @@ import Header from "@/components/Header";
 import InAppBrowserNotice from "@/components/InAppBrowserNotice";
 import Footer from "@/components/Footer";
 import SocialDock from "@/components/SocialDock";
+import OnlyOnHome from "@/components/OnlyOnHome";
+import HomeTrustStrip from "@/components/HomeTrustStrip";
 import OfferPopup from "@/components/OfferPopup";
 import MetaPixel from "@/components/MetaPixel";
 import VisitTracker from "@/components/VisitTracker";
@@ -73,6 +75,10 @@ export default async function RootLayout({
           <Header />
           <div className="flex-1">{children}</div>
           <Footer />
+          {/* Home page only: the trust badges sit below the footer, at the very bottom */}
+          <OnlyOnHome>
+            <HomeTrustStrip />
+          </OnlyOnHome>
           <SocialDock />
           <OfferPopup />
           <EditModeToggle initialAccentColor={accentColor} />
