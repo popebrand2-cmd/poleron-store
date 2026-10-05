@@ -6,6 +6,7 @@ import { formatCLP } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
 import ProductPersonalizer from "@/components/ProductPersonalizer";
 import CollectionGarmentsGrid from "@/components/CollectionGarmentsGrid";
+import ProductInfo from "@/components/ProductInfo";
 import { loadShowcaseItems } from "@/lib/collection-items";
 
 export const dynamic = "force-dynamic";
@@ -115,22 +116,28 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </section>
       )}
 
-      {product.description && <p className="mt-12 max-w-2xl text-neutral-600">{product.description}</p>}
-    </div>
-    {showcase.length > 0 && (
-      <section aria-label="Más prendas de nuestras colecciones" className="mx-auto mt-12 max-w-5xl">
-        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="font-display text-3xl font-bold uppercase leading-none text-white sm:text-4xl">Más prendas de nuestras colecciones</h2>
-            <p className="mt-2 text-sm text-neutral-400">Con el diseño ya puesto, adelante y atrás. Toca una y llévatela.</p>
+      {showcase.length > 0 && (
+        <section aria-label="Más prendas de nuestras colecciones" className="mt-8 overflow-hidden rounded-2xl bg-black p-6">
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="font-display text-3xl font-bold uppercase leading-none text-white sm:text-4xl">Más prendas de nuestras colecciones</h2>
+              <p className="mt-2 text-sm text-neutral-400">Con el diseño ya puesto, adelante y atrás. Toca una y llévatela.</p>
+            </div>
+            <Link href="/#colecciones" className="text-xs font-bold uppercase tracking-[0.18em] text-neon transition hover:underline">
+              Ver colecciones →
+            </Link>
           </div>
-          <Link href="/#colecciones" className="text-xs font-bold uppercase tracking-[0.18em] text-neon transition hover:underline">
-            Ver colecciones →
-          </Link>
-        </div>
-        <CollectionGarmentsGrid items={showcase} compact />
-      </section>
-    )}
+          <CollectionGarmentsGrid items={showcase} compact />
+        </section>
+      )}
+
+      {product.description && <p className="mt-12 max-w-2xl text-neutral-600">{product.description}</p>}
+
+      {/* Purchase info (manufacturing, shipping, payment, warranty, WhatsApp): the last thing on the page */}
+      <div className="mt-10">
+        <ProductInfo />
+      </div>
+    </div>
     </main>
   );
 }

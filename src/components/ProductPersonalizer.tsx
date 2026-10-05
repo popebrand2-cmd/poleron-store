@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import MockupEditor, { type MockupEditorHandle, type MockupView, type PresetPosition } from "./MockupEditor";
 import TryOnEditor from "./TryOnEditor";
 import CollectionPicker from "./CollectionPicker";
-import ProductInfo, { VatNote } from "./ProductInfo";
+import { VatNote } from "./ProductInfo";
 import dynamic from "next/dynamic";
 import CyberCountdown from "./CyberCountdown";
 import { MODELS_3D } from "@/lib/product-3d";
@@ -682,11 +682,6 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
           ¿Cómo se vería puesto?
         </button>
       </section>
-
-      {/* Purchase info: under the buttons on phones, a horizontal strip across both columns on desktop */}
-      <div className="order-5 min-w-0 lg:order-none lg:col-span-2 lg:row-start-5">
-        <ProductInfo />
-      </div>
 
       {view3d && model3d && (
         <HoodieViewer3D
