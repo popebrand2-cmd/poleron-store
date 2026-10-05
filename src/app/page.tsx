@@ -202,14 +202,6 @@ export default async function Home() {
         </section>
       )}
 
-      {/* Trust right under the hero (shipping, secure payment, guarantee) — before the visitor has to scroll
-          to doubt anything. Same editable badges that used to sit at the very bottom. */}
-      <section className="border-y border-neutral-800 bg-neutral-950">
-        <div className="mx-auto max-w-6xl px-6 py-7">
-          <TrustBadgesList initialItems={itemsFor("trustBadges")} />
-        </div>
-      </section>
-
       {/* Featured: the base garments with their price come first — this is what is being sold */}
       <section id={homeItems.length > 0 ? "base" : "tienda"} className="scroll-mt-24 bg-black">
         <div className="mx-auto max-w-6xl px-6 py-16">
@@ -245,6 +237,14 @@ export default async function Home() {
               }))}
             />
           )}
+        </div>
+      </section>
+
+      {/* Trust (shipping, secure payment, guarantee) right under the base garments ("Personaliza el tuyo…"). Same editable
+          badges that used to sit at the very bottom. */}
+      <section className="border-y border-neutral-800 bg-neutral-950">
+        <div className="mx-auto max-w-6xl px-6 py-7">
+          <TrustBadgesList initialItems={itemsFor("trustBadges")} />
         </div>
       </section>
 
