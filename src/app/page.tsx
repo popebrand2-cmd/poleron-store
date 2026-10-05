@@ -16,6 +16,7 @@ import RealVideos from "@/components/RealVideos";
 import ReviewsSection from "@/components/ReviewsSection";
 import InstagramFeed from "@/components/InstagramFeed";
 import HowItWorks from "@/components/preview/HowItWorks";
+import TrustBadgesList from "@/components/edit/TrustBadgesList";
 import FaqList from "@/components/edit/FaqList";
 import CollectionGarmentsGrid from "@/components/CollectionGarmentsGrid";
 import { loadShowcaseItems } from "@/lib/collection-items";
@@ -284,6 +285,13 @@ export default async function Home() {
             </h2>
           </div>
           <FaqList initialItems={itemsFor("faq")} />
+        </div>
+      </section>
+
+      {/* Trust (shipping, secure payment, guarantee): the very last thing on the page, right above the footer. */}
+      <section className="border-y border-neutral-800 bg-neutral-950">
+        <div className="mx-auto max-w-6xl px-6 py-7">
+          <TrustBadgesList initialItems={itemsFor("trustBadges")} />
         </div>
       </section>
 
