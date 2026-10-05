@@ -77,7 +77,9 @@ export function buildArtistItems(opts: {
     return [
       {
         key: `${artistId}-${kind}`,
-        collectionId: artistId,
+        // What the customer calls "the collection": the design's name (Tropicoqueta, Latina Foreva…); the finished
+        // mockups carry the artist's own name.
+        collectionId: `${artistId}-cover`,
         collectionName: artistName,
         kind,
         href: `${base}${base.includes("?") ? "&" : "?"}diseno=${coverDesignId}`,
@@ -100,8 +102,8 @@ export function buildArtistItems(opts: {
       .sort((a, b) => KIND_ORDER[garmentKind(a)] - KIND_ORDER[garmentKind(b)])
       .map((p) => ({
         key: `${d.id}-${p.id}`,
-        collectionId: artistId,
-        collectionName: artistName,
+        collectionId: d.id,
+        collectionName: d.name,
         kind: garmentKind(p),
         href: `/productos/${p.slug}?diseno=${d.id}`,
         blankHref: `/productos/${p.slug}`,
