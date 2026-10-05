@@ -107,7 +107,7 @@ export default async function ArtistPage({ params }: { params: Promise<{ slug: s
             {artist.designs.map((d) => (
               <li key={d.id} className="group">
                 <div className="glass glass-hover overflow-hidden rounded-xl p-1.5">
-                  <div className="aspect-square overflow-hidden rounded-lg bg-neutral-200">
+                  <div className="aspect-square overflow-hidden rounded-lg" style={{ backgroundColor: d.tileBg || (d.garmentColors === "negro" ? "#0a0a0a" : "#e5e5e5") }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={thumb(d.imageUrl, 384)}

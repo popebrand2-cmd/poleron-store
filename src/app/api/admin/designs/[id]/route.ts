@@ -10,6 +10,7 @@ const updateSchema = z.object({
   origin: z.enum(["", "propio", "encargado", "licencia", "dominio-publico", "sin-confirmar"]).optional(),
   sourceNote: z.string().max(500).optional(),
   garmentColors: z.enum(["", "negro", "blanco"]).optional(),
+  tileBg: z.string().regex(/^(#[0-9a-fA-F]{6})?$/, "Color inválido.").optional(),
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {

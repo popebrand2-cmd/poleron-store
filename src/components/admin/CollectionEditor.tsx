@@ -14,6 +14,7 @@ type Design = {
   origin: string;
   sourceNote: string;
   garmentColors: string;
+  tileBg: string;
 };
 
 type Collection = {
@@ -163,6 +164,29 @@ export default function CollectionEditor({ collection, categories }: { collectio
     router.refresh();
   }
 
+  const [bulkBg, setBulkBg] = useState(false);
+  async function handleTileBg(design: Design, tileBg: string) {
+    await fetch(`/api/admin/designs/${design.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tileBg }),
+    });
+    router.refresh();
+  }
+  async function applyTileBgToAll(tileBg: string) {
+    setBulkBg(true);
+    try {
+      await Promise.all(
+        collection.designs.map((d) =>
+          fetch(`/api/admin/designs/${d.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tileBg }) }),
+        ),
+      );
+      router.refresh();
+    } finally {
+      setBulkBg(false);
+    }
+  }
+
   async function handleTone(design: Design, garmentColors: string) {
     await fetch(`/api/admin/designs/${design.id}`, {
       method: "PATCH",
@@ -253,6 +277,18 @@ export default function CollectionEditor({ collection, categories }: { collectio
         </div>
       </div>
 
+      {collection.designs.length > 0 && (
+        <div className="space-y-2 rounded-xl border border-neutral-200 bg-white p-4">
+          <label className="block text-sm font-medium">Fondo de las tarjetas de diseños</label>
+          <p className="text-sm text-neutral-500">
+            Es el color detrás de cada diseño en la página de la colección. «Automático» pone negro a los diseños claros y gris claro a los demás.
+            Elige uno para <strong>todos</strong> aquí, o cambia uno solo más abajo.
+          </p>
+          <TileBgPicker value="" onChange={applyTileBgToAll} disabled={bulkBg} />
+          {bulkBg && <span className="text-xs text-neutral-500">Aplicando…</span>}
+        </div>
+      )}
+
       <BulkDesignUpload collectionId={collection.id} onDone={() => router.refresh()} />
 
       <form onSubmit={handleAddDesign} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6">
@@ -310,8 +346,8 @@ export default function CollectionEditor({ collection, categories }: { collectio
         </button>
       </form>
 
-      <DesignGrid title="Diseños para adelante" designs={front} onDelete={handleDeleteDesign} onToggle={handleToggleDesignActive} onOrigin={handleOrigin} onTone={handleTone} />
-      <DesignGrid title="Diseños para atrás" designs={back} onDelete={handleDeleteDesign} onToggle={handleToggleDesignActive} onOrigin={handleOrigin} onTone={handleTone} />
+      <DesignGrid title="Diseños para adelante" designs={front} onDelete={handleDeleteDesign} onToggle={handleToggleDesignActive} onOrigin={handleOrigin} onTone={handleTone} onTileBg={handleTileBg} />
+      <DesignGrid title="Diseños para atrás" designs={back} onDelete={handleDeleteDesign} onToggle={handleToggleDesignActive} onOrigin={handleOrigin} onTone={handleTone} onTileBg={handleTileBg} />
     </div>
   );
 }
@@ -323,6 +359,7 @@ function DesignGrid({
   onToggle,
   onOrigin,
   onTone,
+  onTileBg,
 }: {
   title: string;
   designs: Design[];
@@ -330,6 +367,7 @@ function DesignGrid({
   onToggle: (d: Design) => void;
   onOrigin: (d: Design, origin: string) => void;
   onTone: (d: Design, tone: string) => void;
+  onTileBg: (d: Design, tileBg: string) => void;
 }) {
   if (designs.length === 0) return null;
   return (
@@ -338,12 +376,15 @@ function DesignGrid({
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
         {designs.map((d) => (
           <div key={d.id} className="rounded-lg border border-neutral-200 bg-white p-3">
-            <div className="mb-2 flex aspect-square items-center justify-center overflow-hidden rounded-md bg-neutral-100">
+            <div className="mb-2 flex aspect-square items-center justify-center overflow-hidden rounded-md" style={{ backgroundColor: d.tileBg || (d.garmentColors === "negro" ? "#0a0a0a" : "#e5e5e5") }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={d.imageUrl} alt={d.name} className="h-full w-full object-contain" />
             </div>
             <p className="truncate text-sm font-medium">{d.name}</p>
             {!d.active && <p className="mt-0.5 text-[11px] font-semibold uppercase text-amber-700">No publicado</p>}
+            <div className="mt-1">
+              <TileBgPicker value={d.tileBg || ""} onChange={(v) => onTileBg(d, v)} />
+            </div>
             <select
               value={d.garmentColors || ""}
               onChange={(e) => onTone(d, e.target.value)}
@@ -380,6 +421,45 @@ function DesignGrid({
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// Background colors offered for the design tiles on the collection page ("" = automatic).
+const TILE_COLORS: { label: string; value: string }[] = [
+  { label: "Automático", value: "" },
+  { label: "Claro", value: "#e5e5e5" },
+  { label: "Blanco", value: "#ffffff" },
+  { label: "Gris oscuro", value: "#2b2b2b" },
+  { label: "Negro", value: "#0a0a0a" },
+  { label: "Neón", value: "#b6ff00" },
+];
+
+function TileBgPicker({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled?: boolean }) {
+  return (
+    <div role="group" aria-label="Fondo de la tarjeta" className="flex flex-wrap items-center gap-1.5">
+      {TILE_COLORS.map((c) => {
+        const on = value.toLowerCase() === c.value;
+        return (
+          <button
+            key={c.label}
+            type="button"
+            title={c.label}
+            aria-label={c.label}
+            aria-pressed={on}
+            disabled={disabled}
+            onClick={() => onChange(c.value)}
+            className={`flex h-6 min-w-6 items-center justify-center rounded-full border-2 text-[9px] font-bold disabled:opacity-50 ${on ? "border-emerald-600 ring-2 ring-emerald-200" : "border-neutral-300"}`}
+            style={c.value ? { backgroundColor: c.value } : { background: "conic-gradient(#e5e5e5 25%, #0a0a0a 0 50%, #e5e5e5 0 75%, #0a0a0a 0)" }}
+          >
+            {c.value ? "" : ""}
+          </button>
+        );
+      })}
+      <label title="Otro color" className="relative flex h-6 w-6 cursor-pointer items-center justify-center overflow-hidden rounded-full border-2 border-neutral-300 text-[11px] font-bold text-neutral-500">
+        +
+        <input type="color" value={/^#[0-9a-f]{6}$/i.test(value) ? value : "#808080"} disabled={disabled} onChange={(e) => onChange(e.target.value)} aria-label="Otro color" className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+      </label>
     </div>
   );
 }

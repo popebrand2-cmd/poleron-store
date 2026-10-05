@@ -272,6 +272,9 @@ model PresetDesign {
   // Garment colors the art looks right on: "" = all, "negro" = only dark garments (light art that would vanish on
   // white), "blanco" = only light garments (dark art that would vanish on black).
   garmentColors String @default("")
+
+  // Background of the design's tile on the collection page, as #rrggbb. "" = automatic (dark for light art, light otherwise).
+  tileBg String @default("")
 }
 
 model OrderItem {

@@ -44,6 +44,7 @@ export default async function AdminCollectionPage({ params }: { params: Promise<
             origin: d.origin,
             sourceNote: d.sourceNote,
             garmentColors: d.garmentColors,
+            tileBg: d.tileBg,
           })),
         }}
       />
