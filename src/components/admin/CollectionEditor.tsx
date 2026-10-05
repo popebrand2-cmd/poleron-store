@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import BulkDesignUpload, { ORIGINS } from "@/components/admin/BulkDesignUpload";
 
 type Design = {
   id: string;
@@ -9,6 +10,9 @@ type Design = {
   imageUrl: string;
   placement: "FRONT" | "BACK";
   active: boolean;
+  backImageUrl: string;
+  origin: string;
+  sourceNote: string;
 };
 
 type Collection = {
@@ -139,10 +143,21 @@ export default function CollectionEditor({ collection, categories }: { collectio
   }
 
   async function handleToggleDesignActive(design: Design) {
+    if (!design.active && design.origin === "sin-confirmar" && !window.confirm("Este diseño está marcado «sin confirmar»: no se sabe si tienes permiso para imprimirlo. ¿Publicarlo igual?")) return;
     await fetch(`/api/admin/designs/${design.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ active: !design.active }),
+    });
+    router.refresh();
+  }
+
+  async function handleOrigin(design: Design, origin: string) {
+    // Marking a design "sin confirmar" takes it off the store; the other origins leave it as it is (use Mostrar to publish).
+    await fetch(`/api/admin/designs/${design.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(origin === "sin-confirmar" ? { origin, active: false } : { origin }),
     });
     router.refresh();
   }
@@ -228,6 +243,8 @@ export default function CollectionEditor({ collection, categories }: { collectio
         </div>
       </div>
 
+      <BulkDesignUpload collectionId={collection.id} onDone={() => router.refresh()} />
+
       <form onSubmit={handleAddDesign} className="space-y-4 rounded-xl border border-neutral-200 bg-white p-6">
         <h2 className="text-lg font-semibold">Agregar diseño</h2>
         <div>
@@ -283,8 +300,8 @@ export default function CollectionEditor({ collection, categories }: { collectio
         </button>
       </form>
 
-      <DesignGrid title="Diseños para adelante" designs={front} onDelete={handleDeleteDesign} onToggle={handleToggleDesignActive} />
-      <DesignGrid title="Diseños para atrás" designs={back} onDelete={handleDeleteDesign} onToggle={handleToggleDesignActive} />
+      <DesignGrid title="Diseños para adelante" designs={front} onDelete={handleDeleteDesign} onToggle={handleToggleDesignActive} onOrigin={handleOrigin} />
+      <DesignGrid title="Diseños para atrás" designs={back} onDelete={handleDeleteDesign} onToggle={handleToggleDesignActive} onOrigin={handleOrigin} />
     </div>
   );
 }
@@ -294,11 +311,13 @@ function DesignGrid({
   designs,
   onDelete,
   onToggle,
+  onOrigin,
 }: {
   title: string;
   designs: Design[];
   onDelete: (id: string) => void;
   onToggle: (d: Design) => void;
+  onOrigin: (d: Design, origin: string) => void;
 }) {
   if (designs.length === 0) return null;
   return (
@@ -312,6 +331,21 @@ function DesignGrid({
               <img src={d.imageUrl} alt={d.name} className="h-full w-full object-contain" />
             </div>
             <p className="truncate text-sm font-medium">{d.name}</p>
+            {!d.active && <p className="mt-0.5 text-[11px] font-semibold uppercase text-amber-700">No publicado</p>}
+            <select
+              value={d.origin || ""}
+              onChange={(e) => onOrigin(d, e.target.value)}
+              aria-label="Origen del diseño"
+              title={d.sourceNote || "Origen del diseño"}
+              className={`mt-1 w-full rounded border px-1 py-1 text-[11px] ${d.origin === "sin-confirmar" || !d.origin ? "border-amber-400 bg-amber-50" : "border-neutral-300"}`}
+            >
+              <option value="">Origen sin registrar</option>
+              {ORIGINS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
             <div className="mt-2 flex items-center justify-between text-xs">
               <button onClick={() => onToggle(d)} className="text-neutral-600 hover:underline">
                 {d.active ? "Ocultar" : "Mostrar"}

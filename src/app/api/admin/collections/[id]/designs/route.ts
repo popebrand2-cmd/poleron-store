@@ -11,6 +11,8 @@ const designSchema = z.object({
   showBack: z.boolean().default(true),
   frontScale: z.number().min(0.1).max(1.5).default(0.6),
   backScale: z.number().min(0.1).max(1.5).default(1),
+  origin: z.enum(["", "propio", "encargado", "licencia", "dominio-publico", "sin-confirmar"]).default(""),
+  sourceNote: z.string().max(500).default(""),
 });
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -40,8 +42,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       frontScale: data.frontScale,
       backScale: data.backScale,
       sortOrder: count,
+      origin: data.origin,
+      sourceNote: data.sourceNote,
+      // A design whose origin is not confirmed is saved but not published.
+      active: data.origin !== "sin-confirmar",
     },
   });
 
-  return NextResponse.json({ id: design.id });
+  return NextResponse.json({ id: design.id, active: design.active });
 }

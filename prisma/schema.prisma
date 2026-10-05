@@ -262,6 +262,12 @@ model PresetDesign {
   showBack     Boolean @default(true)
   frontScale   Float   @default(0.6)
   backScale    Float   @default(1)
+
+  // Where the art comes from, so only designs the store has the right to print are published: "propio",
+  // "encargado" (made for the store), "licencia", "dominio-publico" or "sin-confirmar" (kept unpublished until
+  // cleared). "" = designs created before this was recorded. sourceNote: who/where (license, designer, link).
+  origin     String @default("")
+  sourceNote String @default("")
 }
 
 model OrderItem {

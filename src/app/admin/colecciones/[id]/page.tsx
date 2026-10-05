@@ -40,6 +40,9 @@ export default async function AdminCollectionPage({ params }: { params: Promise<
             imageUrl: d.imageUrl,
             placement: d.placement as "FRONT" | "BACK",
             active: d.active,
+            backImageUrl: d.backImageUrl,
+            origin: d.origin,
+            sourceNote: d.sourceNote,
           })),
         }}
       />

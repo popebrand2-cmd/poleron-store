@@ -7,6 +7,8 @@ const updateSchema = z.object({
   imageUrl: z.string().min(1).optional(),
   placement: z.enum(["FRONT", "BACK"]).optional(),
   active: z.boolean().optional(),
+  origin: z.enum(["", "propio", "encargado", "licencia", "dominio-publico", "sin-confirmar"]).optional(),
+  sourceNote: z.string().max(500).optional(),
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
