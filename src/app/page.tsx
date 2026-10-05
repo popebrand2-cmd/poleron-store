@@ -6,6 +6,7 @@ import EditableText from "@/components/edit/EditableText";
 import EditableLink from "@/components/edit/EditableLink";
 import Txt from "@/components/edit/Txt";
 import PopeHero from "@/components/PopeHero";
+import BannerOffer from "@/components/BannerOffer";
 import CyberGate from "@/components/CyberGate";
 import CyberLookbook from "@/components/CyberLookbook";
 import { isCyberActive, getCyberSaleItems } from "@/lib/cyber";
@@ -52,6 +53,13 @@ export default async function Home() {
   const homeItems = await loadShowcaseItems(8);
   const cyberProducts = products.map((p) => ({ id: p.id, slug: p.slug, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice }));
   const cyberActive = isCyberActive(cyberProducts);
+  // The offer written over the banner photo: only while the sale runs (the same rule as the Cyber strip).
+  const bannerSale = cyberActive
+    ? getCyberSaleItems(cyberProducts)
+        .slice(0, 3)
+        .sort((a, b) => KIND_ORDER[garmentKind(a)] - KIND_ORDER[garmentKind(b)])
+        .map((p) => ({ id: p.id, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice as number }))
+    : [];
   // The Cyber lookbook links each garment to a REAL product/garment type it actually matches — a tee
   // for the 5 t-shirt designs, a hoodie for the 2 hoodie ones — never a made-up one.
   const isHoodieProduct = (p: { name: string; slug: string }) => /hoodie|poler[oó]n/i.test(`${p.name} ${p.slug}`);
@@ -92,8 +100,8 @@ export default async function Home() {
       {/* The brand banner (its headline and button are part of the picture). It IS the hero on computer and tablet (the
           Cyber lookbook and the usual hero are phone-only now); on a phone the text inside would be tiny, so phones keep
           the hero below. The whole banner is the "Diseña la tuya" button. */}
-      <section aria-label="Tu idea. Tu prenda." className="hidden bg-black md:block">
-        <Link href={editorHref} className="mx-auto block max-w-[1600px]">
+      <section aria-label="Tu idea. Tu prenda." className="relative mx-auto hidden max-w-[1600px] bg-black md:block">
+        <Link href={editorHref} className="block">
           <picture>
             <source media="(min-width: 768px)" srcSet="/promo/banner-pope-v3.webp" />
             {/* Phones get a 1px placeholder, so the 200 KB banner is never downloaded there. */}
@@ -108,14 +116,59 @@ export default async function Home() {
             />
           </picture>
         </Link>
+        {/* The offer, written over the photo (bottom-left, on a dark fade that only covers that corner) */}
+        <div className="pointer-events-none absolute bottom-0 left-0 hidden w-[46%] lg:block">
+          <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent [mask-image:linear-gradient(to_right,black_72%,transparent)]" />
+          <BannerOffer sale={bannerSale} className="relative px-8 pb-6 pt-14 xl:px-10 xl:pb-8" />
+        </div>
+        {bannerSale.length > 0 && (
+          <div className="border-t-[3px] border-red-600 bg-black px-6 py-5 lg:hidden">
+            <BannerOffer sale={bannerSale} />
+          </div>
+        )}
       </section>
 
-      {/* While the Cyber campaign runs, this interactive lookbook IS the hero — the usual hoodie hero
-          just hides (hidden, not removed: PopeHero renders itself again the moment isCyberActive is
-          false, with nothing to undo by hand). */}
-      <div className="md:hidden">
+      {/* Phone version of the same banner: the photo (cropped, no text) with the headline, steps and button as real text
+          underneath, so everything is readable on a small screen. */}
+      <section aria-label="Tu idea. Tu prenda." className="relative bg-black md:hidden">
+        <Link href={editorHref} className="relative block">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/promo/banner-pope-phone.webp"
+            alt="Cliente con una polera personalizada POPE y el personalizador en el celular"
+            width={1000}
+            height={880}
+            fetchPriority="high"
+            className="block h-auto w-full"
+          />
+          <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black via-black/75 to-transparent" />
+        </Link>
+        {bannerSale.length > 0 && <BannerOffer sale={bannerSale} size="sm" className="pointer-events-none absolute inset-x-0 top-0 aspect-[1000/880] flex flex-col justify-end px-5 pb-8" />}
+        <div className="relative -mt-6 px-5 pb-10">
+          <h1 className="font-display text-[4.25rem] font-bold uppercase leading-[0.88] text-white">
+            Tu idea.
+            <span className="block text-neon">Tu prenda.</span>
+          </h1>
+          <p className="mt-3 text-[13px] font-bold uppercase tracking-[0.3em] text-white">Elige. Personaliza. Crea.</p>
+          <ol className="mt-5 divide-y divide-white/20 border-y border-white/20">
+            {["Elige tu prenda", "Sube tu diseño", "Personaliza en vivo"].map((t, i) => (
+              <li key={t} className="flex items-center gap-4 py-3 text-lg uppercase text-white">
+                <span className="font-display text-3xl font-bold text-neon">{String(i + 1).padStart(2, "0")}</span>
+                {t}
+              </li>
+            ))}
+          </ol>
+          <Link href={editorHref} className="mt-6 flex min-h-14 items-center justify-center rounded-md bg-neon px-6 font-display text-3xl font-bold uppercase text-black transition active:brightness-90">
+            Diseña la tuya
+          </Link>
+          <p className="mt-4 text-center text-sm font-medium uppercase tracking-[0.35em] text-neutral-300">popebrand.cl</p>
+        </div>
+      </section>
+
+      {/* The Cyber lookbook and the usual hero are retired from the home page: the banner above is the hero on every
+          screen. (Set active back to cyberActive to bring the lookbook back.) */}
       <CyberLookbook
-        active={cyberActive}
+        active={false}
         editorHref={editorHref}
         teeProduct={toLookbookProduct(lookbookTee)}
         hoodieProduct={toLookbookProduct(lookbookHoodie)}
@@ -125,9 +178,8 @@ export default async function Home() {
           .sort((a, b) => KIND_ORDER[garmentKind(a)] - KIND_ORDER[garmentKind(b)])
           .map((p) => ({ id: p.id, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice as number }))}
       />
-      </div>
 
-      <PopeHero editorHref={editorHref} cyberActive={cyberActive} hidden={cyberActive} />
+      <PopeHero editorHref={editorHref} cyberActive={cyberActive} hidden />
 
       {/* The ready-made garments of the collections, right under the offer: seeing the finished piece is what makes
           people buy faster. "Ver ofertas" lands here. */}
