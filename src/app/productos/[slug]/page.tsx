@@ -87,7 +87,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <section aria-label="Completa tu look" className="mt-8 border-t border-neutral-200 pt-6">
           <h2 className="font-display text-4xl font-bold uppercase leading-none text-black sm:text-5xl">Completa tu look</h2>
           <p className="mt-2 text-base text-neutral-600">Otras prendas POPE para personalizar con tu diseño.</p>
-          <ul className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <ul className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
             {others.map((o) => {
               const img = o.colors[0]?.views[0]?.imageUrl;
               const sale = o.compareAtPrice != null && o.compareAtPrice > o.basePrice;
