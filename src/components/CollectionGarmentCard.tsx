@@ -5,13 +5,11 @@ import Link from "next/link";
 import { formatCLP } from "@/lib/money";
 import { garmentPhoto } from "@/lib/garment-photo";
 
-// Deep-green halo (a darker take of the brand green) around every garment, so all cards look the same.
-const BACK_SHADOW = "drop-shadow(-12px 8px 14px rgba(0,0,0,0.38))";
-const GARMENT_GLOW = "drop-shadow(0 0 1px rgba(0,0,0,0.45)) drop-shadow(0 0 6px color-mix(in srgb, var(--neon) 34%, #000)) drop-shadow(0 4px 16px color-mix(in srgb, var(--neon) 24%, #000))";
-const BACK_GLOW = `${BACK_SHADOW} ${GARMENT_GLOW}`;
-// Light theme (white garments on a white page): a plain soft shadow instead of the green halo.
-const LIGHT_GLOW = "drop-shadow(0 6px 12px rgba(0,0,0,0.16))";
-const LIGHT_BACK_GLOW = "drop-shadow(-10px 8px 12px rgba(0,0,0,0.2))";
+// Studio-style shadows on a light tile: a hairline edge (so white garments don't dissolve into the tile) plus a soft
+// shadow underneath (so black ones don't look flat). Two filters instead of the old three, which also keeps phones
+// smooth in the swipeable row. The garment in front casts a short shadow on the one behind it.
+const GARMENT_SHADOW = "drop-shadow(0 1px 1px rgba(0,0,0,0.32)) drop-shadow(0 9px 9px rgba(0,0,0,0.2))";
+const BACK_GARMENT_SHADOW = "drop-shadow(-7px 5px 7px rgba(0,0,0,0.26)) drop-shadow(0 1px 1px rgba(0,0,0,0.32)) drop-shadow(0 9px 9px rgba(0,0,0,0.2))";
 
 export type GarmentView = {
   label: string;
@@ -133,13 +131,13 @@ export default function CollectionGarmentCard({
   const backView = color?.views.find((v) => v.label === "Espalda");
   const back = backView && backView.imageUrl !== front?.imageUrl ? backView : undefined;
   const badgeLabel = badge?.trim() || "";
-  const glow = light ? LIGHT_GLOW : GARMENT_GLOW;
-  const backGlow = light ? LIGHT_BACK_GLOW : BACK_GLOW;
+  const glow = GARMENT_SHADOW;
+  const backGlow = BACK_GARMENT_SHADOW;
   const pct = basePrice != null && compareAtPrice && compareAtPrice > basePrice ? Math.round(100 - (basePrice / compareAtPrice) * 100) : 0;
 
   return (
     <li className={`group ${className}`}>
-      <div className="relative aspect-square overflow-hidden rounded-xl bg-[#f1f1f1]">
+      <div className="relative aspect-square overflow-hidden rounded-xl bg-[#ececec] bg-[radial-gradient(ellipse_at_50%_38%,#ffffff_0%,#f3f3f3_55%,#e2e2e2_100%)]">
         {/* The whole picture is a link to the garment with this design already on it */}
         <Link href={href} aria-label={title} className="absolute inset-0 z-[1]" />
         {(badgeLabel || pct > 0) && (
