@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import CollectionsBrowser from "@/components/CollectionsBrowser";
 import { loadShowcaseItems } from "@/lib/collection-items";
-import type { GarmentItem } from "@/components/CollectionGarmentsGrid";
 
 export const dynamic = "force-dynamic";
 
@@ -11,21 +10,8 @@ export const metadata: Metadata = {
   description: "Poleras y polerones de todas las colecciones POPE, con el diseño ya estampado por delante y por detrás. Filtra por colección y llévate el tuyo.",
 };
 
-// One card from each collection in turn (instead of a whole collection after another), so the page reads as a mix.
-function mix(items: GarmentItem[]): GarmentItem[] {
-  const groups = new Map<string, GarmentItem[]>();
-  for (const i of items) {
-    const key = i.collectionId ?? "";
-    groups.set(key, [...(groups.get(key) ?? []), i]);
-  }
-  const lists = [...groups.values()];
-  const out: GarmentItem[] = [];
-  for (let n = 0; out.length < items.length; n++) for (const l of lists) if (n < l.length) out.push(l[n]);
-  return out;
-}
-
 export default async function CollectionsPage() {
-  const items = mix(await loadShowcaseItems(1000));
+  const items = await loadShowcaseItems(1000);
 
   return (
     <main className="bg-black text-white">

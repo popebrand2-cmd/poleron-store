@@ -137,6 +137,22 @@ export function buildArtistItems(opts: {
   return [...mockupItems, ...overlayItems];
 }
 
+// One card from each design in turn instead of a whole design after another, and a different type of garment first for
+// each design (polera, polerón, boxifit, polera…), so the first cards of the home page and of /colecciones mix designs
+// AND garments instead of showing the same design three times in a row.
+export function mixItems(items: GarmentItem[]): GarmentItem[] {
+  const groups = new Map<string, GarmentItem[]>();
+  for (const i of items) groups.set(i.collectionId ?? "", [...(groups.get(i.collectionId ?? "") ?? []), i]);
+  const lists = [...groups.values()].map((list, gi) => {
+    const sorted = [...list].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]);
+    const shift = gi % sorted.length;
+    return [...sorted.slice(shift), ...sorted.slice(0, shift)];
+  });
+  const out: GarmentItem[] = [];
+  for (let n = 0; out.length < items.length; n++) for (const l of lists) if (n < l.length) out.push(l[n]);
+  return out;
+}
+
 // The ready-made garments of the active collections (design printed front and back), for the homepage and the product
 // page. Only collections with a finished mockup or a cut-out design appear — a full poster laid on a shirt looks pasted on.
 export async function loadShowcaseItems(limit = 8): Promise<GarmentItem[]> {
@@ -169,7 +185,7 @@ export async function loadShowcaseItems(limit = 8): Promise<GarmentItem[]> {
         });
       }),
   );
-  return items.flat().slice(0, limit);
+  return mixItems(items.flat()).slice(0, limit);
 }
 
 // The designs of a collection that should get garment cards next to its finished mockups: the cut-out ones only (a full
