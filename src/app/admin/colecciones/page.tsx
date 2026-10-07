@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import NewCollectionForm from "@/components/admin/NewCollectionForm";
 import DeleteCollectionButton from "@/components/admin/DeleteCollectionButton";
+import MoveCollectionButtons from "@/components/admin/MoveCollectionButtons";
 import AdminNav from "@/components/admin/AdminNav";
 import { DEFAULT_SECTIONS } from "@/lib/collection-sections";
 
@@ -25,7 +26,7 @@ export default async function AdminCollectionsPage() {
       </Link>
 
       <p className="mb-6 max-w-2xl text-sm text-neutral-500">
-        Cada colección es un artista o tema (ej. &quot;Karol G&quot;, &quot;Navidad&quot;) y se agrupa en una <strong>sección</strong> (ej. &quot;Reguetón&quot;, &quot;Anime&quot;) que aparece como pestaña en la página principal. Sus diseños predeterminados son los que el cliente puede elegir
+        <strong>El orden de esta lista es el de la portada:</strong> la primera es la que se ve al frente del carrusel (usa «Primera», ↑ y ↓). Cada colección es un artista o tema (ej. &quot;Karol G&quot;, &quot;Navidad&quot;) y se agrupa en una <strong>sección</strong> (ej. &quot;Reguetón&quot;, &quot;Anime&quot;) que aparece como pestaña en la página principal. Sus diseños predeterminados son los que el cliente puede elegir
         en el personalizador en vez de subir su propio diseño. Los diseños marcados &quot;Adelante&quot; dejan
         elegir posición (izquierda, centro o derecha del pecho); los marcados &quot;Atrás&quot; usan siempre un
         tamaño fijo debajo de la capucha.
@@ -37,7 +38,7 @@ export default async function AdminCollectionsPage() {
         <p className="mt-6 text-neutral-500">Todavía no tienes colecciones.</p>
       ) : (
         <div className="mt-6 divide-y divide-neutral-200 rounded-xl border border-neutral-200 bg-white">
-          {collections.map((c) => (
+          {collections.map((c, i) => (
             <div key={c.id} className="flex items-center justify-between gap-4 p-4">
               <div>
                 <p className="font-medium">
@@ -51,6 +52,7 @@ export default async function AdminCollectionsPage() {
                 </p>
               </div>
               <div className="flex items-center gap-3">
+                <MoveCollectionButtons id={c.id} index={i} count={collections.length} />
                 <Link href={`/admin/colecciones/${c.id}`} className="text-sm text-fuchsia-600 hover:underline">
                   Editar
                 </Link>
