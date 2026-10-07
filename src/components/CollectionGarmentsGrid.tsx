@@ -69,8 +69,12 @@ export default function CollectionGarmentsGrid({
     };
   }, [compact, active]);
   // Autoplay (homepage rail): it moves one card every few seconds while it is on screen, and goes back to the start at the
-  // end. Once the visitor touches it (drag, wheel, arrows, a filter tab) it stays where they left it.
-  const [stopped, setStopped] = useState(false);
+  // end. When the visitor touches it (drag, sideways wheel, arrows, a filter tab) it waits 8 seconds and then keeps going,
+  // so a single touch never leaves the section frozen for good.
+  const lastTouch = useRef(0);
+  const touched = () => {
+    lastTouch.current = Date.now();
+  };
   const [inView, setInView] = useState(false);
   useEffect(() => {
     const el = rail.current;
@@ -80,10 +84,10 @@ export default function CollectionGarmentsGrid({
     return () => io.disconnect();
   }, [compact]);
   useEffect(() => {
-    if (!compact || stopped || !inView) return;
+    if (!compact || !inView) return;
     const id = setInterval(() => {
       const el = rail.current;
-      if (!el || document.hidden) return;
+      if (!el || document.hidden || Date.now() - lastTouch.current < 8000) return;
       const max = el.scrollWidth - el.clientWidth;
       if (max <= 4) return;
       if (el.scrollLeft >= max - 4) el.scrollTo({ left: 0, behavior: "smooth" });
@@ -93,9 +97,9 @@ export default function CollectionGarmentsGrid({
       }
     }, 3200);
     return () => clearInterval(id);
-  }, [compact, stopped, inView, active]);
+  }, [compact, inView, active]);
   const slide = (dir: 1 | -1) => {
-    setStopped(true);
+    touched();
     const el = rail.current;
     if (!el) return;
     const card = el.querySelector("li");
@@ -140,7 +144,7 @@ export default function CollectionGarmentsGrid({
                 aria-selected={on}
                 onClick={() => {
                   setActive(k);
-                  setStopped(true);
+                  touched();
                 }}
                 className={`min-h-11 shrink-0 whitespace-nowrap rounded-full border-2 px-5 text-xs font-bold uppercase tracking-wide transition ${
                   on
@@ -179,8 +183,8 @@ export default function CollectionGarmentsGrid({
       )}
       <ul
         ref={compact ? rail : undefined}
-        onPointerDown={compact ? () => setStopped(true) : undefined}
-        onWheel={compact ? (e) => Math.abs(e.deltaX) > 4 && setStopped(true) : undefined}
+        onPointerDown={compact ? touched : undefined}
+        onWheel={compact ? (e) => Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 4 && touched() : undefined}
         className={
           compact
             ? "scrollbar-none -mx-6 flex snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto scroll-smooth px-6 pb-4 lg:mx-0 lg:gap-6 lg:scroll-px-0 lg:px-0"

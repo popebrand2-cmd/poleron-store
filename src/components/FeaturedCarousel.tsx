@@ -110,7 +110,33 @@ export default function FeaturedCarousel({ products }: { products: FeaturedProdu
     return () => ro.disconnect();
   }, [products.length]);
 
+  // Autoplay when the cards overflow (phones): one card every few seconds, back to the start at the end; a touch pauses it 8 s.
+  const lastTouch = useRef(0);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.3 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  useEffect(() => {
+    if (!overflows || !inView) return;
+    const id = setInterval(() => {
+      const el = scrollerRef.current;
+      if (!el || document.hidden || Date.now() - lastTouch.current < 8000) return;
+      const max = el.scrollWidth - el.clientWidth;
+      if (el.scrollLeft >= max - 4) el.scrollTo({ left: 0, behavior: "smooth" });
+      else {
+        const card = el.querySelector("a");
+        el.scrollBy({ left: card ? card.getBoundingClientRect().width + 20 : 240, behavior: "smooth" });
+      }
+    }, 3400);
+    return () => clearInterval(id);
+  }, [overflows, inView]);
+
   function scrollBy(dir: 1 | -1) {
+    lastTouch.current = Date.now();
     const el = scrollerRef.current;
     if (!el) return;
     el.scrollBy({ left: dir * Math.min(560, el.clientWidth * 0.9), behavior: "smooth" });
@@ -120,6 +146,7 @@ export default function FeaturedCarousel({ products }: { products: FeaturedProdu
     <div className="relative">
       <div
         ref={scrollerRef}
+        onPointerDown={() => (lastTouch.current = Date.now())}
         className="scrollbar-none -mx-4 -mb-8 -mt-6 flex snap-x snap-mandatory scroll-px-4 gap-5 overflow-x-auto scroll-smooth px-4 pb-10 pt-6"
         style={{ scrollbarWidth: "none" }}
       >
