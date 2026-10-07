@@ -99,6 +99,9 @@ export async function POST(request: Request) {
     if (!product || !product.active) {
       return NextResponse.json({ error: "Un producto del carrito ya no está disponible." }, { status: 409 });
     }
+    if (product.basePrice <= 0) {
+      return NextResponse.json({ error: "Un producto del carrito todavía no tiene precio." }, { status: 409 });
+    }
     // Limited edition: never sell past the closing date or past the units that exist.
     if (product.limitedEdition) {
       const asked = (askedLimited.get(product.id) ?? 0) + item.quantity;

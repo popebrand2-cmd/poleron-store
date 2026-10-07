@@ -64,7 +64,7 @@ export async function toCardFrame(colors: GarmentColor[]): Promise<GarmentColor[
 // Every active product that has photos to print on (each color with its Frente/Espalda views and print zones).
 export async function loadGarments(): Promise<StudioGarment[]> {
   const products = await prisma.product.findMany({
-    where: { active: true },
+    where: { active: true, limitedEdition: false },
     orderBy: { createdAt: "desc" },
     include: { colors: { orderBy: { sortOrder: "asc" }, include: { views: { orderBy: { sortOrder: "asc" } } } } },
   });

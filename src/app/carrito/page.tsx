@@ -53,7 +53,7 @@ export default function CartPage() {
                 Color {item.colorName} · Talla {item.sizeLabel}
                 {item.materialLabel && ` · ${item.materialLabel}`}
               </p>
-              <p className="text-sm text-neutral-500">{Object.keys(item.designPlacement).join(", ")}</p>
+              <p className="text-sm text-neutral-500">{Object.keys(item.designPlacement).length > 0 ? Object.keys(item.designPlacement).join(", ") : "Pieza exclusiva · edición limitada"}</p>
               <div className="mt-2 flex items-center gap-3">
                 <input
                   type="number"
@@ -62,12 +62,14 @@ export default function CartPage() {
                   onChange={(e) => setQuantity(item.id, Number(e.target.value))}
                   className="w-16 rounded-md border border-neutral-300 px-2 py-1 text-sm"
                 />
-                <Link
-                  href={`/productos/${item.productSlug}?editar=${item.id}`}
-                  className="text-sm font-medium text-neutral-700 underline underline-offset-2 hover:text-black"
-                >
-                  Editar diseño
-                </Link>
+                {Object.keys(item.designPlacement).length > 0 && (
+                  <Link
+                    href={`/productos/${item.productSlug}?editar=${item.id}`}
+                    className="text-sm font-medium text-neutral-700 underline underline-offset-2 hover:text-black"
+                  >
+                    Editar diseño
+                  </Link>
+                )}
                 <button
                   onClick={() => removeItem(item.id)}
                   className="text-sm text-red-600 hover:underline"

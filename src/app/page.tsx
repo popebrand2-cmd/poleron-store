@@ -35,7 +35,7 @@ const KIND_ORDER = { polera: 0, poleron: 1, boxy: 2 } as const;
 export default async function Home() {
   const [products, designCollections, contentItems, siteTextRows, reviews] = await Promise.all([
     prisma.product.findMany({
-      where: { active: true },
+      where: { active: true, limitedEdition: false },
       orderBy: { createdAt: "desc" },
       include: { colors: { include: { views: true } } },
     }),

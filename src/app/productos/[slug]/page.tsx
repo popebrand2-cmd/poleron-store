@@ -8,7 +8,9 @@ import ProductPersonalizer from "@/components/ProductPersonalizer";
 import CollectionGarmentsGrid from "@/components/CollectionGarmentsGrid";
 import ProductInfo from "@/components/ProductInfo";
 import { loadShowcaseItems } from "@/lib/collection-items";
-import { limitedState, soldUnits } from "@/lib/limited";
+import { limitedState, loadLimitedCards, soldUnits } from "@/lib/limited";
+import ExclusiveProduct, { type ExclusiveData } from "@/components/ExclusiveProduct";
+import LimitedEditionCard from "@/components/LimitedEditionCard";
 import LimitedStrip from "@/components/LimitedStrip";
 
 export const dynamic = "force-dynamic";
@@ -16,8 +18,9 @@ export const dynamic = "force-dynamic";
 // The product's own name in the tab and in search results (it used to be the generic site title).
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const p = await prisma.product.findUnique({ where: { slug }, select: { name: true, description: true, active: true } });
+  const p = await prisma.product.findUnique({ where: { slug }, select: { name: true, description: true, active: true, limitedEdition: true } });
   if (!p || !p.active) return { title: "Producto — POPE" };
+  if (p.limitedEdition) return { title: `${p.name} — Edición limitada — POPE`, description: p.description || `${p.name}: pieza exclusiva de edición limitada de POPE.` };
   const description = p.description || `${p.name} con tu diseño: súbelo, míralo en la prenda real antes de comprar.`;
   return { title: `${p.name} con tu diseño — POPE`, description };
 }
@@ -38,10 +41,54 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   if (!product || !product.active || product.colors.length === 0) notFound();
 
+  // Limited edition = exclusive piece: nothing to customize, its own page, and it only recommends other exclusives.
+  if (product.limitedEdition) {
+    const st = limitedState(product, (await soldUnits([product.id])).get(product.id) ?? 0);
+    const material = product.materials[0];
+    const data: ExclusiveData = {
+      id: product.id,
+      slug: product.slug,
+      name: product.name,
+      description: product.description,
+      basePrice: product.basePrice,
+      compareAtPrice: product.compareAtPrice,
+      materialLabel: material?.label ?? "",
+      materialDelta: material?.priceDelta ?? 0,
+      sizes: product.sizes.map((z) => ({ label: z.label, priceDelta: z.priceDelta })),
+      versions: product.colors
+        .filter((c) => c.views[0]?.imageUrl)
+        .map((c) => ({ name: c.name, hex: c.hex, imageUrl: c.views[0].imageUrl, thumbUrl: thumb(c.views[0].imageUrl, 640) })),
+      units: st.units,
+      remaining: st.remaining,
+      until: product.limitedUntil ? product.limitedUntil.toISOString() : null,
+      soldOut: st.soldOut,
+      closed: st.closed,
+    };
+    const others = (await loadLimitedCards()).filter((c) => c.slug !== product.slug);
+    return (
+      <main className="bg-black text-white">
+        <ExclusiveProduct p={data} />
+        {others.length > 0 && (
+          <section aria-label="Más piezas exclusivas" className="mx-auto max-w-6xl px-6 pb-16">
+            <h2 className="mb-6 font-display text-4xl font-bold uppercase leading-none sm:text-5xl">Más piezas exclusivas</h2>
+            <div className="space-y-6">
+              {others.map((c) => (
+                <LimitedEditionCard key={c.slug} item={c} />
+              ))}
+            </div>
+          </section>
+        )}
+        <div className="mx-auto max-w-6xl px-6 pb-28 lg:pb-16">
+          <ProductInfo />
+        </div>
+      </main>
+    );
+  }
+
   // "Completa tu look": the store's other garments, each one a link to its own personalizer (a design is
   // placed per garment, so this is a shortcut to the next piece, not a one-click add).
   const others = await prisma.product.findMany({
-    where: { active: true, id: { not: product.id }, colors: { some: {} } },
+    where: { active: true, limitedEdition: false, id: { not: product.id }, colors: { some: {} } },
     orderBy: { createdAt: "desc" },
     take: 3,
     include: { colors: { orderBy: { sortOrder: "asc" }, take: 1, include: { views: { orderBy: { sortOrder: "asc" }, take: 1 } } } },

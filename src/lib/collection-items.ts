@@ -16,7 +16,7 @@ type CatalogProduct = Awaited<ReturnType<typeof loadProducts>>[number];
 
 function loadProducts() {
   return prisma.product.findMany({
-    where: { active: true },
+    where: { active: true, limitedEdition: false },
     orderBy: { createdAt: "desc" },
     include: { colors: { orderBy: { sortOrder: "asc" }, include: { views: { orderBy: { sortOrder: "asc" } } } } },
   });
