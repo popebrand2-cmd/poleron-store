@@ -51,127 +51,188 @@ export default function CollectionGarmentsGrid({
   const [colorName, setColorName] = useState("");
   // One chip per color name found in the collection (Negro, Blanco…), with its swatch.
   const colorChoices = [...new Map(items.flatMap((i) => i.colors).map((c) => [c.name, c.hex])).entries()];
+  // Homepage rail: the row never stops. It glides on its own, forever (the cards are repeated once so there is no end),
+  // slows down under the mouse so a card can be clicked, and can be dragged, flicked, wheeled or moved with the arrows.
+  // It is moved with a transform (sub-pixel, no scrolling), one frame at a time, so it stays smooth at 60 fps.
+  const view = useRef<HTMLDivElement>(null);
   const rail = useRef<HTMLUListElement>(null);
   const thumb = useRef<HTMLDivElement>(null);
   const shown = items.filter((i) => (active === "all" || i.kind === active) && (!colorName || i.colors.some((c) => c.name === colorName)));
-  // Homepage rail: the row never stops. It glides on its own, forever (the cards are repeated once so there is no end),
-  // slows down under the cursor so a card can be clicked, and waits while the visitor drags it or uses the arrows.
   const loops = compact && shown.length > 1;
-  const lastTouch = useRef(0);
-  const touched = () => {
-    lastTouch.current = Date.now();
-  };
   const [inView, setInView] = useState(false);
+  // Shared with the animation loop below.
+  const motion = useRef({ x: 0, target: null as number | null, v: 0, pausedUntil: 0 });
+  const touched = (ms = 1500) => {
+    motion.current.pausedUntil = Date.now() + ms;
+  };
   useEffect(() => {
-    const el = rail.current;
+    const el = view.current;
     if (!compact || !el || !("IntersectionObserver" in window)) return;
-    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.05 });
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.02 });
     io.observe(el);
     return () => io.disconnect();
   }, [compact]);
-  // Length of one full set of cards (where the second copy starts).
-  const period = () => {
-    const el = rail.current;
-    const items = el ? el.querySelectorAll("li") : [];
-    const n = items.length / 2;
-    return n >= 1 && items[n] instanceof HTMLElement ? (items[n] as HTMLElement).offsetLeft - (items[0] as HTMLElement).offsetLeft : 0;
-  };
   const SPEED = 110; // px per second (the reference video glides at about this pace)
+  const strideOf = () => {
+    const cards = rail.current?.querySelectorAll("li");
+    return cards && cards.length > 1 ? (cards[1] as HTMLElement).offsetLeft - (cards[0] as HTMLElement).offsetLeft : 0;
+  };
   useEffect(() => {
-    if (rail.current) rail.current.scrollLeft = 0;
+    const m = motion.current;
+    m.x = 0;
+    m.target = null;
+    m.v = 0;
+    const el = rail.current;
+    if (el) el.style.transform = "translate3d(0,0,0)";
   }, [active, colorName]);
   useEffect(() => {
+    const view_ = view.current;
     const el = rail.current;
-    if (!loops || !el || !inView) return;
-    let pos = el.scrollLeft;
-    let last = performance.now();
+    if (!loops || !view_ || !el || !inView) return;
+    const m = motion.current;
+    let period = 0;
+    const measure = () => {
+      const cards = el.querySelectorAll("li");
+      const half = cards.length / 2;
+      period = half >= 1 && cards[half] ? (cards[half] as HTMLElement).offsetLeft - (cards[0] as HTMLElement).offsetLeft : 0;
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
     let hover = false;
-    let down = false;
     let factor = 1;
-    let raf = 0;
-    // Only a real mouse slows it down: on a phone a tap leaves an emulated "hover" behind that would never go away.
+    let drag: { id: number; startX: number; startPos: number; on: boolean; lastX: number; lastT: number; v: number } | null = null;
     const onEnter = (e: PointerEvent) => {
       if (e.pointerType === "mouse") hover = true;
     };
     const onLeave = (e: PointerEvent) => {
       if (e.pointerType === "mouse") hover = false;
     };
-    const onDown = () => {
-      down = true;
-      touched();
+    const onDown = (e: PointerEvent) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      drag = { id: e.pointerId, startX: e.clientX, startPos: m.x, on: false, lastX: e.clientX, lastT: performance.now(), v: 0 };
+      m.target = null;
+      m.v = 0;
+      touched(60000);
     };
-    const onUp = () => {
-      down = false;
-      touched();
+    const onMove = (e: PointerEvent) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      const dx = e.clientX - drag.startX;
+      if (!drag.on && Math.abs(dx) > 6) {
+        drag.on = true;
+        // Capture only once it is really a drag, so a plain click on a card still reaches its link.
+        try {
+          view_.setPointerCapture(e.pointerId);
+        } catch {}
+      }
+      if (!drag.on) return;
+      const now = performance.now();
+      const dt = Math.max(1, now - drag.lastT) / 1000;
+      drag.v = drag.v * 0.6 + (-(e.clientX - drag.lastX) / dt) * 0.4;
+      drag.lastX = e.clientX;
+      drag.lastT = now;
+      m.x = drag.startPos - dx;
     };
-    // Where this code last left the row: a scroll to anywhere else is the visitor's finger (or its momentum), which also
-    // pauses the glide. On a phone the browser takes over the drag and cancels the pointer, so the scroll itself is the signal.
-    let expected = el.scrollLeft;
-    const onScroll = () => {
-      if (Math.abs(el.scrollLeft - expected) > 1.5) touched();
+    const onUp = (e: PointerEvent) => {
+      if (!drag || e.pointerId !== drag.id) return;
+      if (drag.on) {
+        // Flick: keep going with the speed of the finger, slowing down.
+        m.v = Math.abs(drag.v) > 80 && performance.now() - drag.lastT < 120 ? drag.v : 0;
+        view_.dataset.dragged = "1";
+        setTimeout(() => delete view_.dataset.dragged, 60);
+        try {
+          view_.releasePointerCapture(e.pointerId);
+        } catch {}
+      }
+      drag = null;
+      touched(1500);
     };
-    el.addEventListener("pointerenter", onEnter);
-    el.addEventListener("pointerleave", onLeave);
-    el.addEventListener("pointerdown", onDown);
-    el.addEventListener("touchstart", onDown, { passive: true });
-    el.addEventListener("touchend", onUp, { passive: true });
-    el.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("pointerup", onUp);
-    window.addEventListener("pointercancel", onUp);
-    const paint = () => {
-      const p = period();
-      if (thumb.current && p > 0) {
-        const w = 18;
-        thumb.current.style.width = w + "%";
-        thumb.current.style.left = ((el.scrollLeft % p) / p) * (100 - w) + "%";
+    const onWheel = (e: WheelEvent) => {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 1) {
+        m.x += e.deltaX;
+        m.target = null;
+        touched(1500);
       }
     };
+    const onFocus = () => touched(4000);
+    const onScroll = () => {
+      // The browser scrolls this clipped box to reveal a focused card: undo it, the transform does the moving.
+      view_.scrollLeft = 0;
+    };
+    view_.addEventListener("pointerenter", onEnter);
+    view_.addEventListener("pointerleave", onLeave);
+    view_.addEventListener("pointerdown", onDown);
+    view_.addEventListener("pointermove", onMove);
+    view_.addEventListener("pointerup", onUp);
+    view_.addEventListener("pointercancel", onUp);
+    view_.addEventListener("wheel", onWheel, { passive: true });
+    view_.addEventListener("focusin", onFocus);
+    view_.addEventListener("scroll", onScroll, { passive: true });
+
+    let raf = 0;
+    let last = performance.now();
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
-      const dt = Math.min(0.1, (now - last) / 1000);
+      const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      const p = period();
-      if (document.hidden || !p) return;
-      // Somebody else moved the row since the last frame (a finger, its momentum, the arrows): leave it alone for a moment.
-      if (Math.abs(el.scrollLeft - expected) > 1.5) touched();
-      if (down || Date.now() - lastTouch.current < 2500) {
-        // The visitor is moving it by hand: follow, and loop the same way.
-        if (el.scrollLeft >= p) el.scrollLeft -= p;
-        pos = el.scrollLeft;
-        expected = pos;
-        paint();
-        return;
+      if (document.hidden || !period) return;
+      if (drag?.on) {
+        // The finger moves it (onMove).
+      } else if (m.target !== null) {
+        const diff = m.target - m.x;
+        m.x += diff * Math.min(1, dt * 9);
+        if (Math.abs(diff) < 0.5) {
+          m.x = m.target;
+          m.target = null;
+        }
+      } else if (Math.abs(m.v) > 20) {
+        m.x += m.v * dt;
+        m.v *= Math.exp(-dt * 3.2);
+        touched(900);
+      } else if (!drag && Date.now() >= m.pausedUntil) {
+        factor += ((hover ? 0.25 : 1) - factor) * Math.min(1, dt * 6);
+        m.x += SPEED * factor * dt;
       }
-      factor += ((hover ? 0.25 : 1) - factor) * Math.min(1, dt * 6);
-      pos += SPEED * factor * dt;
-      if (pos >= p) pos -= p;
-      el.scrollLeft = pos;
-      expected = el.scrollLeft;
-      paint();
+      // Loop: the second copy is identical to the first, so jumping a whole period back is invisible.
+      while (m.x >= period) {
+        m.x -= period;
+        if (m.target !== null) m.target -= period;
+        if (drag) drag.startPos -= period;
+      }
+      while (m.x < 0) {
+        m.x += period;
+        if (m.target !== null) m.target += period;
+        if (drag) drag.startPos += period;
+      }
+      el.style.transform = `translate3d(${-m.x}px,0,0)`;
+      if (thumb.current) {
+        const w = 18;
+        thumb.current.style.width = w + "%";
+        thumb.current.style.left = (m.x / period) * (100 - w) + "%";
+      }
     };
     raf = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(raf);
-      el.removeEventListener("pointerenter", onEnter);
-      el.removeEventListener("pointerleave", onLeave);
-      el.removeEventListener("pointerdown", onDown);
-      el.removeEventListener("touchstart", onDown);
-      el.removeEventListener("touchend", onUp);
-      el.removeEventListener("scroll", onScroll);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
+      ro.disconnect();
+      view_.removeEventListener("pointerenter", onEnter);
+      view_.removeEventListener("pointerleave", onLeave);
+      view_.removeEventListener("pointerdown", onDown);
+      view_.removeEventListener("pointermove", onMove);
+      view_.removeEventListener("pointerup", onUp);
+      view_.removeEventListener("pointercancel", onUp);
+      view_.removeEventListener("wheel", onWheel);
+      view_.removeEventListener("focusin", onFocus);
+      view_.removeEventListener("scroll", onScroll);
     };
   }, [loops, inView, active, colorName]);
   const slide = (dir: 1 | -1) => {
-    touched();
-    const el = rail.current;
-    if (!el) return;
-    const card = el.querySelector("li");
-    const step = (card ? card.getBoundingClientRect().width + 24 : el.clientWidth * 0.8) * (window.innerWidth >= 1024 ? 2 : 1);
-    const p = period();
-    // Going back from the start: jump (unseen, the copies are identical) to the same place in the second copy first.
-    if (dir < 0 && p > 0 && el.scrollLeft < step) el.scrollLeft += p;
-    el.scrollBy({ left: dir * step, behavior: "smooth" });
+    const m = motion.current;
+    const step = strideOf() * (window.innerWidth >= 1024 ? 2 : 1);
+    if (!step) return;
+    m.v = 0;
+    m.target = (m.target ?? m.x) + dir * step;
+    touched(2500);
   };
 
   return (
@@ -208,10 +269,7 @@ export default function CollectionGarmentsGrid({
                 type="button"
                 role="tab"
                 aria-selected={on}
-                onClick={() => {
-                  setActive(k);
-                  touched();
-                }}
+                onClick={() => setActive(k)}
                 className={`min-h-11 shrink-0 whitespace-nowrap rounded-full border-2 px-5 text-xs font-bold uppercase tracking-wide transition ${
                   on
                     ? light ? "border-black bg-black text-white" : "border-neon bg-neon text-black"
@@ -245,16 +303,28 @@ export default function CollectionGarmentsGrid({
           </button>
         </>
       )}
+      <div
+        ref={compact ? view : undefined}
+        onClickCapture={
+          compact
+            ? (e) => {
+                // A drag that ends on a card must not open it.
+                if (view.current?.dataset.dragged) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              }
+            : undefined
+        }
+        className={compact ? "-mx-6 touch-pan-y select-none overflow-hidden pb-4 lg:mx-0" : ""}
+      >
       <ul
         ref={compact ? rail : undefined}
-        onWheel={compact ? (e) => Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 4 && touched() : undefined}
-        onTouchMove={compact ? touched : undefined}
         className={
           compact
-            ? "scrollbar-none -mx-6 flex gap-4 overflow-x-auto px-6 pb-4 lg:mx-0 lg:gap-6 lg:px-0"
+            ? "flex w-full gap-4 px-6 will-change-transform lg:gap-6 lg:px-0"
             : "grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4"
         }
-        style={compact ? { scrollbarWidth: "none" } : undefined}
       >
         {(loops ? [...shown, ...shown] : shown).map((i, n) => (
           <CollectionGarmentCard
@@ -280,6 +350,7 @@ export default function CollectionGarmentsGrid({
           />
         ))}
       </ul>
+      </div>
       {loops && (
         <div aria-hidden="true" className="relative mx-auto mt-4 h-1 w-40 overflow-hidden rounded-full bg-white/10 lg:mt-6 lg:w-64">
           <div ref={thumb} className="absolute inset-y-0 rounded-full bg-neon" style={{ width: "18%", left: "0%" }} />
