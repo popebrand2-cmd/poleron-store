@@ -14,6 +14,7 @@ import { isCyberActive, getCyberSaleItems } from "@/lib/cyber";
 import { garmentKind } from "@/lib/garments";
 import RealWorks from "@/components/RealWorks";
 import RealVideos from "@/components/RealVideos";
+import InstagramPosts from "@/components/InstagramPosts";
 import ReviewsSection from "@/components/ReviewsSection";
 import InstagramFeed from "@/components/InstagramFeed";
 import HowItWorks from "@/components/preview/HowItWorks";
@@ -265,6 +266,9 @@ export default async function Home() {
       <ReviewsSection initialItems={reviewRows} products={reviewProducts} />
 
       <HowItWorks editorHref={editorHref} />
+
+      {/* The owner's Instagram posts, each one opening that post on Instagram (hidden until the owner adds some) */}
+      <InstagramPosts />
 
       {/* Vertical videos of finished garments, as a hand of cards (hidden until the owner uploads some) */}
       <RealVideos />

@@ -231,9 +231,11 @@ export default function SiteAssetsPanel({ defaultOpen = false }: { defaultOpen?:
       </summary>
       <div className="max-h-[55vh] space-y-4 overflow-y-auto px-4 pb-4">
         <ul className="space-y-3">
-          {Object.keys(SITE_IMAGE_LABELS).map((k) => (
-            <ImageSlot key={k} k={k} />
-          ))}
+          {Object.keys(SITE_IMAGE_LABELS)
+            .filter((k) => !k.startsWith("image.insta"))
+            .map((k) => (
+              <ImageSlot key={k} k={k} />
+            ))}
         </ul>
         <div className="space-y-3 border-t border-white/10 pt-3">
           <p className="text-xs font-bold uppercase tracking-wide text-neon">Videos verticales (pruebas reales)</p>
@@ -243,6 +245,23 @@ export default function SiteAssetsPanel({ defaultOpen = false }: { defaultOpen?:
           <ul className="space-y-2">
             {Array.from({ length: 8 }, (_, i) => (
               <VideoSlot key={i} n={i + 1} />
+            ))}
+          </ul>
+        </div>
+        <div className="space-y-3 border-t border-white/10 pt-3">
+          <p className="text-xs font-bold uppercase tracking-wide text-neon">Publicaciones de Instagram</p>
+          <p className="text-[11px] leading-tight text-neutral-400">
+            Sube la foto de cada publicación (cuadrada) y pega abajo el enlace de esa publicación: al tocarla, tus visitantes van directo a
+            ella en Instagram. La sección aparece en la portada apenas subas la primera.
+          </p>
+          <ul className="space-y-3">
+            {Array.from({ length: 8 }, (_, i) => (
+              <li key={i} className="space-y-2 rounded-xl border border-white/10 p-2.5">
+                <ul>
+                  <ImageSlot k={`image.insta${i + 1}`} />
+                </ul>
+                <SettingField k={`insta.${i + 1}.url`} label="Enlace de la publicación" optional placeholder="https://www.instagram.com/p/…" />
+              </li>
             ))}
           </ul>
         </div>

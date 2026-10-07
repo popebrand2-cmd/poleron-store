@@ -137,6 +137,18 @@ export const SITE_TEXT_DEFAULTS: Record<string, string> = {
   "video.8.src": "",
   "video.8.tag": "",
   "video.8.caption": "",
+  "insta.eyebrow": "Síguenos",
+  "insta.heading": "En Instagram",
+  "insta.subtext": "Toca una publicación y míranos en Instagram.",
+  "insta.cta": "Seguir en Instagram",
+  "insta.1.url": "",
+  "insta.2.url": "",
+  "insta.3.url": "",
+  "insta.4.url": "",
+  "insta.5.url": "",
+  "insta.6.url": "",
+  "insta.7.url": "",
+  "insta.8.url": "",
   "works.eyebrow": "Trabajos reales",
   "works.heading": "Hechos por POPE",
   "works.subtext": "Prendas que ya fueron confeccionadas para nuestros clientes.",
@@ -175,6 +187,15 @@ export const SITE_IMAGE_DEFAULTS: Record<string, string> = {
   "image.work4": "",
   "image.work5": "",
   "image.work6": "",
+  // Pictures of the Instagram posts (the link of each one is saved in "insta.N.url").
+  "image.insta1": "",
+  "image.insta2": "",
+  "image.insta3": "",
+  "image.insta4": "",
+  "image.insta5": "",
+  "image.insta6": "",
+  "image.insta7": "",
+  "image.insta8": "",
 };
 
 export const SITE_IMAGE_LABELS: Record<string, { label: string; hint: string }> = {
@@ -191,6 +212,14 @@ export const SITE_IMAGE_LABELS: Record<string, { label: string; hint: string }> 
   "image.work4": { label: "Foto real 4", hint: "Una prenda ya fabricada." },
   "image.work5": { label: "Foto real 5", hint: "Una prenda ya fabricada." },
   "image.work6": { label: "Foto real 6", hint: "Una prenda ya fabricada." },
+  "image.insta1": { label: "Publicación 1", hint: "Cuadrada (1:1), la foto de la publicación." },
+  "image.insta2": { label: "Publicación 2", hint: "Cuadrada (1:1), la foto de la publicación." },
+  "image.insta3": { label: "Publicación 3", hint: "Cuadrada (1:1), la foto de la publicación." },
+  "image.insta4": { label: "Publicación 4", hint: "Cuadrada (1:1), la foto de la publicación." },
+  "image.insta5": { label: "Publicación 5", hint: "Cuadrada (1:1), la foto de la publicación." },
+  "image.insta6": { label: "Publicación 6", hint: "Cuadrada (1:1), la foto de la publicación." },
+  "image.insta7": { label: "Publicación 7", hint: "Cuadrada (1:1), la foto de la publicación." },
+  "image.insta8": { label: "Publicación 8", hint: "Cuadrada (1:1), la foto de la publicación." },
 };
 
 export function siteText(map: Record<string, string>, key: string): string {
