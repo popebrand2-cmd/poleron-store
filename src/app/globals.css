@@ -616,3 +616,8 @@ a.pope-social:active { transform: scale(0.96); }
   .pope-card-in, .pope-sheet, .pope-banner-img, .pope-banner-sheen, .pope-banner-text > * { animation: none !important; }
 }
 [data-lite] .pope-banner-img, [data-lite] .pope-banner-sheen { animation: none; }
+
+/* Collections carousel autoplay: a thin bar that fills until the next collection */
+.pcol-auto { display: block; width: 120px; height: 2px; background: #ffffff1f; border-radius: 2px; overflow: hidden; }
+.pcol-auto i { display: block; height: 100%; width: 100%; background: var(--neon); transform-origin: left; animation: pcolAuto linear both; }
+@keyframes pcolAuto { from { transform: scaleX(0); } to { transform: scaleX(1); } }

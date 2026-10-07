@@ -84,6 +84,15 @@ export default function CollectionsShowcase({
   const wheelLock = useRef(0);
   const firstDeal = useRef(true);
   const [giant, setGiant] = useState<{ cur?: string; prev?: string; k: number }>({ k: 0 });
+  // Autoplay: the carousel turns by itself every few seconds while it is on screen, and stops while the pointer is on it,
+  // while the tab is hidden, while searching and in edit mode. It also runs with "reduce motion" (the turn itself is then a
+  // plain cross-fade, see globals.css), because the owner wants the carousel to move.
+  const AUTO_MS = 4200;
+  const sectionRef = useRef<HTMLElement>(null);
+  const [inView, setInView] = useState(false);
+  const [hover, setHover] = useState(false);
+  const [tabVisible, setTabVisible] = useState(true);
+  const [autoKey, setAutoKey] = useState(0);
 
   // The default sections always show (even while empty), then any other section used in the admin,
   // then "Todas". Artists without a section fall under "Otros".
@@ -246,10 +255,33 @@ export default function CollectionsShowcase({
     ["--ty", "--tx", "--px", "--py"].forEach((k) => c.style.removeProperty(k));
   }
 
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.35 });
+    io.observe(el);
+    const onVis = () => setTabVisible(!document.hidden);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      io.disconnect();
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, []);
+
+  const autoOn = !editMode && n > 1 && inView && !hover && tabVisible && !query;
+  useEffect(() => {
+    if (!autoOn) return;
+    const t = setTimeout(() => {
+      setAutoKey((k) => k + 1);
+      setActive((a) => (a + 1) % n);
+    }, AUTO_MS);
+    return () => clearTimeout(t);
+  }, [autoOn, active, n, autoKey]);
+
   const S = STATES[mode];
 
   return (
-    <section id="colecciones" className="pcol" aria-label="Colecciones POPE" onKeyDown={onKeyDown}>
+    <section ref={sectionRef} id="colecciones" className="pcol" aria-label="Colecciones POPE" onKeyDown={onKeyDown}>
       <header className="pcol-head">
         <p className="pcol-eyebrow">{eyebrow}</p>
         <h2 className="pcol-title">
@@ -309,6 +341,10 @@ export default function CollectionsShowcase({
         ref={stageRef}
         className="pcol-stage"
         tabIndex={0}
+        onPointerEnter={(e) => e.pointerType !== "touch" && setHover(true)}
+        onPointerLeave={() => setHover(false)}
+        onFocus={() => setHover(true)}
+        onBlur={() => setHover(false)}
         aria-label="Carrusel de colecciones. Usa las flechas del teclado para navegar."
         onWheel={onWheel}
       >
@@ -406,6 +442,9 @@ export default function CollectionsShowcase({
             />
           ))}
         </div>
+        <span aria-hidden="true" className="pcol-auto">
+          {autoOn && <i key={`${active}-${autoKey}`} style={{ animationDuration: `${AUTO_MS}ms` }} />}
+        </span>
         <div className="pcol-count">
           <b>{pad(n ? Math.min(active, n - 1) + 1 : 0)}</b> / {pad(n)}
         </div>

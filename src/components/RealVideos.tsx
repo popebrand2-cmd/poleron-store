@@ -9,6 +9,14 @@ export const VIDEO_SLOTS = 8;
 
 type Card = { n: number; src: string; tag: string; caption: string };
 
+// The shipped videos have a 4-second, silent, 360p loop next to them (media/pope-video-N-preview.mp4, ~200 KB instead of
+// 1-2.6 MB): the row plays those like GIFs; the full video (with sound) only loads in the player. Videos the owner uploads
+// later have no preview and use the video itself.
+function previewOf(src: string): string {
+  const m = /^\/uploads\/(pope-video-\d+)\.mp4$/.exec(src);
+  return m ? `/uploads/${m[1]}-preview.mp4` : src;
+}
+
 function PlayIcon({ className = "h-6 w-6" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
@@ -232,11 +240,17 @@ export default function RealVideos() {
   // the other strips stay on their first frame, which keeps phones light. This is the point of
   // the section, so it also plays with "reduce motion" on (a single small muted video).
   useEffect(() => {
+    // Every strip loops its small preview like a GIF (the owner asked for it; it is the point of the section), except on
+    // low-power devices, where only the open one plays.
+    const wall = !lite;
     cards.forEach((_, i) => {
       const v = videoRefs.current[i];
       if (!v) return;
-      if (i === current && inView && open === null && !lite) {
-        v.play().then(() => setBlocked(false)).catch(() => setBlocked(true));
+      const play = inView && open === null && !lite && (i === current || wall);
+      if (play) {
+        v.play()
+          .then(() => i === current && setBlocked(false))
+          .catch(() => i === current && setBlocked(true));
       } else v.pause();
     });
   }, [cards, current, inView, open, lite]);
@@ -348,20 +362,20 @@ export default function RealVideos() {
                     setBlocked(false);
                   }}
                   onCanPlay={() => setBuffering(false)}
-                  src={near ? `${c.src}#t=0.1` : undefined}
+                  src={near ? `${previewOf(c.src)}#t=0.1` : undefined}
                   muted
                   loop
                   playsInline
-                  preload={lite ? (on ? "metadata" : "none") : on ? "auto" : "metadata"}
+                  preload={lite ? "metadata" : "auto"}
                   tabIndex={-1}
                   aria-hidden="true"
                   className={`pointer-events-none h-full w-full transform-gpu object-cover transition-transform duration-[900ms] ease-out ${
-                    on ? "scale-100" : "scale-[1.12]"
+                    on ? "scale-100" : "scale-[1.12] group-hover:scale-100"
                   }`}
                 />
                 <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/5 to-black/35" />
                 <span
-                  className={`pointer-events-none absolute inset-0 bg-black transition-opacity duration-700 ${on ? "opacity-0" : "opacity-45 group-hover:opacity-20"}`}
+                  className={`pointer-events-none absolute inset-0 bg-black transition-opacity duration-500 ${on ? "opacity-0" : "opacity-30 group-hover:opacity-0"}`}
                   aria-hidden="true"
                 />
 
