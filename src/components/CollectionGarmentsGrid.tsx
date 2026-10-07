@@ -89,16 +89,33 @@ export default function CollectionGarmentsGrid({
     let down = false;
     let factor = 1;
     let raf = 0;
-    const onEnter = () => (hover = true);
-    const onLeave = () => (hover = false);
-    const onDown = () => (down = true);
+    // Only a real mouse slows it down: on a phone a tap leaves an emulated "hover" behind that would never go away.
+    const onEnter = (e: PointerEvent) => {
+      if (e.pointerType === "mouse") hover = true;
+    };
+    const onLeave = (e: PointerEvent) => {
+      if (e.pointerType === "mouse") hover = false;
+    };
+    const onDown = () => {
+      down = true;
+      touched();
+    };
     const onUp = () => {
       down = false;
       touched();
     };
-    el.addEventListener("mouseenter", onEnter);
-    el.addEventListener("mouseleave", onLeave);
+    // Where this code last left the row: a scroll to anywhere else is the visitor's finger (or its momentum), which also
+    // pauses the glide. On a phone the browser takes over the drag and cancels the pointer, so the scroll itself is the signal.
+    let expected = el.scrollLeft;
+    const onScroll = () => {
+      if (Math.abs(el.scrollLeft - expected) > 1.5) touched();
+    };
+    el.addEventListener("pointerenter", onEnter);
+    el.addEventListener("pointerleave", onLeave);
     el.addEventListener("pointerdown", onDown);
+    el.addEventListener("touchstart", onDown, { passive: true });
+    el.addEventListener("touchend", onUp, { passive: true });
+    el.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointercancel", onUp);
     const paint = () => {
@@ -119,6 +136,7 @@ export default function CollectionGarmentsGrid({
         // The visitor is moving it by hand: follow, and loop the same way.
         if (el.scrollLeft >= p) el.scrollLeft -= p;
         pos = el.scrollLeft;
+        expected = pos;
         paint();
         return;
       }
@@ -126,14 +144,18 @@ export default function CollectionGarmentsGrid({
       pos += SPEED * factor * dt;
       if (pos >= p) pos -= p;
       el.scrollLeft = pos;
+      expected = el.scrollLeft;
       paint();
     };
     raf = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(raf);
-      el.removeEventListener("mouseenter", onEnter);
-      el.removeEventListener("mouseleave", onLeave);
+      el.removeEventListener("pointerenter", onEnter);
+      el.removeEventListener("pointerleave", onLeave);
       el.removeEventListener("pointerdown", onDown);
+      el.removeEventListener("touchstart", onDown);
+      el.removeEventListener("touchend", onUp);
+      el.removeEventListener("scroll", onScroll);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onUp);
     };
