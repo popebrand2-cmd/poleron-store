@@ -52,25 +52,11 @@ export default function CollectionGarmentsGrid({
   // One chip per color name found in the collection (Negro, Blanco…), with its swatch.
   const colorChoices = [...new Map(items.flatMap((i) => i.colors).map((c) => [c.name, c.hex])).entries()];
   const rail = useRef<HTMLUListElement>(null);
-  const [progress, setProgress] = useState({ at: 0, size: 1, start: true, end: false });
-  useEffect(() => {
-    const el = rail.current;
-    if (!compact || !el) return;
-    const update = () => {
-      const max = el.scrollWidth - el.clientWidth;
-      setProgress({ at: max > 0 ? el.scrollLeft / max : 0, size: el.scrollWidth > 0 ? el.clientWidth / el.scrollWidth : 1, start: el.scrollLeft <= 4, end: el.scrollLeft >= max - 4 });
-    };
-    update();
-    el.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
-    return () => {
-      el.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
-    };
-  }, [compact, active]);
-  // Autoplay (homepage rail): it moves one card every few seconds while it is on screen, and goes back to the start at the
-  // end. When the visitor touches it (drag, sideways wheel, arrows, a filter tab) it waits 8 seconds and then keeps going,
-  // so a single touch never leaves the section frozen for good.
+  const thumb = useRef<HTMLDivElement>(null);
+  const shown = items.filter((i) => (active === "all" || i.kind === active) && (!colorName || i.colors.some((c) => c.name === colorName)));
+  // Homepage rail: the row never stops. It glides on its own, forever (the cards are repeated once so there is no end),
+  // slows down under the cursor so a card can be clicked, and waits while the visitor drags it or uses the arrows.
+  const loops = compact && shown.length > 1;
   const lastTouch = useRef(0);
   const touched = () => {
     lastTouch.current = Date.now();
@@ -79,34 +65,90 @@ export default function CollectionGarmentsGrid({
   useEffect(() => {
     const el = rail.current;
     if (!compact || !el || !("IntersectionObserver" in window)) return;
-    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.3 });
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.05 });
     io.observe(el);
     return () => io.disconnect();
   }, [compact]);
+  // Length of one full set of cards (where the second copy starts).
+  const period = () => {
+    const el = rail.current;
+    const items = el ? el.querySelectorAll("li") : [];
+    const n = items.length / 2;
+    return n >= 1 && items[n] instanceof HTMLElement ? (items[n] as HTMLElement).offsetLeft - (items[0] as HTMLElement).offsetLeft : 0;
+  };
+  const SPEED = 46; // px per second
   useEffect(() => {
-    if (!compact || !inView) return;
-    const id = setInterval(() => {
-      const el = rail.current;
-      if (!el || document.hidden || Date.now() - lastTouch.current < 8000) return;
-      const max = el.scrollWidth - el.clientWidth;
-      if (max <= 4) return;
-      if (el.scrollLeft >= max - 4) el.scrollTo({ left: 0, behavior: "smooth" });
-      else {
-        const card = el.querySelector("li");
-        el.scrollBy({ left: card ? card.getBoundingClientRect().width + (window.innerWidth >= 1024 ? 24 : 16) : el.clientWidth * 0.7, behavior: "smooth" });
+    if (rail.current) rail.current.scrollLeft = 0;
+  }, [active, colorName]);
+  useEffect(() => {
+    const el = rail.current;
+    if (!loops || !el || !inView) return;
+    let pos = el.scrollLeft;
+    let last = performance.now();
+    let hover = false;
+    let down = false;
+    let factor = 1;
+    let raf = 0;
+    const onEnter = () => (hover = true);
+    const onLeave = () => (hover = false);
+    const onDown = () => (down = true);
+    const onUp = () => {
+      down = false;
+      touched();
+    };
+    el.addEventListener("mouseenter", onEnter);
+    el.addEventListener("mouseleave", onLeave);
+    el.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    const paint = () => {
+      const p = period();
+      if (thumb.current && p > 0) {
+        const w = 18;
+        thumb.current.style.width = w + "%";
+        thumb.current.style.left = ((el.scrollLeft % p) / p) * (100 - w) + "%";
       }
-    }, 3200);
-    return () => clearInterval(id);
-  }, [compact, inView, active]);
+    };
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      const dt = Math.min(0.1, (now - last) / 1000);
+      last = now;
+      const p = period();
+      if (document.hidden || !p) return;
+      if (down || Date.now() - lastTouch.current < 2500) {
+        // The visitor is moving it by hand: follow, and loop the same way.
+        if (el.scrollLeft >= p) el.scrollLeft -= p;
+        pos = el.scrollLeft;
+        paint();
+        return;
+      }
+      factor += ((hover ? 0.25 : 1) - factor) * Math.min(1, dt * 6);
+      pos += SPEED * factor * dt;
+      if (pos >= p) pos -= p;
+      el.scrollLeft = pos;
+      paint();
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      el.removeEventListener("mouseenter", onEnter);
+      el.removeEventListener("mouseleave", onLeave);
+      el.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+  }, [loops, inView, active, colorName]);
   const slide = (dir: 1 | -1) => {
     touched();
     const el = rail.current;
     if (!el) return;
     const card = el.querySelector("li");
-    const step = card ? card.getBoundingClientRect().width + 24 : el.clientWidth * 0.8;
-    el.scrollBy({ left: dir * step * (window.innerWidth >= 1024 ? 2 : 1), behavior: "smooth" });
+    const step = (card ? card.getBoundingClientRect().width + 24 : el.clientWidth * 0.8) * (window.innerWidth >= 1024 ? 2 : 1);
+    const p = period();
+    // Going back from the start: jump (unseen, the copies are identical) to the same place in the second copy first.
+    if (dir < 0 && p > 0 && el.scrollLeft < step) el.scrollLeft += p;
+    el.scrollBy({ left: dir * step, behavior: "smooth" });
   };
-  const shown = items.filter((i) => (active === "all" || i.kind === active) && (!colorName || i.colors.some((c) => c.name === colorName)));
 
   return (
     <>
@@ -165,8 +207,7 @@ export default function CollectionGarmentsGrid({
             type="button"
             aria-label="Anteriores"
             onClick={() => slide(-1)}
-            disabled={progress.start}
-            className="absolute -left-5 top-[38%] z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/80 text-xl text-white shadow-xl backdrop-blur transition hover:border-neon hover:text-neon disabled:pointer-events-none disabled:opacity-0 lg:grid"
+            className="absolute -left-5 top-[38%] z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/80 text-xl text-white shadow-xl backdrop-blur transition hover:border-neon hover:text-neon lg:grid"
           >
             ←
           </button>
@@ -174,8 +215,7 @@ export default function CollectionGarmentsGrid({
             type="button"
             aria-label="Siguientes"
             onClick={() => slide(1)}
-            disabled={progress.end}
-            className="absolute -right-5 top-[38%] z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/80 text-xl text-white shadow-xl backdrop-blur transition hover:border-neon hover:text-neon disabled:pointer-events-none disabled:opacity-0 lg:grid"
+            className="absolute -right-5 top-[38%] z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/80 text-xl text-white shadow-xl backdrop-blur transition hover:border-neon hover:text-neon lg:grid"
           >
             →
           </button>
@@ -183,18 +223,18 @@ export default function CollectionGarmentsGrid({
       )}
       <ul
         ref={compact ? rail : undefined}
-        onPointerDown={compact ? touched : undefined}
         onWheel={compact ? (e) => Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 4 && touched() : undefined}
+        onTouchMove={compact ? touched : undefined}
         className={
           compact
-            ? "scrollbar-none -mx-6 flex snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto scroll-smooth px-6 pb-4 lg:mx-0 lg:gap-6 lg:scroll-px-0 lg:px-0"
+            ? "scrollbar-none -mx-6 flex gap-4 overflow-x-auto px-6 pb-4 lg:mx-0 lg:gap-6 lg:px-0"
             : "grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4"
         }
         style={compact ? { scrollbarWidth: "none" } : undefined}
       >
-        {shown.map((i) => (
+        {(loops ? [...shown, ...shown] : shown).map((i, n) => (
           <CollectionGarmentCard
-            key={i.key}
+            key={n >= shown.length ? `${i.key}~2` : i.key}
             href={i.href}
             blankHref={i.blankHref}
             title={i.title}
@@ -209,15 +249,16 @@ export default function CollectionGarmentsGrid({
             colors={i.colors}
             preferColor={colorName || defaultColor}
             light={light}
-            className={compact ? "w-[72vw] max-w-[320px] shrink-0 snap-start lg:w-[calc((100%-4.5rem)/4)] lg:max-w-none" : ""}
+            className={compact ? "w-[72vw] max-w-[320px] shrink-0 lg:w-[calc((100%-4.5rem)/4)] lg:max-w-none" : ""}
             reveal={compact}
-            revealIndex={i.key ? shown.indexOf(i) : 0}
+            revealIndex={n % Math.max(1, shown.length)}
+            duplicate={loops && n >= shown.length}
           />
         ))}
       </ul>
-      {compact && progress.size < 0.999 && (
+      {loops && (
         <div aria-hidden="true" className="relative mx-auto mt-4 h-1 w-40 overflow-hidden rounded-full bg-white/10 lg:mt-6 lg:w-64">
-          <div className="absolute inset-y-0 rounded-full bg-neon transition-[left] duration-200" style={{ width: `${Math.max(12, progress.size * 100)}%`, left: `${progress.at * (100 - Math.max(12, progress.size * 100))}%` }} />
+          <div ref={thumb} className="absolute inset-y-0 rounded-full bg-neon" style={{ width: "18%", left: "0%" }} />
         </div>
       )}
       </div>
