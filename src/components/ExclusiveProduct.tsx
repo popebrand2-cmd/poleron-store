@@ -17,7 +17,7 @@ export type ExclusiveData = {
   compareAtPrice: number | null;
   materialLabel: string;
   materialDelta: number;
-  sizes: { label: string; priceDelta: number }[];
+  sizes: { label: string; priceDelta: number; lengthCm: number | null; widthCm: number | null }[];
   versions: { name: string; hex: string; imageUrl: string; thumbUrl: string }[];
   units: number;
   remaining: number | null;
@@ -126,7 +126,7 @@ export default function ExclusiveProduct({ p }: { p: ExclusiveData }) {
         <div className="flex flex-col">
           <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-neon">POPE · Pieza exclusiva</p>
           <h1 className="mt-3 font-display text-6xl font-bold uppercase leading-[0.88] sm:text-7xl">{p.name}</h1>
-          {p.description && <p className="mt-4 max-w-md text-neutral-300">{p.description}</p>}
+          {p.description && <p className="mt-4 max-w-md whitespace-pre-line text-sm leading-relaxed text-neutral-300">{p.description}</p>}
 
           <p className="mt-6 flex items-baseline gap-3">
             <span className="font-display text-5xl font-bold text-neon">{formatCLP(unit)}</span>
@@ -184,6 +184,35 @@ export default function ExclusiveProduct({ p }: { p: ExclusiveData }) {
                 ))}
               </div>
             </div>
+          )}
+
+          {p.sizes.some((z) => z.lengthCm || z.widthCm) && (
+            <details className="group mt-3 max-w-md rounded-xl border border-white/15">
+              <summary className="cursor-pointer select-none list-none px-4 py-3 text-xs font-bold uppercase tracking-[0.2em] text-white/70 [&::-webkit-details-marker]:hidden">
+                Guía de tallas <span aria-hidden="true" className="float-right transition group-open:rotate-180">⌄</span>
+              </summary>
+              <div className="px-4 pb-4">
+                <table className="w-full text-center text-sm tabular-nums">
+                  <thead>
+                    <tr className="text-[11px] uppercase tracking-[0.2em] text-white/50">
+                      <th className="py-2 text-left font-bold">Talla</th>
+                      <th className="py-2 font-bold">Alto (cm)</th>
+                      <th className="py-2 font-bold">Ancho (cm)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {p.sizes.map((z) => (
+                      <tr key={z.label} className={`border-t border-white/10 ${size === z.label ? "text-neon" : "text-white"}`}>
+                        <td className="py-2 text-left font-bold">{z.label}</td>
+                        <td className="py-2">{z.lengthCm ?? "—"}</td>
+                        <td className="py-2">{z.widthCm ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="mt-2 text-xs text-white/50">Las medidas pueden variar entre 1 y 2 cm.</p>
+              </div>
+            </details>
           )}
 
           {/* Quantity */}

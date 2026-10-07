@@ -54,7 +54,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       compareAtPrice: product.compareAtPrice,
       materialLabel: material?.label ?? "",
       materialDelta: material?.priceDelta ?? 0,
-      sizes: product.sizes.map((z) => ({ label: z.label, priceDelta: z.priceDelta })),
+      sizes: product.sizes.map((z) => ({ label: z.label, priceDelta: z.priceDelta, lengthCm: z.lengthCm, widthCm: z.chestCm })),
       versions: product.colors
         .filter((c) => c.views[0]?.imageUrl)
         .map((c) => ({ name: c.name, hex: c.hex, imageUrl: c.views[0].imageUrl, thumbUrl: thumb(c.views[0].imageUrl, 640) })),
