@@ -8,6 +8,8 @@ import ProductPersonalizer from "@/components/ProductPersonalizer";
 import CollectionGarmentsGrid from "@/components/CollectionGarmentsGrid";
 import ProductInfo from "@/components/ProductInfo";
 import { loadShowcaseItems } from "@/lib/collection-items";
+import { limitedState, soldUnits } from "@/lib/limited";
+import LimitedStrip from "@/components/LimitedStrip";
 
 export const dynamic = "force-dynamic";
 
@@ -46,11 +48,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   });
 
   const showcase = await loadShowcaseItems(12);
+  const limited = product.limitedEdition ? limitedState(product, (await soldUnits([product.id])).get(product.id) ?? 0) : null;
 
   return (
     <main className="bg-black px-6 py-10">
     <div className="relative mx-auto max-w-5xl overflow-hidden rounded-2xl bg-white p-6 text-neutral-900 sm:p-8">
       <div className="absolute inset-x-0 top-0 h-1.5 bg-neon" />
+      {limited && (
+        <LimitedStrip remaining={limited.remaining} units={limited.units} until={product.limitedUntil ? product.limitedUntil.toISOString() : null} soldOut={limited.soldOut} closed={limited.closed} />
+      )}
       <ProductPersonalizer
         product={{
           id: product.id,

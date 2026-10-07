@@ -43,6 +43,9 @@ const productSchema = z.object({
   basePrice: z.number().int().min(0),
   compareAtPrice: z.number().int().min(0).nullable().optional(),
   badgeText: z.string().trim().max(30).optional(),
+  limitedEdition: z.boolean().optional().default(false),
+  limitedUnits: z.number().int().min(0).optional().default(0),
+  limitedUntil: z.string().nullable().optional(),
   active: z.boolean(),
   sizes: z.array(sizeSchema).min(1),
   materials: z.array(materialSchema).min(1),
@@ -97,6 +100,9 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         basePrice: data.basePrice,
         compareAtPrice: data.compareAtPrice ?? null,
         badgeText: data.badgeText ?? "",
+        limitedEdition: data.limitedEdition,
+        limitedUnits: data.limitedUnits,
+        limitedUntil: data.limitedUntil ? new Date(data.limitedUntil) : null,
         active: data.active,
         sizes: {
           create: data.sizes.map((s, i) => ({

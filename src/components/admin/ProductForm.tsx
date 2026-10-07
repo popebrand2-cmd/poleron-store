@@ -42,6 +42,9 @@ export type ProductFormInitial = {
   basePrice: number;
   compareAtPrice: number | null;
   badgeText: string;
+  limitedEdition: boolean;
+  limitedUnits: number;
+  limitedUntil: string | null; // ISO
   active: boolean;
   sizes: SizeFormState[];
   materials: MaterialFormState[];
@@ -76,6 +79,15 @@ export default function ProductForm({ initial }: { initial?: ProductFormInitial 
   const [basePrice, setBasePrice] = useState(initial?.basePrice ?? 25000);
   const [compareAtPrice, setCompareAtPrice] = useState(initial?.compareAtPrice != null ? String(initial.compareAtPrice) : "");
   const [badgeText, setBadgeText] = useState(initial?.badgeText ?? "");
+  const [limitedEdition, setLimitedEdition] = useState(initial?.limitedEdition ?? false);
+  const [limitedUnits, setLimitedUnits] = useState(initial?.limitedUnits ? String(initial.limitedUnits) : "");
+  // <input type="datetime-local"> wants the browser's local time as YYYY-MM-DDTHH:mm
+  const [limitedUntil, setLimitedUntil] = useState(() => {
+    if (!initial?.limitedUntil) return "";
+    const d = new Date(initial.limitedUntil);
+    const p = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+  });
   const [active, setActive] = useState(initial?.active ?? true);
   const [sizes, setSizes] = useState<SizeFormState[]>(
     initial?.sizes ?? [
@@ -155,6 +167,9 @@ export default function ProductForm({ initial }: { initial?: ProductFormInitial 
       basePrice,
       compareAtPrice: compareAtPrice.trim() ? Number(compareAtPrice) : null,
       badgeText: badgeText.trim(),
+      limitedEdition,
+      limitedUnits: limitedEdition && limitedUnits.trim() ? Math.max(0, Math.floor(Number(limitedUnits))) : 0,
+      limitedUntil: limitedEdition && limitedUntil ? new Date(limitedUntil).toISOString() : null,
       active,
       sizes,
       materials,
@@ -249,6 +264,28 @@ export default function ProductForm({ initial }: { initial?: ProductFormInitial 
             <p className="mt-1 text-xs text-neutral-500">
               Es la etiqueta roja que aparece arriba a la izquierda de la prenda en las páginas de colección. Escribe tu propio texto (ej. «Ahorra 30%», «Cyber», «Nuevo») para que se muestre siempre.
             </p>
+          </div>
+          <div className="col-span-2 rounded-lg border-2 border-dashed border-red-300 bg-red-50/40 p-4">
+            <label className="flex items-center gap-2 text-sm font-semibold">
+              <input type="checkbox" checked={limitedEdition} onChange={(e) => setLimitedEdition(e.target.checked)} />
+              Edición limitada (tarjeta especial en la tienda)
+            </label>
+            <p className="mt-1 text-xs text-neutral-600">
+              Aparece con una tarjeta grande y destacada en la portada y en «Todas las colecciones», con las unidades que quedan y una cuenta regresiva. El checkout no deja comprar más unidades de las que hay ni después de la fecha de cierre.
+            </p>
+            {limitedEdition && (
+              <div className="mt-3 grid grid-cols-2 gap-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Unidades disponibles</label>
+                  <input type="number" min={0} value={limitedUnits} onChange={(e) => setLimitedUnits(e.target.value)} placeholder="Vacío = sin tope" className="w-full rounded-md border border-neutral-300 px-3 py-2" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Cierra el</label>
+                  <input type="datetime-local" value={limitedUntil} onChange={(e) => setLimitedUntil(e.target.value)} className="w-full rounded-md border border-neutral-300 px-3 py-2" />
+                  <p className="mt-1 text-xs text-neutral-500">Vacío = sin fecha de cierre.</p>
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2 pt-6">
             <input

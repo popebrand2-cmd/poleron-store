@@ -32,6 +32,9 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
           basePrice: product.basePrice,
           compareAtPrice: product.compareAtPrice,
           badgeText: product.badgeText,
+          limitedEdition: product.limitedEdition,
+          limitedUnits: product.limitedUnits,
+          limitedUntil: product.limitedUntil ? product.limitedUntil.toISOString() : null,
           active: product.active,
           sizes: product.sizes.map((s) => ({
             label: s.label,

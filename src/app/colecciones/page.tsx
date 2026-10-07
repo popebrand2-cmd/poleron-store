@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import CollectionsBrowser from "@/components/CollectionsBrowser";
 import { loadShowcaseItems } from "@/lib/collection-items";
+import { loadLimitedCards } from "@/lib/limited";
+import LimitedEditionCard from "@/components/LimitedEditionCard";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +14,7 @@ export const metadata: Metadata = {
 
 export default async function CollectionsPage() {
   const items = await loadShowcaseItems(1000);
+  const limited = await loadLimitedCards();
 
   return (
     <main className="bg-black text-white">
@@ -22,6 +25,14 @@ export default async function CollectionsPage() {
         </Link>
         <h1 className="font-display text-5xl font-bold uppercase leading-none sm:text-6xl">Todas las colecciones</h1>
         <p className="mt-3 max-w-2xl text-neutral-400">Poleras y polerones con el diseño ya estampado por delante y por detrás. Toca una para comprarla, o «+ Personalizar» para ponerle tu propio diseño.</p>
+
+        {limited.length > 0 && (
+          <div className="mt-8 space-y-6">
+            {limited.map((c) => (
+              <LimitedEditionCard key={c.slug} item={c} />
+            ))}
+          </div>
+        )}
 
         <div className="mt-8">
           {items.length === 0 ? (

@@ -21,6 +21,8 @@ import TrustBadgesList from "@/components/edit/TrustBadgesList";
 import FaqList from "@/components/edit/FaqList";
 import CollectionGarmentsGrid from "@/components/CollectionGarmentsGrid";
 import { loadShowcaseItems } from "@/lib/collection-items";
+import { loadLimitedCards } from "@/lib/limited";
+import LimitedEditionCard from "@/components/LimitedEditionCard";
 import { getEditorHref } from "@/lib/editor-product";
 import { siteText, CONTENT_DEFAULTS, type ContentSection } from "@/lib/site-content";
 
@@ -52,6 +54,7 @@ export default async function Home() {
   // The garments of the collections, ready-made (design printed front and back), right under the hero: the same cards as
   // the collection pages.
   const homeItems = await loadShowcaseItems(8);
+  const limitedCards = await loadLimitedCards();
   const cyberProducts = products.map((p) => ({ id: p.id, slug: p.slug, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice }));
   const cyberActive = isCyberActive(cyberProducts);
   // The offer written over the banner photo: only while the sale runs (the same rule as the Cyber strip).
@@ -183,6 +186,17 @@ export default async function Home() {
       />
 
       <PopeHero editorHref={editorHref} cyberActive={cyberActive} hidden />
+
+      {/* Limited-edition products: one special card each, the first thing after the banner */}
+      {limitedCards.length > 0 && (
+        <section id="limitada" aria-label="Edición limitada" className="scroll-mt-24 border-b border-neutral-800 bg-black">
+          <div className="mx-auto max-w-6xl space-y-6 px-6 py-10 sm:py-14">
+            {limitedCards.map((c) => (
+              <LimitedEditionCard key={c.slug} item={c} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* The ready-made garments of the collections, right under the offer: seeing the finished piece is what makes
           people buy faster. "Ver ofertas" lands here. */}

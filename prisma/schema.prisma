@@ -24,6 +24,12 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // Limited edition: a special card on the store, a unit counter and a closing date. limitedUnits 0 = no cap on units;
+  // limitedUntil null = no closing date. The checkout refuses orders past either limit.
+  limitedEdition Boolean   @default(false)
+  limitedUnits   Int       @default(0)
+  limitedUntil   DateTime?
+
   colors    ProductColor[]
   sizes     ProductSize[]
   materials ProductMaterial[]

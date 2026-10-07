@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { uploadsDir } from "@/lib/storage";
 import { createMercadoPagoPreference, isMercadoPagoConfigured } from "@/lib/mercadopago";
 import { deliveryCost } from "@/lib/shipping-rules";
+import { limitedState, soldUnits } from "@/lib/limited";
 
 const placementSchema = z.object({
   designUrl: z.string(),
@@ -89,6 +90,7 @@ export async function POST(request: Request) {
     previewImageUrl: string;
   }[] = [];
 
+  const askedLimited = new Map<string, number>();
   for (const item of data.items) {
     const product = await prisma.product.findUnique({
       where: { id: item.productId },
@@ -96,6 +98,21 @@ export async function POST(request: Request) {
     });
     if (!product || !product.active) {
       return NextResponse.json({ error: "Un producto del carrito ya no está disponible." }, { status: 409 });
+    }
+    // Limited edition: never sell past the closing date or past the units that exist.
+    if (product.limitedEdition) {
+      const asked = (askedLimited.get(product.id) ?? 0) + item.quantity;
+      askedLimited.set(product.id, asked);
+      const st = limitedState(product, (await soldUnits([product.id])).get(product.id) ?? 0);
+      if (st.closed) {
+        return NextResponse.json({ error: `«${product.name}» es una edición limitada y su venta ya cerró.` }, { status: 409 });
+      }
+      if (st.remaining != null && asked > st.remaining) {
+        return NextResponse.json(
+          { error: st.remaining === 0 ? `«${product.name}» se agotó.` : `De «${product.name}» solo quedan ${st.remaining} unidades. Baja la cantidad en el carrito.` },
+          { status: 409 },
+        );
+      }
     }
     const size = product.sizes.find((s) => s.label === item.sizeLabel);
     if (!size) {
