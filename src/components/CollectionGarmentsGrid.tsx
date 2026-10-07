@@ -132,6 +132,8 @@ export default function CollectionGarmentsGrid({
       last = now;
       const p = period();
       if (document.hidden || !p) return;
+      // Somebody else moved the row since the last frame (a finger, its momentum, the arrows): leave it alone for a moment.
+      if (Math.abs(el.scrollLeft - expected) > 1.5) touched();
       if (down || Date.now() - lastTouch.current < 2500) {
         // The visitor is moving it by hand: follow, and loop the same way.
         if (el.scrollLeft >= p) el.scrollLeft -= p;
