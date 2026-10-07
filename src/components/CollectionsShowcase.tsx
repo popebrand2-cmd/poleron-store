@@ -84,13 +84,14 @@ export default function CollectionsShowcase({
   const wheelLock = useRef(0);
   const firstDeal = useRef(true);
   const [giant, setGiant] = useState<{ cur?: string; prev?: string; k: number }>({ k: 0 });
-  // Autoplay: the carousel turns by itself every few seconds while it is on screen, and stops while the pointer is on it,
-  // while the tab is hidden, while searching and in edit mode. It also runs with "reduce motion" (the turn itself is then a
-  // plain cross-fade, see globals.css), because the owner wants the carousel to move.
+  // Autoplay: the carousel turns by itself every few seconds, whether or not the pointer is on it, until the visitor
+  // selects something. It pauses only while it is off screen or the tab is hidden, and also runs with "reduce motion"
+  // (the owner wants the carousel to move).
   const AUTO_MS = 4200;
   const sectionRef = useRef<HTMLElement>(null);
   const [inView, setInView] = useState(false);
-  const [hover, setHover] = useState(false);
+  // Once the visitor picks something (a card, an arrow, a dot, a swipe, a key, a filter, the search) the carousel stays put.
+  const [stopped, setStopped] = useState(false);
   const [tabVisible, setTabVisible] = useState(true);
   const [autoKey, setAutoKey] = useState(0);
 
@@ -174,11 +175,13 @@ export default function CollectionsShowcase({
 
   function go(i: number) {
     if (n === 0) return;
+    setStopped(true);
     setActive(((i % n) + n) % n);
   }
   const move = (d: number) => go(active + d);
 
   function pickCat(k: string) {
+    setStopped(true);
     if (k === cat && !query) return;
     setSwapping(true);
     if (swapTimer.current) clearTimeout(swapTimer.current);
@@ -268,7 +271,7 @@ export default function CollectionsShowcase({
     };
   }, []);
 
-  const autoOn = !editMode && n > 1 && inView && !hover && tabVisible && !query;
+  const autoOn = !editMode && !stopped && n > 1 && inView && tabVisible && !query;
   useEffect(() => {
     if (!autoOn) return;
     const t = setTimeout(() => {
@@ -314,6 +317,7 @@ export default function CollectionsShowcase({
             aria-label="Buscar una colección"
             value={query}
             onChange={(e) => {
+              setStopped(true);
               setQuery(e.target.value);
               setActive(0);
             }}
@@ -341,10 +345,6 @@ export default function CollectionsShowcase({
         ref={stageRef}
         className="pcol-stage"
         tabIndex={0}
-        onPointerEnter={(e) => e.pointerType !== "touch" && setHover(true)}
-        onPointerLeave={() => setHover(false)}
-        onFocus={() => setHover(true)}
-        onBlur={() => setHover(false)}
         aria-label="Carrusel de colecciones. Usa las flechas del teclado para navegar."
         onWheel={onWheel}
       >

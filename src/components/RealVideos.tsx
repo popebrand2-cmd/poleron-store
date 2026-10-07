@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useEditMode } from "@/components/edit/EditModeContext";
 import Txt from "@/components/edit/Txt";
 import { useSiteTexts } from "@/components/SiteContentProvider";
@@ -8,15 +8,6 @@ import { useSiteTexts } from "@/components/SiteContentProvider";
 export const VIDEO_SLOTS = 8;
 
 type Card = { n: number; src: string; tag: string; caption: string };
-
-// The shipped videos have a 4-second, silent, 360p loop next to them (media/pope-video-N-preview.mp4, ~200 KB instead of
-// 1-2.6 MB): the row plays those like GIFs; the full video (with sound) only loads in the player. Videos the owner uploads
-// later have no preview and use the video itself.
-function previewOf(src: string): string {
-  const m = /^\/uploads\/(pope-video-\d+)\.mp4$/.exec(src);
-  return m ? `/uploads/${m[1]}-preview.mp4` : src;
-}
-
 function PlayIcon({ className = "h-6 w-6" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
@@ -25,172 +16,17 @@ function PlayIcon({ className = "h-6 w-6" }: { className?: string }) {
   );
 }
 
-function Player({ cards, index, onIndex, onClose }: { cards: Card[]; index: number; onIndex: (i: number) => void; onClose: () => void }) {
-  const card = cards[index];
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [muted, setMuted] = useState(false);
-  const [paused, setPaused] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const touchY = useRef<number | null>(null);
-
-  const go = useCallback(
-    (delta: number) => onIndex((index + delta + cards.length) % cards.length),
-    [index, cards.length, onIndex],
-  );
-
-  // The tap that opened the player counts as a user gesture, so try to start with sound and
-  // fall back to muted if the browser refuses.
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    setProgress(0);
-    setPaused(false);
-    v.muted = false;
-    setMuted(false);
-    v.play().catch(() => {
-      v.muted = true;
-      setMuted(true);
-      v.play().catch(() => setPaused(true));
-    });
-  }, [card.src]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-      if (e.key === "ArrowRight" || e.key === "ArrowDown") go(1);
-      if (e.key === "ArrowLeft" || e.key === "ArrowUp") go(-1);
-    };
-    document.addEventListener("keydown", onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [go, onClose]);
-
-  function togglePlay() {
-    const v = videoRef.current;
-    if (!v) return;
-    if (v.paused) {
-      v.play().then(() => setPaused(false)).catch(() => {});
-    } else {
-      v.pause();
-      setPaused(true);
-    }
-  }
-
-  const arrow =
-    "glass-dark absolute top-1/2 z-10 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full text-2xl text-neon transition hover:bg-neon hover:text-black sm:flex";
-
-  return (
-    <div
-      className="pope-popup-backdrop fixed inset-0 z-[80] flex items-center justify-center bg-black/90 backdrop-blur-sm"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      onTouchStart={(e) => (touchY.current = e.touches[0].clientY)}
-      onTouchEnd={(e) => {
-        if (touchY.current === null) return;
-        const dy = e.changedTouches[0].clientY - touchY.current;
-        touchY.current = null;
-        if (Math.abs(dy) > 70) go(dy < 0 ? 1 : -1);
-      }}
-    >
-      <div role="dialog" aria-modal="true" aria-label={card.caption || "Video"} className="pope-popup relative h-[min(88svh,calc(100vw*16/9))] aspect-[9/16] max-w-full overflow-hidden rounded-3xl border border-white/15 bg-black shadow-2xl">
-        <video
-          key={card.src}
-          ref={videoRef}
-          src={card.src}
-          playsInline
-          preload="auto"
-          onClick={togglePlay}
-          onTimeUpdate={(e) => {
-            const v = e.currentTarget;
-            setProgress(v.duration ? v.currentTime / v.duration : 0);
-          }}
-          onEnded={() => (cards.length > 1 ? go(1) : setPaused(true))}
-          className="pope-player-video h-full w-full cursor-pointer object-cover"
-        />
-
-        {paused && (
-          <button
-            type="button"
-            onClick={togglePlay}
-            aria-label="Reproducir"
-            className="glass-neon absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-black"
-          >
-            <PlayIcon className="h-7 w-7" />
-          </button>
-        )}
-
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-4 pb-6 pt-16">
-          {card.tag && (
-            <span className="glass-neon mb-2 inline-block rounded-full px-3 py-0.5 font-display text-lg font-bold uppercase leading-none tracking-wide text-black">
-              {card.tag}
-            </span>
-          )}
-          {card.caption && <p className="font-display text-3xl font-bold uppercase leading-none text-white">{card.caption}</p>}
-        </div>
-
-        <div className="absolute inset-x-0 bottom-0 h-1 bg-white/20" aria-hidden="true">
-          <div className="h-full bg-neon" style={{ width: `${progress * 100}%` }} />
-        </div>
-
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Cerrar"
-          className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-neon hover:text-black"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" className="h-5 w-5" aria-hidden="true">
-            <path d="M6 6l12 12M18 6L6 18" />
-          </svg>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => {
-            const v = videoRef.current;
-            if (!v) return;
-            v.muted = !v.muted;
-            setMuted(v.muted);
-          }}
-          aria-label={muted ? "Activar sonido" : "Silenciar"}
-          className="absolute left-3 top-3 z-10 flex h-11 items-center gap-1.5 rounded-full bg-black/60 px-3 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-neon hover:text-black"
-        >
-          {muted ? "Sin sonido" : "Sonido"}
-        </button>
-      </div>
-
-      {cards.length > 1 && (
-        <>
-          <button type="button" onClick={() => go(-1)} aria-label="Video anterior" className={`${arrow} left-[max(1rem,calc(50%-15.5rem))]`}>
-            ‹
-          </button>
-          <button type="button" onClick={() => go(1)} aria-label="Video siguiente" className={`${arrow} right-[max(1rem,calc(50%-15.5rem))]`}>
-            ›
-          </button>
-        </>
-      )}
-    </div>
-  );
-}
-
-// Vertical videos of finished garments as a row of cards: the one you point at (or tap) opens
-// up, playing its video, while the others fold into slim strips. Tapping the open card plays it
-// full screen with sound. Nothing is shown until the owner uploads a video (edit mode →
-// «Imágenes y contacto»).
+// Vertical videos of finished garments as a row of cards: the one you point at (or tap) opens up and plays,
+// silently and in a loop; the others stay folded as slim strips on their first frame. There is no sound and no
+// full-screen player. Nothing is shown until the owner uploads a video (edit mode → «Imágenes y contacto»).
 export default function RealVideos() {
   const { editMode } = useEditMode();
   const texts = useSiteTexts();
   const [active, setActive] = useState(0);
-  const [open, setOpen] = useState<number | null>(null);
   const [inView, setInView] = useState(false);
   // The videos are big: nothing is downloaded until the section is about to be reached, and on
   // low-power phones only the open card loads (the rest stay as dark strips until opened).
   const [near, setNear] = useState(false);
-  const [lite, setLite] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -213,13 +49,11 @@ export default function RealVideos() {
   }, [texts]);
 
   const cards = all;
-  const close = useCallback(() => setOpen(null), []);
   const hasVideos = all.length > 0;
   const current = Math.min(active, Math.max(0, cards.length - 1));
 
   useEffect(() => {
     setReduceMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-    setLite(document.documentElement.hasAttribute("data-lite"));
     const el = sectionRef.current;
     if (!el || !("IntersectionObserver" in window)) {
       setInView(true);
@@ -236,24 +70,17 @@ export default function RealVideos() {
     };
   }, [hasVideos]);
 
-  // Only the open card plays (muted, looping) and only while the section is on screen —
-  // the other strips stay on their first frame, which keeps phones light. This is the point of
-  // the section, so it also plays with "reduce motion" on (a single small muted video).
+  // Only the open card plays (muted, looping), and only while the section is on screen: the other strips stay on their
+  // first frame. This is the point of the section, so it plays with "reduce motion" and on slow devices too (one small video).
   useEffect(() => {
-    // Every strip loops its small preview like a GIF (the owner asked for it; it is the point of the section), except on
-    // low-power devices, where only the open one plays.
-    const wall = !lite;
     cards.forEach((_, i) => {
       const v = videoRefs.current[i];
       if (!v) return;
-      const play = inView && open === null && !lite && (i === current || wall);
-      if (play) {
-        v.play()
-          .then(() => i === current && setBlocked(false))
-          .catch(() => i === current && setBlocked(true));
+      if (i === current && inView) {
+        v.play().then(() => setBlocked(false)).catch(() => setBlocked(true));
       } else v.pause();
     });
-  }, [cards, current, inView, open, lite]);
+  }, [cards, current, inView]);
 
   // On phones the row scrolls sideways: keep the open card in view.
   useEffect(() => {
@@ -327,10 +154,7 @@ export default function RealVideos() {
                   setActive(i);
                 }}
                 onClick={() => {
-                  if (on) {
-                    setOpen(i);
-                    return;
-                  }
+                  if (on) return;
                   source.current = "tap";
                   setActive(i);
                   setBlocked(false);
@@ -340,7 +164,7 @@ export default function RealVideos() {
                     v.play().catch(() => setBlocked(true));
                   }
                 }}
-                aria-label={`${on ? "Ver con sonido" : "Abrir"}${c.caption ? `: ${c.caption}` : ""}`}
+                aria-label={`${on ? "Reproduciendo" : "Ver"}${c.caption ? `: ${c.caption}` : ""}`}
                 aria-current={on}
                 className={`group relative block h-full w-full overflow-hidden rounded-3xl border-2 bg-neutral-900 text-left transition-[border-color,box-shadow] duration-[900ms] ease-in-out ${
                   on ? "border-neon shadow-[0_0_38px_-6px_color-mix(in_srgb,var(--neon)_65%,transparent)]" : "border-white/10"
@@ -362,20 +186,20 @@ export default function RealVideos() {
                     setBlocked(false);
                   }}
                   onCanPlay={() => setBuffering(false)}
-                  src={near ? `${previewOf(c.src)}#t=0.1` : undefined}
+                  src={near ? `${c.src}#t=0.1` : undefined}
                   muted
                   loop
                   playsInline
-                  preload={lite ? "metadata" : "auto"}
+                  preload={on ? "auto" : "metadata"}
                   tabIndex={-1}
                   aria-hidden="true"
                   className={`pointer-events-none h-full w-full transform-gpu object-cover transition-transform duration-[900ms] ease-out ${
-                    on ? "scale-100" : "scale-[1.12] group-hover:scale-100"
+                    on ? "scale-100" : "scale-[1.12]"
                   }`}
                 />
                 <span className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/90 via-black/5 to-black/35" />
                 <span
-                  className={`pointer-events-none absolute inset-0 bg-black transition-opacity duration-500 ${on ? "opacity-0" : "opacity-30 group-hover:opacity-0"}`}
+                  className={`pointer-events-none absolute inset-0 bg-black transition-opacity duration-500 ${on ? "opacity-0" : "opacity-45 group-hover:opacity-20"}`}
                   aria-hidden="true"
                 />
 
@@ -400,7 +224,7 @@ export default function RealVideos() {
                   </span>
                 )}
 
-                {/* Open card: chip, title and the invitation to play with sound (fade in once open, out at once) */}
+                {/* Open card: chip and title (fade in once open, out at once) */}
                 <span
                   className={`pointer-events-none absolute inset-0 transition-[opacity,transform] ${
                     on ? "translate-y-0 opacity-100 delay-[450ms] duration-700" : "translate-y-3 opacity-0 duration-300"
@@ -413,12 +237,6 @@ export default function RealVideos() {
                   )}
                   <span className="absolute inset-x-4 bottom-4 flex flex-col gap-2">
                     {c.caption && <span className="font-display text-4xl font-bold uppercase leading-[0.9] text-white">{c.caption}</span>}
-                    <span className="glass-dark inline-flex w-fit items-center gap-2 rounded-full py-1.5 pl-2 pr-4 text-xs font-bold uppercase tracking-wide text-white transition group-hover:bg-neon group-hover:text-black">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-neon text-black">
-                        <PlayIcon className="h-3.5 w-3.5" />
-                      </span>
-                      Ver con sonido
-                    </span>
                   </span>
                 </span>
               </button>
@@ -427,7 +245,6 @@ export default function RealVideos() {
         })}
       </ul>
 
-      {open !== null && cards[open] && <Player cards={cards} index={open} onIndex={setOpen} onClose={close} />}
     </section>
   );
 }
