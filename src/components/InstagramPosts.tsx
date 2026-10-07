@@ -26,7 +26,7 @@ function InstaGlyph({ className = "h-6 w-6" }: { className?: string }) {
 // The owner's Instagram posts: each tile is a picture of a post and opens that post on Instagram (new tab). Instagram offers no
 // free way to read a profile, so the owner adds each post here (picture + link, edit mode → «Imágenes y contacto»). Nothing is
 // shown to visitors until at least one post has a picture, so the section never displays invented content.
-export default function InstagramPosts() {
+export default function InstagramPosts({ live = [] }: { live?: { id: string; image: string; permalink: string; caption: string }[] }) {
   const { editMode } = useEditMode();
   const texts = useSiteTexts();
   const images = useSiteImages();
@@ -36,10 +36,15 @@ export default function InstagramPosts() {
     return seg && !seg.includes(".com") ? `@${seg}` : "";
   })();
 
-  const posts = Array.from({ length: INSTA_SLOTS }, (_, i) => {
+  // The account's latest posts, read from Instagram itself, when it is connected; otherwise the ones added by hand.
+  const manual = Array.from({ length: INSTA_SLOTS }, (_, i) => {
     const n = i + 1;
-    return { n, src: images[`image.insta${n}`] ?? "", url: safeUrl(texts[`insta.${n}.url`] ?? "") || profile };
+    return { n, src: images[`image.insta${n}`] ?? "", url: safeUrl(texts[`insta.${n}.url`] ?? "") || profile, alt: `Publicación ${n} de Instagram` };
   }).filter((p) => p.src);
+  const posts =
+    live.length > 0
+      ? live.map((p, i) => ({ n: i + 1, src: p.image, url: p.permalink, alt: p.caption ? `Instagram: ${p.caption}` : `Publicación ${i + 1} de Instagram` }))
+      : manual;
 
   if (posts.length === 0) {
     if (!editMode) return null;
@@ -79,9 +84,10 @@ export default function InstagramPosts() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={p.src}
-                  alt={`Publicación ${p.n} de Instagram`}
+                  alt={p.alt}
                   loading="lazy"
                   decoding="async"
+                  referrerPolicy="no-referrer"
                   draggable={false}
                   className="h-full w-full object-cover transition duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.07]"
                 />

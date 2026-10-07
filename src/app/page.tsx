@@ -15,6 +15,7 @@ import { garmentKind } from "@/lib/garments";
 import RealWorks from "@/components/RealWorks";
 import RealVideos from "@/components/RealVideos";
 import InstagramPosts from "@/components/InstagramPosts";
+import { getInstagramPosts } from "@/lib/instagram";
 import ReviewsSection from "@/components/ReviewsSection";
 import InstagramFeed from "@/components/InstagramFeed";
 import HowItWorks from "@/components/preview/HowItWorks";
@@ -52,7 +53,7 @@ export default async function Home() {
 
   // The garments of the collections, ready-made (design printed front and back), right under the hero: the same cards as
   // the collection pages.
-  const homeItems = await loadShowcaseItems(12);
+  const [homeItems, instagramPosts] = await Promise.all([loadShowcaseItems(12), getInstagramPosts(8)]);
   const cyberProducts = products.map((p) => ({ id: p.id, slug: p.slug, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice }));
   const cyberActive = isCyberActive(cyberProducts);
   // The offer written over the banner photo: only while the sale runs (the same rule as the Cyber strip).
@@ -268,7 +269,7 @@ export default async function Home() {
       <HowItWorks editorHref={editorHref} />
 
       {/* The owner's Instagram posts, each one opening that post on Instagram (hidden until the owner adds some) */}
-      <InstagramPosts />
+      <InstagramPosts live={instagramPosts} />
 
       {/* Vertical videos of finished garments, as a hand of cards (hidden until the owner uploads some) */}
       <RealVideos />

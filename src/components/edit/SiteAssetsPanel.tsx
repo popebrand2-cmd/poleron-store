@@ -252,7 +252,7 @@ export default function SiteAssetsPanel({ defaultOpen = false }: { defaultOpen?:
           <p className="text-xs font-bold uppercase tracking-wide text-neon">Publicaciones de Instagram</p>
           <p className="text-[11px] leading-tight text-neutral-400">
             Sube la foto de cada publicación (cuadrada) y pega abajo el enlace de esa publicación: al tocarla, tus visitantes van directo a
-            ella en Instagram. La sección aparece en la portada apenas subas la primera.
+            ella en Instagram. La sección aparece en la portada apenas subas la primera. Si la tienda está conectada a tu cuenta de Instagram (variable INSTAGRAM_ACCESS_TOKEN), se muestran sus últimas publicaciones solas y estas quedan de respaldo.
           </p>
           <ul className="space-y-3">
             {Array.from({ length: 8 }, (_, i) => (
