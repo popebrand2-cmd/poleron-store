@@ -621,21 +621,3 @@ a.pope-social:active { transform: scale(0.96); }
 .pcol-auto { display: block; width: 120px; height: 2px; background: #ffffff1f; border-radius: 2px; overflow: hidden; }
 .pcol-auto i { display: block; height: 100%; width: 100%; background: var(--neon); transform-origin: left; animation: pcolAuto linear both; }
 @keyframes pcolAuto { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-
-/* Homepage garments as a 3D carousel (same movement as the collections) */
-.pcol.pcol-flat { background: transparent; border-top: 0; padding: 0; overflow: hidden; color: inherit; }
-.pcol-flat .pcol-stage { margin-top: 8px; height: calc(var(--w) * 1.62 + 36px); }
-.pcol-gslot { aspect-ratio: auto; }
-.pcol-gslot::before { border-radius: 14px; }
-.pcol-gbox { position: relative; border-radius: 14px; background: #0b0b0b; padding: 10px 10px 14px; box-shadow: 0 30px 60px -20px #000c; overflow: hidden; }
-.pcol-gbox .pcol-dim { border-radius: inherit; }
-.pcol-pick { position: absolute; inset: 0; z-index: 6; cursor: pointer; background: transparent; }
-.pcol-gslot:not(.act) .pcol-gbox a, .pcol-gslot:not(.act) .pcol-gbox button { pointer-events: none; }
-.pcol-flat.light .pcol-gbox { background: #fff; box-shadow: 0 24px 50px -22px #0006, 0 0 0 1px #0000001a; }
-.pcol-flat.light .pcol-giant { color: rgba(0, 0, 0, 0.045); -webkit-text-stroke: 1px rgba(0, 0, 0, 0.09); }
-.pcol-flat.light .pcol-floor { opacity: 0.35; }
-.pcol-flat.light .pcol-arrow { background: #fffffff0; border-color: #0000002e; color: #000; }
-.pcol-flat.light .pcol-arrow:hover { background: var(--neon); border-color: var(--neon); color: #050505; }
-.pcol-flat.light .pcol-count { color: #00000066; }
-.pcol-flat.light .pcol-dim { background: #fff; }
-@media (max-width: 639px) { .pcol-flat .pcol-stage { --w: 64vw; height: calc(64vw * 1.62 + 36px); } }

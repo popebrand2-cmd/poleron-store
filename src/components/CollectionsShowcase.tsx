@@ -12,12 +12,12 @@ export type ShowcaseArtist = { id: string; slug: string; name: string; imageUrl:
 const NO_SECTION = "Otros";
 const ALL = "Todas";
 
-export type Mode = "desktop" | "tablet" | "mobile";
-export type St = { x: number; s: number; o: number; d: number; z: number; r: number };
+type Mode = "desktop" | "tablet" | "mobile";
+type St = { x: number; s: number; o: number; d: number; z: number; r: number };
 
 // Stack geometry by distance from the centre (x in card widths). Values between two steps are
 // interpolated, so changing artist glides instead of jumping.
-export const STATES: Record<Mode, St[]> = {
+const STATES: Record<Mode, St[]> = {
   desktop: [
     { x: 0, s: 1, o: 1, d: 0, z: 80, r: 0 },
     { x: 0.55, s: 0.89, o: 0.84, d: 0.28, z: -40, r: 3 },
@@ -39,7 +39,7 @@ export const STATES: Record<Mode, St[]> = {
 };
 const COLLAPSED: St = { x: 0, s: 0.8, o: 0, d: 0.6, z: -150, r: 0 };
 
-export function stateAt(S: St[], a: number): St {
+function stateAt(S: St[], a: number): St {
   if (a >= 3) return S[3];
   const i = Math.floor(a);
   const t = a - i;
