@@ -128,10 +128,12 @@ export default function FeaturedCarousel({ products }: { products: FeaturedProdu
       const max = el.scrollWidth - el.clientWidth;
       if (el.scrollLeft >= max - 4) el.scrollTo({ left: 0, behavior: "smooth" });
       else {
-        const card = el.querySelector("a");
-        el.scrollBy({ left: card ? card.getBoundingClientRect().width + 20 : 240, behavior: "smooth" });
+        const cards = el.querySelectorAll("a");
+        const stride = cards.length > 1 ? (cards[1] as HTMLElement).offsetLeft - (cards[0] as HTMLElement).offsetLeft : 240;
+        const next = (Math.round(el.scrollLeft / stride) + 1) * stride;
+        el.scrollTo({ left: Math.min(next, max), behavior: "smooth" });
       }
-    }, 3400);
+    }, 2600);
     return () => clearInterval(id);
   }, [overflows, inView]);
 

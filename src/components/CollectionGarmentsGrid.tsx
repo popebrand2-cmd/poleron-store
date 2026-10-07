@@ -92,10 +92,12 @@ export default function CollectionGarmentsGrid({
       if (max <= 4) return;
       if (el.scrollLeft >= max - 4) el.scrollTo({ left: 0, behavior: "smooth" });
       else {
-        const card = el.querySelector("li");
-        el.scrollBy({ left: card ? card.getBoundingClientRect().width + (window.innerWidth >= 1024 ? 24 : 16) : el.clientWidth * 0.7, behavior: "smooth" });
+        const cards = el.querySelectorAll("li");
+        const stride = cards.length > 1 ? (cards[1] as HTMLElement).offsetLeft - (cards[0] as HTMLElement).offsetLeft : el.clientWidth * 0.7;
+        const next = (Math.round(el.scrollLeft / stride) + 1) * stride;
+        el.scrollTo({ left: Math.min(next, max), behavior: "smooth" });
       }
-    }, 3200);
+    }, 2400);
     return () => clearInterval(id);
   }, [compact, inView, active]);
   const slide = (dir: 1 | -1) => {
