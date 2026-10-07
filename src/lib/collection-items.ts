@@ -58,7 +58,8 @@ type Design = {
 };
 
 // Light art disappears on a white garment and dark art on a black one: a design limited to one tone only shows the
-// garment colors where it reads. If that would leave no color at all, every color stays.
+// garment colors where it reads. A garment that has none of those colors gets no card for that design (a dark print on a
+// black-only boxifit would just be invisible).
 function colorsFor<T extends { hex: string }>(colors: T[], limit?: string): T[] {
   if (limit !== "negro" && limit !== "blanco") return colors;
   const lum = (hex: string) => {
@@ -67,7 +68,7 @@ function colorsFor<T extends { hex: string }>(colors: T[], limit?: string): T[] 
     return (0.299 * parseInt(v.slice(0, 2), 16) + 0.587 * parseInt(v.slice(2, 4), 16) + 0.114 * parseInt(v.slice(4, 6), 16)) / 255;
   };
   const fit = colors.filter((c) => (limit === "negro" ? lum(c.hex) < 0.45 : lum(c.hex) >= 0.45));
-  return fit.length > 0 ? fit : colors;
+  return fit;
 }
 
 // The garment cards of one collection: the owner's finished mockups when the collection has them (they cover the
@@ -136,7 +137,8 @@ export function buildArtistItems(opts: {
         basePrice: p.basePrice,
         compareAtPrice: p.compareAtPrice,
         colors: colorsFor(p.colors, d.garmentColors),
-      })),
+      }))
+      .filter((item) => item.colors.length > 0),
   );
   return [...mockupItems, ...overlayItems];
 }

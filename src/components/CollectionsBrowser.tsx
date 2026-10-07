@@ -201,7 +201,7 @@ export default function CollectionsBrowser({ items }: { items: GarmentItem[] }) 
   return (
     <div className="grid gap-6 lg:grid-cols-[16.5rem_1fr] lg:gap-10">
       {/* Desktop: a sticky side panel that scrolls on its own if it gets long */}
-      <aside aria-label="Filtros" className="hidden lg:sticky lg:top-28 lg:block lg:max-h-[calc(100vh-8rem)] lg:self-start lg:overflow-y-auto lg:pr-1 [scrollbar-width:thin]">
+      <aside aria-label="Filtros" className="hidden lg:sticky lg:top-28 lg:block lg:max-h-[calc(100vh-8rem)] lg:self-start lg:overflow-y-auto lg:pb-20 lg:pr-1 [scrollbar-width:thin]">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-2xl font-bold uppercase leading-none text-white">Filtros</h2>
           {active.length > 0 && (
