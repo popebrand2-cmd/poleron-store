@@ -5,6 +5,8 @@ import Header from "@/components/Header";
 import InAppBrowserNotice from "@/components/InAppBrowserNotice";
 import Footer from "@/components/Footer";
 import SocialDock from "@/components/SocialDock";
+import ExclusiveDrop from "@/components/ExclusiveDrop";
+import ScrollReveal from "@/components/ScrollReveal";
 import OfferPopup from "@/components/OfferPopup";
 import MetaPixel from "@/components/MetaPixel";
 import VisitTracker from "@/components/VisitTracker";
@@ -74,6 +76,8 @@ export default async function RootLayout({
           <div className="flex-1">{children}</div>
           <Footer />
           <SocialDock />
+          <ExclusiveDrop />
+          <ScrollReveal />
           <OfferPopup />
           <EditModeToggle initialAccentColor={accentColor} />
         </EditModeProvider>

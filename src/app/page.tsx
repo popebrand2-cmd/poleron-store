@@ -21,8 +21,6 @@ import TrustBadgesList from "@/components/edit/TrustBadgesList";
 import FaqList from "@/components/edit/FaqList";
 import CollectionGarmentsGrid from "@/components/CollectionGarmentsGrid";
 import { loadShowcaseItems } from "@/lib/collection-items";
-import { loadLimitedCards } from "@/lib/limited";
-import LimitedEditionCard from "@/components/LimitedEditionCard";
 import { getEditorHref } from "@/lib/editor-product";
 import { siteText, CONTENT_DEFAULTS, type ContentSection } from "@/lib/site-content";
 
@@ -53,8 +51,7 @@ export default async function Home() {
 
   // The garments of the collections, ready-made (design printed front and back), right under the hero: the same cards as
   // the collection pages.
-  const homeItems = await loadShowcaseItems(8);
-  const limitedCards = await loadLimitedCards();
+  const homeItems = await loadShowcaseItems(12);
   const cyberProducts = products.map((p) => ({ id: p.id, slug: p.slug, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice }));
   const cyberActive = isCyberActive(cyberProducts);
   // The offer written over the banner photo: only while the sale runs (the same rule as the Cyber strip).
@@ -107,7 +104,7 @@ export default async function Home() {
           Cyber lookbook and the usual hero are phone-only now); on a phone the text inside would be tiny, so phones keep
           the hero below. The whole banner is the "Diseña la tuya" button. */}
       <section aria-label="Tu idea. Tu prenda." className="relative mx-auto hidden max-w-[1600px] bg-black md:block">
-        <Link href={editorHref} className="block">
+        <Link href={editorHref} className="relative block overflow-hidden">
           <picture>
             <source media="(min-width: 768px)" srcSet="/promo/banner-pope-v3.webp" />
             {/* Phones get a 1px placeholder, so the 200 KB banner is never downloaded there. */}
@@ -118,14 +115,15 @@ export default async function Home() {
               width={2000}
               height={1126}
               fetchPriority="high"
-              className="h-auto w-full"
+              className="pope-banner-img h-auto w-full"
             />
           </picture>
+          <span aria-hidden="true" className="pope-banner-sheen pointer-events-none absolute inset-0" />
         </Link>
         {/* The offer, written over the photo (bottom-left, on a dark fade that only covers that corner) */}
         <div className="pointer-events-none absolute bottom-0 left-0 hidden w-[46%] lg:block">
           <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent [mask-image:linear-gradient(to_right,black_72%,transparent)]" />
-          <BannerOffer sale={bannerSale} className="relative px-8 pb-6 pt-14 xl:px-10 xl:pb-8" />
+          <BannerOffer sale={bannerSale} className="pope-banner-text relative px-8 pb-6 pt-14 xl:px-10 xl:pb-8" />
         </div>
         {bannerSale.length > 0 && (
           <div className="border-t-[3px] border-red-600 bg-black px-6 py-5 lg:hidden">
@@ -137,7 +135,7 @@ export default async function Home() {
       {/* Phone version of the same banner: the photo (cropped, no text) with the headline, steps and button as real text
           underneath, so everything is readable on a small screen. */}
       <section aria-label="Tu idea. Tu prenda." className="relative bg-black md:hidden">
-        <Link href={editorHref} className="relative block">
+        <Link href={editorHref} className="relative block overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/promo/banner-pope-phone.webp"
@@ -145,12 +143,12 @@ export default async function Home() {
             width={1000}
             height={880}
             fetchPriority="high"
-            className="block h-auto w-full"
+            className="pope-banner-img block h-auto w-full"
           />
           <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black via-black/75 to-transparent" />
         </Link>
         {bannerSale.length > 0 && <BannerOffer sale={bannerSale} size="sm" className="pointer-events-none absolute inset-x-0 top-0 aspect-[1000/880] flex flex-col justify-end px-5 pb-8" />}
-        <div className="relative -mt-6 px-5 pb-10">
+        <div className="pope-banner-text relative -mt-6 px-5 pb-10">
           <h1 className="font-display text-[4.25rem] font-bold uppercase leading-[0.88] text-white">
             Tu idea.
             <span className="block text-neon">Tu prenda.</span>
@@ -187,23 +185,12 @@ export default async function Home() {
 
       <PopeHero editorHref={editorHref} cyberActive={cyberActive} hidden />
 
-      {/* Limited-edition products: one special card each, the first thing after the banner */}
-      {limitedCards.length > 0 && (
-        <section id="limitada" aria-label="Edición limitada" className="scroll-mt-24 border-b border-neutral-800 bg-black">
-          <div className="mx-auto max-w-6xl space-y-6 px-6 py-10 sm:py-14">
-            {limitedCards.map((c) => (
-              <LimitedEditionCard key={c.slug} item={c} />
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* The ready-made garments of the collections, right under the offer: seeing the finished piece is what makes
           people buy faster. "Ver ofertas" lands here. */}
       {homeItems.length > 0 && (
         <section id="tienda" className="scroll-mt-24 border-b border-neutral-800 bg-black">
           <div className="mx-auto max-w-6xl px-6 py-10 sm:py-14">
-            <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+            <div data-reveal="" className="mb-6 flex flex-wrap items-end justify-between gap-3">
               <div className="max-w-2xl">
                 <h2 className="font-display text-4xl font-bold uppercase leading-none sm:text-5xl">
                   <Txt k="home.garmentsTitle" />
@@ -222,7 +209,7 @@ export default async function Home() {
       {/* Featured: the base garments with their price come first — this is what is being sold */}
       <section id={homeItems.length > 0 ? "base" : "tienda"} className="scroll-mt-24 bg-black">
         <div className="mx-auto max-w-6xl px-6 py-16">
-          <div className="mb-10 text-center">
+          <div data-reveal="" className="mb-10 text-center">
             <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-neon">
               <span className="h-px w-8 bg-neon" />
               <EditableText value={t("featured.eyebrow")} siteKey="featured.eyebrow" as="span" />

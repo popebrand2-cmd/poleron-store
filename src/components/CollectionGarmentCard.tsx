@@ -97,8 +97,15 @@ export default function CollectionGarmentCard({
   className = "",
   blankHref,
   light = false,
+  style,
+  reveal = false,
+  revealIndex = 0,
 }: {
   className?: string;
+  style?: React.CSSProperties;
+  // Rises into view when it scrolls in (ScrollReveal), staggered by its position in the row.
+  reveal?: boolean;
+  revealIndex?: number;
   // White page: dark text and a plain shadow instead of the white-on-black look.
   light?: boolean;
   // Where "+ Personalizar" goes: the same garment with nothing printed. `href` (the card itself) opens it with this design on.
@@ -136,7 +143,7 @@ export default function CollectionGarmentCard({
   const pct = basePrice != null && compareAtPrice && compareAtPrice > basePrice ? Math.round(100 - (basePrice / compareAtPrice) * 100) : 0;
 
   return (
-    <li className={`group ${className}`}>
+    <li className={`group ${className}`} style={reveal ? { ...style, ["--reveal-delay" as string]: `${(revealIndex % 4) * 90}ms` } : style} data-reveal={reveal ? "" : undefined}>
       <div className="relative aspect-square overflow-hidden rounded-xl bg-[#ececec] bg-[radial-gradient(ellipse_at_50%_38%,#ffffff_0%,#f3f3f3_55%,#e2e2e2_100%)]">
         {/* The whole picture is a link to the garment with this design already on it */}
         <Link href={href} aria-label={title} className="absolute inset-0 z-[1]" />
@@ -145,15 +152,15 @@ export default function CollectionGarmentCard({
         )}
         {color?.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={color.imageUrl} alt={title} loading="lazy" decoding="async" draggable={false} className="absolute inset-0 h-full w-full object-contain transition duration-500 group-hover:scale-[1.03]" style={{ filter: glow }} />
+          <img src={color.imageUrl} alt={title} loading="lazy" decoding="async" draggable={false} className="absolute inset-0 h-full w-full object-contain transition duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.05]" style={{ filter: glow }} />
         )}
         {!color?.imageUrl && front && (
-          <div style={{ filter: glow }} className={`absolute flex items-start justify-start transition duration-500 group-hover:scale-[1.03] ${back ? "left-[2%] top-[3%] h-[78%] w-[78%]" : "inset-[6%]"}`}>
+          <div style={{ filter: glow }} className={`absolute flex items-start justify-start transition duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${back ? "group-hover:-translate-x-[3%] group-hover:-translate-y-[2%] group-hover:-rotate-2" : "group-hover:scale-[1.05]"} ${back ? "left-[2%] top-[3%] h-[78%] w-[78%]" : "inset-[6%]"}`}>
             <Mock view={front} design={frontArt} scale={frontScale} />
           </div>
         )}
         {!color?.imageUrl && back && (
-          <div style={{ filter: backGlow }} className="absolute bottom-[2%] right-[1%] flex h-[78%] w-[78%] items-end justify-end transition duration-500 group-hover:scale-[1.03]">
+          <div style={{ filter: backGlow }} className="absolute bottom-[2%] right-[1%] flex h-[78%] w-[78%] items-end justify-end transition duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-[2%] group-hover:translate-y-[1%] group-hover:rotate-2 group-hover:scale-[1.04]">
             <Mock view={back} design={backArt} scale={backScale} fallback={frontArt} />
           </div>
         )}

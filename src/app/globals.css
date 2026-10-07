@@ -571,3 +571,48 @@ a.pope-social:active { transform: scale(0.96); }
 [data-lite] .pope-nudge, [data-lite] .hiw-float, [data-lite] .hiw-handle { animation: none; }
 [data-lite] .pope-word { animation-name: popeWordLite; }
 [data-lite] .glass-hover:hover { transform: none; }
+
+/* ---- Exclusive drop: hidden button + reveal ---- */
+.pope-excl-ring { box-shadow: 0 0 0 0 color-mix(in srgb, var(--neon) 55%, transparent); animation: exclRing 2.6s ease-out infinite; }
+@keyframes exclRing { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--neon) 55%, transparent); } 70%, 100% { box-shadow: 0 0 0 14px transparent; } }
+.pope-excl-btn { animation: exclIn 0.7s cubic-bezier(0.32, 0.72, 0, 1) 1.2s both; }
+@keyframes exclIn { from { opacity: 0; transform: translateX(-24px) scale(0.9); } to { opacity: 1; transform: none; } }
+.pope-excl-hint { animation: exclHint 0.5s cubic-bezier(0.32, 0.72, 0, 1) both; }
+@keyframes exclHint { from { opacity: 0; transform: translateY(8px) scale(0.96); } to { opacity: 1; transform: none; } }
+.pope-excl-backdrop { animation: popupFade 0.35s ease both; }
+.pope-excl-panel { animation: exclPanel 0.6s cubic-bezier(0.32, 0.72, 0, 1) both; }
+@keyframes exclPanel { from { opacity: 0; transform: translateY(30px) scale(0.96); } to { opacity: 1; transform: none; } }
+.pope-excl-curtain { transform-origin: top; animation: exclCurtain 0.9s cubic-bezier(0.76, 0, 0.24, 1) 0.25s both; }
+@keyframes exclCurtain { from { transform: scaleY(1); } to { transform: scaleY(0); } }
+.pope-excl-reveal { animation: exclReveal 1.4s cubic-bezier(0.32, 0.72, 0, 1) 0.3s both; }
+@keyframes exclReveal { from { filter: blur(14px) brightness(0.4); transform: scale(1.12); } to { filter: none; transform: none; } }
+.pope-excl-line { animation: popeWord 0.7s cubic-bezier(0.32, 0.72, 0, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .pope-excl-ring, .pope-excl-btn, .pope-excl-hint, .pope-excl-panel, .pope-excl-curtain, .pope-excl-reveal, .pope-excl-line, .pope-excl-backdrop { animation: none !important; }
+  .pope-excl-curtain { display: none; }
+}
+
+/* ---- Scroll reveal (ScrollReveal.tsx) and small entrance motions ---- */
+[data-reveal] { transition: opacity 0.8s cubic-bezier(0.32, 0.72, 0, 1), transform 0.9s cubic-bezier(0.32, 0.72, 0, 1); transition-delay: var(--reveal-delay, 0ms); }
+[data-reveal].reveal-wait { opacity: 0; transform: translateY(36px); }
+[data-reveal].reveal-wait[data-reveal="left"] { transform: translateX(-36px); }
+[data-reveal].reveal-wait[data-reveal="zoom"] { transform: scale(0.94); }
+.pope-card-in { animation: popeCardIn 0.6s cubic-bezier(0.32, 0.72, 0, 1) both; }
+@keyframes popeCardIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+.pope-sheet { animation: popeSheet 0.45s cubic-bezier(0.32, 0.72, 0, 1) both; }
+@keyframes popeSheet { from { transform: translateY(100%); } to { transform: none; } }
+/* Banner: a slow settle on load and a light sweep across it once */
+.pope-banner-img { animation: popeSettle 2.2s cubic-bezier(0.22, 0.8, 0.2, 1) both; transform-origin: 60% 50%; }
+@keyframes popeSettle { from { transform: scale(1.07); } to { transform: none; } }
+.pope-banner-sheen { background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.16) 50%, transparent 65%); background-size: 250% 100%; background-position: 130% 0; animation: popeSheen 1.6s ease-in-out 1.1s both; }
+@keyframes popeSheen { from { background-position: 130% 0; } to { background-position: -40% 0; } }
+.pope-banner-text > * { animation: popeWord 0.8s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.pope-banner-text > *:nth-child(2) { animation-delay: 0.12s; }
+.pope-banner-text > *:nth-child(3) { animation-delay: 0.24s; }
+.pope-banner-text > *:nth-child(4) { animation-delay: 0.36s; }
+.pope-banner-text > *:nth-child(5) { animation-delay: 0.48s; }
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal], [data-reveal].reveal-wait { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .pope-card-in, .pope-sheet, .pope-banner-img, .pope-banner-sheen, .pope-banner-text > * { animation: none !important; }
+}
+[data-lite] .pope-banner-img, [data-lite] .pope-banner-sheen { animation: none; }

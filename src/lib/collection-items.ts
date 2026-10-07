@@ -96,6 +96,8 @@ export function buildArtistItems(opts: {
         // mockups carry the artist's own name.
         collectionId: `${artistId}-cover`,
         collectionName: artistName,
+        groupId: artistId,
+        groupName: artistName,
         kind,
         href: `${base}${base.includes("?") ? "&" : "?"}diseno=${coverDesignId}`,
         blankHref: base,
@@ -119,6 +121,8 @@ export function buildArtistItems(opts: {
         key: `${d.id}-${p.id}`,
         collectionId: d.id,
         collectionName: d.name,
+        groupId: artistId,
+        groupName: artistName,
         kind: garmentKind(p),
         href: `/productos/${p.slug}?diseno=${d.id}`,
         blankHref: `/productos/${p.slug}`,

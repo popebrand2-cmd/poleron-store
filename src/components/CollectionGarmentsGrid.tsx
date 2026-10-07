@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CollectionGarmentCard, { type GarmentColor } from "@/components/CollectionGarmentCard";
 
 export type GarmentKind = "polera" | "poleron" | "boxy";
@@ -13,6 +13,9 @@ export type GarmentItem = {
   // The collection it belongs to (the "all collections" page filters on it).
   collectionId?: string;
   collectionName?: string;
+  // The artist/collection it belongs to (Karol G, Streetwear, BTS…), one level above the design.
+  groupId?: string;
+  groupName?: string;
   title: string;
   description?: string;
   badge?: string;
@@ -48,6 +51,30 @@ export default function CollectionGarmentsGrid({
   const [colorName, setColorName] = useState("");
   // One chip per color name found in the collection (Negro, Blanco…), with its swatch.
   const colorChoices = [...new Map(items.flatMap((i) => i.colors).map((c) => [c.name, c.hex])).entries()];
+  const rail = useRef<HTMLUListElement>(null);
+  const [progress, setProgress] = useState({ at: 0, size: 1, start: true, end: false });
+  useEffect(() => {
+    const el = rail.current;
+    if (!compact || !el) return;
+    const update = () => {
+      const max = el.scrollWidth - el.clientWidth;
+      setProgress({ at: max > 0 ? el.scrollLeft / max : 0, size: el.scrollWidth > 0 ? el.clientWidth / el.scrollWidth : 1, start: el.scrollLeft <= 4, end: el.scrollLeft >= max - 4 });
+    };
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      el.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [compact, active]);
+  const slide = (dir: 1 | -1) => {
+    const el = rail.current;
+    if (!el) return;
+    const card = el.querySelector("li");
+    const step = card ? card.getBoundingClientRect().width + 24 : el.clientWidth * 0.8;
+    el.scrollBy({ left: dir * step * (window.innerWidth >= 1024 ? 2 : 1), behavior: "smooth" });
+  };
   const shown = items.filter((i) => (active === "all" || i.kind === active) && (!colorName || i.colors.some((c) => c.name === colorName)));
 
   return (
@@ -97,10 +124,34 @@ export default function CollectionGarmentsGrid({
           })}
         </div>
       )}
+      <div className={compact ? "group/rail relative" : ""}>
+      {compact && (
+        <>
+          <button
+            type="button"
+            aria-label="Anteriores"
+            onClick={() => slide(-1)}
+            disabled={progress.start}
+            className="absolute -left-5 top-[38%] z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/80 text-xl text-white shadow-xl backdrop-blur transition hover:border-neon hover:text-neon disabled:pointer-events-none disabled:opacity-0 lg:grid"
+          >
+            ←
+          </button>
+          <button
+            type="button"
+            aria-label="Siguientes"
+            onClick={() => slide(1)}
+            disabled={progress.end}
+            className="absolute -right-5 top-[38%] z-20 hidden h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/80 text-xl text-white shadow-xl backdrop-blur transition hover:border-neon hover:text-neon disabled:pointer-events-none disabled:opacity-0 lg:grid"
+          >
+            →
+          </button>
+        </>
+      )}
       <ul
+        ref={compact ? rail : undefined}
         className={
           compact
-            ? "scrollbar-none -mx-6 flex snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto scroll-smooth px-6 pb-4 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-x-6 lg:gap-y-12 lg:overflow-visible lg:px-0 lg:pb-0"
+            ? "scrollbar-none -mx-6 flex snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto scroll-smooth px-6 pb-4 lg:mx-0 lg:gap-6 lg:scroll-px-0 lg:px-0"
             : "grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4"
         }
         style={compact ? { scrollbarWidth: "none" } : undefined}
@@ -122,10 +173,18 @@ export default function CollectionGarmentsGrid({
             colors={i.colors}
             preferColor={colorName || defaultColor}
             light={light}
-            className={compact ? "w-[72vw] max-w-[320px] shrink-0 snap-start lg:w-auto lg:max-w-none" : ""}
+            className={compact ? "w-[72vw] max-w-[320px] shrink-0 snap-start lg:w-[calc((100%-4.5rem)/4)] lg:max-w-none" : ""}
+            reveal={compact}
+            revealIndex={i.key ? shown.indexOf(i) : 0}
           />
         ))}
       </ul>
+      {compact && progress.size < 0.999 && (
+        <div aria-hidden="true" className="relative mx-auto mt-4 h-1 w-40 overflow-hidden rounded-full bg-white/10 lg:mt-6 lg:w-64">
+          <div className="absolute inset-y-0 rounded-full bg-neon transition-[left] duration-200" style={{ width: `${Math.max(12, progress.size * 100)}%`, left: `${progress.at * (100 - Math.max(12, progress.size * 100))}%` }} />
+        </div>
+      )}
+      </div>
       {shown.length === 0 && <p className={`py-10 text-center ${light ? "text-neutral-600" : "text-neutral-400"}`}>No hay prendas con ese filtro. Prueba con otro color o tipo de prenda.</p>}
     </>
   );
