@@ -87,7 +87,7 @@ export default function CollectionsShowcase({
   // Autoplay: the carousel turns by itself every few seconds, whether or not the pointer is on it, until the visitor
   // selects something. It pauses only while it is off screen or the tab is hidden, and also runs with "reduce motion"
   // (the owner wants the carousel to move).
-  const AUTO_MS = 2400;
+  const AUTO_MS = 1800;
   // Same behaviour as the garments rail: a touch pauses it for a few seconds, then it keeps turning by itself.
   const RESUME_MS = 8000;
   const sectionRef = useRef<HTMLElement>(null);
