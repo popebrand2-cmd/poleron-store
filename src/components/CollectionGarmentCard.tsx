@@ -100,15 +100,12 @@ export default function CollectionGarmentCard({
   style,
   reveal = false,
   revealIndex = 0,
-  duplicate = false,
 }: {
   className?: string;
   style?: React.CSSProperties;
   // Rises into view when it scrolls in (ScrollReveal), staggered by its position in the row.
   reveal?: boolean;
   revealIndex?: number;
-  // Second copy of a looping rail: hidden from screen readers.
-  duplicate?: boolean;
   // White page: dark text and a plain shadow instead of the white-on-black look.
   light?: boolean;
   // Where "+ Personalizar" goes: the same garment with nothing printed. `href` (the card itself) opens it with this design on.
@@ -146,7 +143,7 @@ export default function CollectionGarmentCard({
   const pct = basePrice != null && compareAtPrice && compareAtPrice > basePrice ? Math.round(100 - (basePrice / compareAtPrice) * 100) : 0;
 
   return (
-    <li aria-hidden={duplicate || undefined} className={`group ${className}`} style={reveal ? { ...style, ["--reveal-delay" as string]: `${(revealIndex % 4) * 90}ms` } : style} data-reveal={reveal ? "" : undefined}>
+    <li className={`group ${className}`} style={reveal ? { ...style, ["--reveal-delay" as string]: `${(revealIndex % 4) * 90}ms` } : style} data-reveal={reveal ? "" : undefined}>
       <div className="relative aspect-square overflow-hidden rounded-xl bg-[#ececec] bg-[radial-gradient(ellipse_at_50%_38%,#ffffff_0%,#f3f3f3_55%,#e2e2e2_100%)]">
         {/* The whole picture is a link to the garment with this design already on it */}
         <Link href={href} aria-label={title} className="absolute inset-0 z-[1]" />
