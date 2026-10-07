@@ -171,6 +171,18 @@ export async function GET(request: Request) {
 
   const key = createHash("sha1").update(`${f}:${mtime}:v4`).digest("hex");
   const cached = path.join(CACHE_DIR, `${key}.png`);
+  // Cards show the photo at ~300 px: a 640 px WebP is ~10x lighter than the full PNG and looks the same.
+  const wParam = Number(url.searchParams.get("w"));
+  const width = [480, 640, 960].includes(wParam) ? wParam : 0;
+  const small = path.join(CACHE_DIR, `${key}-${width}.webp`);
+  if (width) {
+    try {
+      const hit = await readFile(small);
+      return new NextResponse(new Uint8Array(hit), { headers: { "Content-Type": "image/webp", "Cache-Control": "public, max-age=31536000, immutable" } });
+    } catch {
+      // not made yet: built below from the full-size result
+    }
+  }
   let body: Buffer;
   try {
     body = await readFile(cached);
@@ -201,6 +213,20 @@ export async function GET(request: Request) {
       await writeFile(cached, body);
     } catch {
       // cache is best-effort
+    }
+  }
+  if (width) {
+    try {
+      const webp = await sharp(body).resize({ width, withoutEnlargement: true }).webp({ quality: 90, alphaQuality: 100, effort: 4 }).toBuffer();
+      try {
+        await mkdir(CACHE_DIR, { recursive: true });
+        await writeFile(small, webp);
+      } catch {
+        // cache is best-effort
+      }
+      return new NextResponse(new Uint8Array(webp), { headers: { "Content-Type": "image/webp", "Cache-Control": "public, max-age=31536000, immutable" } });
+    } catch {
+      // fall through to the full-size PNG
     }
   }
   return new NextResponse(new Uint8Array(body), {

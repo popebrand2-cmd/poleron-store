@@ -205,11 +205,7 @@ export default function CollectionGarmentsGrid({
         if (drag) drag.startPos += period;
       }
       el.style.transform = `translate3d(${-m.x}px,0,0)`;
-      if (thumb.current) {
-        const w = 18;
-        thumb.current.style.width = w + "%";
-        thumb.current.style.left = (m.x / period) * (100 - w) + "%";
-      }
+      if (thumb.current) thumb.current.style.transform = `translate3d(${(m.x / period) * 455}%,0,0)`;
     };
     raf = requestAnimationFrame(tick);
     return () => {
@@ -353,7 +349,7 @@ export default function CollectionGarmentsGrid({
       </div>
       {loops && (
         <div aria-hidden="true" className="relative mx-auto mt-4 h-1 w-40 overflow-hidden rounded-full bg-white/10 lg:mt-6 lg:w-64">
-          <div ref={thumb} className="absolute inset-y-0 rounded-full bg-neon" style={{ width: "18%", left: "0%" }} />
+          <div ref={thumb} className="absolute inset-y-0 left-0 w-[18%] rounded-full bg-neon will-change-transform" />
         </div>
       )}
       </div>

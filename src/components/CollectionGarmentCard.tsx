@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { formatCLP } from "@/lib/money";
 import { garmentPhoto } from "@/lib/garment-photo";
+import { thumb } from "@/lib/thumb";
+
+// A smaller copy for the card (the originals are up to 2000 px tall). SVG/GIF and anything else is left as it is.
+const small = (url: string) => (/\.(png|jpe?g|webp)(\?|$)/i.test(url) ? thumb(url, 640) : url);
 
 // Studio-style shadows on a light tile: a hairline edge (so white garments don't dissolve into the tile) plus a soft
 // shadow underneath (so black ones don't look flat). Two filters instead of the old three, which also keeps phones
@@ -66,7 +70,7 @@ function Mock({ view, design, scale = 1, fallback = "" }: { view: GarmentView; d
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           ref={artImg}
-          src={art}
+          src={small(art)}
           alt=""
           loading="lazy"
           decoding="async"
@@ -155,7 +159,7 @@ export default function CollectionGarmentCard({
         )}
         {color?.imageUrl && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={color.imageUrl} alt={title} loading="lazy" decoding="async" draggable={false} className="absolute inset-0 h-full w-full object-contain transition duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.05]" style={{ filter: glow }} />
+          <img src={small(color.imageUrl)} alt={title} loading="lazy" decoding="async" draggable={false} className="absolute inset-0 h-full w-full object-contain transition duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.05]" style={{ filter: glow }} />
         )}
         {!color?.imageUrl && front && (
           <div style={{ filter: glow }} className={`absolute flex items-start justify-start transition duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${back ? "group-hover:-translate-x-[3%] group-hover:-translate-y-[2%] group-hover:-rotate-2" : "group-hover:scale-[1.05]"} ${back ? "left-[2%] top-[3%] h-[78%] w-[78%]" : "inset-[6%]"}`}>
@@ -169,7 +173,7 @@ export default function CollectionGarmentCard({
         )}
         {colors.map((c) => c.imageUrl && c !== color && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img key={c.imageUrl} src={c.imageUrl} alt="" aria-hidden="true" decoding="async" className="hidden" />
+          <img key={c.imageUrl} src={small(c.imageUrl)} alt="" aria-hidden="true" decoding="async" className="hidden" />
         ))}
         <Link
           href={blankHref ?? href}
