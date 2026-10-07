@@ -68,7 +68,34 @@ export default function CollectionGarmentsGrid({
       window.removeEventListener("resize", update);
     };
   }, [compact, active]);
+  // Autoplay (homepage rail): it moves one card every few seconds while it is on screen, and goes back to the start at the
+  // end. Once the visitor touches it (drag, wheel, arrows, a filter tab) it stays where they left it.
+  const [stopped, setStopped] = useState(false);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = rail.current;
+    if (!compact || !el || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver(([e]) => setInView(e.isIntersecting), { threshold: 0.3 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [compact]);
+  useEffect(() => {
+    if (!compact || stopped || !inView) return;
+    const id = setInterval(() => {
+      const el = rail.current;
+      if (!el || document.hidden) return;
+      const max = el.scrollWidth - el.clientWidth;
+      if (max <= 4) return;
+      if (el.scrollLeft >= max - 4) el.scrollTo({ left: 0, behavior: "smooth" });
+      else {
+        const card = el.querySelector("li");
+        el.scrollBy({ left: card ? card.getBoundingClientRect().width + (window.innerWidth >= 1024 ? 24 : 16) : el.clientWidth * 0.7, behavior: "smooth" });
+      }
+    }, 3200);
+    return () => clearInterval(id);
+  }, [compact, stopped, inView, active]);
   const slide = (dir: 1 | -1) => {
+    setStopped(true);
     const el = rail.current;
     if (!el) return;
     const card = el.querySelector("li");
@@ -111,7 +138,10 @@ export default function CollectionGarmentsGrid({
                 type="button"
                 role="tab"
                 aria-selected={on}
-                onClick={() => setActive(k)}
+                onClick={() => {
+                  setActive(k);
+                  setStopped(true);
+                }}
                 className={`min-h-11 shrink-0 whitespace-nowrap rounded-full border-2 px-5 text-xs font-bold uppercase tracking-wide transition ${
                   on
                     ? light ? "border-black bg-black text-white" : "border-neon bg-neon text-black"
@@ -149,6 +179,8 @@ export default function CollectionGarmentsGrid({
       )}
       <ul
         ref={compact ? rail : undefined}
+        onPointerDown={compact ? () => setStopped(true) : undefined}
+        onWheel={compact ? (e) => Math.abs(e.deltaX) > 4 && setStopped(true) : undefined}
         className={
           compact
             ? "scrollbar-none -mx-6 flex snap-x snap-mandatory scroll-px-6 gap-4 overflow-x-auto scroll-smooth px-6 pb-4 lg:mx-0 lg:gap-6 lg:scroll-px-0 lg:px-0"

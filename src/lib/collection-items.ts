@@ -146,12 +146,21 @@ export function buildArtistItems(opts: {
 // One card from each design in turn instead of a whole design after another, and a different type of garment first for
 // each design (polera, polerón, boxifit, polera…), so the first cards of the home page and of /colecciones mix designs
 // AND garments instead of showing the same design three times in a row.
-export function mixItems(items: GarmentItem[]): GarmentItem[] {
+// `random`: the designs come in a different order on every visit, and each one starts with a different garment.
+export function mixItems(items: GarmentItem[], random = false): GarmentItem[] {
+  const shuffle = <T,>(a: T[]): T[] => {
+    const o = [...a];
+    for (let i = o.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [o[i], o[j]] = [o[j], o[i]];
+    }
+    return o;
+  };
   const groups = new Map<string, GarmentItem[]>();
   for (const i of items) groups.set(i.collectionId ?? "", [...(groups.get(i.collectionId ?? "") ?? []), i]);
-  const lists = [...groups.values()].map((list, gi) => {
+  const lists = (random ? shuffle([...groups.values()]) : [...groups.values()]).map((list, gi) => {
     const sorted = [...list].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]);
-    const shift = gi % sorted.length;
+    const shift = (random ? Math.floor(Math.random() * sorted.length) : gi) % sorted.length;
     return [...sorted.slice(shift), ...sorted.slice(0, shift)];
   });
   const out: GarmentItem[] = [];
@@ -191,7 +200,8 @@ export async function loadShowcaseItems(limit = 8): Promise<GarmentItem[]> {
         });
       }),
   );
-  return mixItems(items.flat()).slice(0, limit);
+  // Random on every visit (the page is rendered per request), so the first cards are never always the same.
+  return mixItems(items.flat(), true).slice(0, limit);
 }
 
 // The designs of a collection that should get garment cards next to its finished mockups: the cut-out ones only (a full
