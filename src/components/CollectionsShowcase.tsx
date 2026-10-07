@@ -87,11 +87,25 @@ export default function CollectionsShowcase({
   // Autoplay: the carousel turns by itself every few seconds, whether or not the pointer is on it, until the visitor
   // selects something. It pauses only while it is off screen or the tab is hidden, and also runs with "reduce motion"
   // (the owner wants the carousel to move).
-  const AUTO_MS = 4200;
+  const AUTO_MS = 3200;
+  // Same behaviour as the garments rail: a touch pauses it for a few seconds, then it keeps turning by itself.
+  const RESUME_MS = 8000;
   const sectionRef = useRef<HTMLElement>(null);
   const [inView, setInView] = useState(false);
-  // Once the visitor picks something (a card, an arrow, a dot, a swipe, a key, a filter, the search) the carousel stays put.
+  // The visitor picks something (a card, an arrow, a dot, a swipe, a key, a filter, the search): the carousel waits, then resumes.
   const [stopped, setStopped] = useState(false);
+  const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pauseAuto = () => {
+    setStopped(true);
+    if (resumeTimer.current) clearTimeout(resumeTimer.current);
+    resumeTimer.current = setTimeout(() => setStopped(false), RESUME_MS);
+  };
+  useEffect(
+    () => () => {
+      if (resumeTimer.current) clearTimeout(resumeTimer.current);
+    },
+    [],
+  );
   const [tabVisible, setTabVisible] = useState(true);
   const [autoKey, setAutoKey] = useState(0);
 
@@ -175,13 +189,13 @@ export default function CollectionsShowcase({
 
   function go(i: number) {
     if (n === 0) return;
-    setStopped(true);
+    pauseAuto();
     setActive(((i % n) + n) % n);
   }
   const move = (d: number) => go(active + d);
 
   function pickCat(k: string) {
-    setStopped(true);
+    pauseAuto();
     if (k === cat && !query) return;
     setSwapping(true);
     if (swapTimer.current) clearTimeout(swapTimer.current);
@@ -317,7 +331,7 @@ export default function CollectionsShowcase({
             aria-label="Buscar una colección"
             value={query}
             onChange={(e) => {
-              setStopped(true);
+              pauseAuto();
               setQuery(e.target.value);
               setActive(0);
             }}
