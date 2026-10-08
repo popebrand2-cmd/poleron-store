@@ -28,7 +28,7 @@ export const SITE_TEXT_DEFAULTS: Record<string, string> = {
   "announce.1": "📦 ENVÍO GRATIS SOBRE $70.000 EN LA REGIÓN METROPOLITANA",
   "announce.2": "🎨 SUBE TU PROPIO DISEÑO Y VE EL MOCKUP REAL ANTES DE COMPRAR",
   "announce.3": "🧵 CADA PRENDA ES UNA EDICIÓN DE UNA SOLA PERSONA: TÚ",
-  "announce.4": "🔥 CYBER POPE: HASTA 45% DCTO EN TODA LA TIENDA — HASTA EL 7 DE OCTUBRE",
+  "announce.4": "💎 PIEZA EXCLUSIVA: MUSCULOSA BTS — EDICIÓN LIMITADA, SOLO EN POPE",
   "cyber.badge": "Cyber POPE",
   "cyber.headline": "¡Comenzó el Cyber en POPE!",
   "cyber.subtext": "Por tiempo limitado en toda la tienda. Sube tu diseño y personaliza tu prenda al precio Cyber.",
