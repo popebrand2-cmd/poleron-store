@@ -10,6 +10,11 @@ type Stats = {
   oldestMtimeMs: number | null;
   keepHours: number;
   disk: { totalBytes: number; freeBytes: number } | null;
+  shrinkableCount: number;
+  shrinkableBytes: number;
+  videoCount: number;
+  videoBytes: number;
+  heaviest: { name: string; bytes: number; referenced: boolean }[];
 };
 
 function formatBytes(bytes: number): string {
@@ -25,6 +30,8 @@ export default function StoragePanel() {
   const [error, setError] = useState("");
   const [cleaning, setCleaning] = useState(false);
   const [result, setResult] = useState<{ deleted: number; freedBytes: number; errors: string[] } | null>(null);
+  const [shrinking, setShrinking] = useState(false);
+  const [shrinkResult, setShrinkResult] = useState<{ shrunk: number; savedBytes: number } | null>(null);
 
   async function load() {
     setLoading(true);
@@ -64,6 +71,25 @@ export default function StoragePanel() {
     }
   }
 
+  async function shrink() {
+    if (!stats || stats.shrinkableCount === 0) return;
+    if (!confirm(`¿Reducir el peso de ${stats.shrinkableCount} fotos pesadas? Se ven y se imprimen igual: solo se guardan de forma más liviana. No se puede deshacer.`)) return;
+    setShrinking(true);
+    setShrinkResult(null);
+    setError("");
+    try {
+      const res = await fetch("/api/admin/storage", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "shrink" }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "No se pudo reducir.");
+      setShrinkResult(data);
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo reducir.");
+    } finally {
+      setShrinking(false);
+    }
+  }
+
   if (loading) return <p className="text-sm text-neutral-500">Revisando…</p>;
   if (error) return <p className="text-sm text-red-600">{error}</p>;
   if (!stats) return null;
@@ -100,6 +126,51 @@ export default function StoragePanel() {
           <p className="text-2xl font-bold">{oldestDate}</p>
         </div>
       </div>
+
+      <div className="rounded-xl border border-neutral-200 p-5">
+        <h2 className="font-semibold">Reducir el peso de las fotos</h2>
+        <p className="mt-1 text-sm text-neutral-600">
+          Las fotos de celular pesan 10 a 25 MB cada una. Hay <strong>{stats.shrinkableCount}</strong> fotos de más de 1,5 MB (
+          {formatBytes(stats.shrinkableBytes)} en total). Al reducirlas conservan el formato, la transparencia y la calidad para imprimir
+          (las muy grandes se dejan en 4096 px de largo, unos 340 ppp en 30 cm); solo cambia lo que ocupan. Las fotos nuevas que suben
+          tus clientes ya se guardan así automáticamente.
+        </p>
+        <button
+          type="button"
+          onClick={shrink}
+          disabled={shrinking || stats.shrinkableCount === 0}
+          className="mt-4 rounded-full bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-40"
+        >
+          {shrinking ? "Reduciendo… (puede tardar un minuto)" : stats.shrinkableCount === 0 ? "No hay fotos pesadas" : `Reducir ${stats.shrinkableCount} fotos`}
+        </button>
+        {shrinkResult && (
+          <div className="mt-4 rounded-lg bg-neutral-50 p-3 text-sm">
+            <p>
+              Se redujeron <strong>{shrinkResult.shrunk}</strong> fotos y se liberaron <strong>{formatBytes(shrinkResult.savedBytes)}</strong>.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {stats.heaviest.length > 0 && (
+        <div className="rounded-xl border border-neutral-200 p-5">
+          <h2 className="font-semibold">Lo que más pesa</h2>
+          <p className="mt-1 text-sm text-neutral-600">
+            Videos: {stats.videoCount} ({formatBytes(stats.videoBytes)}). Los archivos más pesados:
+          </p>
+          <ul className="mt-3 space-y-1 text-sm">
+            {stats.heaviest.map((f) => (
+              <li key={f.name} className="flex items-center justify-between gap-3">
+                <span className="truncate text-neutral-600">{f.name}</span>
+                <span className="shrink-0">
+                  <strong>{formatBytes(f.bytes)}</strong>{" "}
+                  <span className={`text-xs ${f.referenced ? "text-emerald-600" : "text-amber-600"}`}>{f.referenced ? "en uso" : "sin usar"}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="rounded-xl border border-neutral-200 p-5">
         <h2 className="font-semibold">Liberar espacio</h2>

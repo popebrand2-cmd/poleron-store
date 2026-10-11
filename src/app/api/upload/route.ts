@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { uploadsDir } from "@/lib/storage";
 import { scheduleSweep } from "@/lib/upload-cleanup";
+import { shrinkImage, SHRINK_MIN_BYTES } from "@/lib/image-shrink";
 
 const ALLOWED_TYPES: Record<string, string> = {
   "image/png": "png",
@@ -16,9 +17,11 @@ const ALLOWED_TYPES: Record<string, string> = {
 // routinely produce 15-25MB photos, so 15MB was rejecting ordinary customer uploads.
 const MAX_BYTES = 30 * 1024 * 1024; // 30MB
 
-async function saveBytes(bytes: Buffer, ext: string): Promise<string> {
+async function saveBytes(input: Buffer, ext: string): Promise<string> {
   const dir = uploadsDir();
   await mkdir(dir, { recursive: true });
+  // A 20 MB phone photo is stored as a few MB at the same quality for printing (see lib/image-shrink.ts).
+  const bytes = input.byteLength >= SHRINK_MIN_BYTES ? ((await shrinkImage(input, ext)) ?? input) : input;
   const filename = `${uuidv4()}.${ext}`;
   await writeFile(path.join(dir, filename), bytes);
   scheduleSweep();

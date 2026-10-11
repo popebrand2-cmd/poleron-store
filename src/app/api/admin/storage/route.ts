@@ -1,8 +1,9 @@
-import { readdir, stat, statfs, unlink } from "fs/promises";
+import { readdir, readFile, rename, stat, statfs, unlink, writeFile } from "fs/promises";
 import path from "path";
 import { NextResponse } from "next/server";
 import { uploadsDir } from "@/lib/storage";
 import { referencedFilenames, UNUSED_FILE_MAX_AGE_MS } from "@/lib/upload-cleanup";
+import { shrinkImage, SHRINK_MIN_BYTES } from "@/lib/image-shrink";
 
 async function scan() {
   const dir = uploadsDir();
@@ -45,7 +46,19 @@ async function diskInfo(dir: string) {
 export async function GET() {
   const { dir, files, totalBytes } = await scan();
   const deletable = files.filter((f) => f.deletable);
+  const isImage = (n: string) => /\.(png|jpe?g|webp)$/i.test(n);
+  const shrinkable = files.filter((f) => isImage(f.name) && f.bytes >= SHRINK_MIN_BYTES);
+  const videos = files.filter((f) => /\.(mp4|webm|mov)$/i.test(f.name));
+  const heaviest = [...files]
+    .sort((a, b) => b.bytes - a.bytes)
+    .slice(0, 8)
+    .map((f) => ({ name: f.name, bytes: f.bytes, referenced: f.referenced }));
   return NextResponse.json({
+    shrinkableCount: shrinkable.length,
+    shrinkableBytes: shrinkable.reduce((s, f) => s + f.bytes, 0),
+    videoCount: videos.length,
+    videoBytes: videos.reduce((s, f) => s + f.bytes, 0),
+    heaviest,
     dir,
     fileCount: files.length,
     totalBytes,
@@ -57,7 +70,34 @@ export async function GET() {
   });
 }
 
-export async function POST() {
+// Re-encodes the heavy photos in place (same name, same format, same transparency; only pictures bigger than 4096 px are
+// scaled down). Files are replaced atomically, so a visitor never gets a half-written image.
+async function shrinkAll() {
+  const { dir, files } = await scan();
+  let shrunk = 0;
+  let savedBytes = 0;
+  for (const f of files) {
+    if (!/\.(png|jpe?g|webp)$/i.test(f.name) || f.bytes < SHRINK_MIN_BYTES) continue;
+    const full = path.join(dir, f.name);
+    try {
+      const input = await readFile(full);
+      const out = await shrinkImage(input, path.extname(f.name));
+      if (!out) continue;
+      const tmp = `${full}.shrink`;
+      await writeFile(tmp, out);
+      await rename(tmp, full);
+      shrunk++;
+      savedBytes += input.byteLength - out.byteLength;
+    } catch {
+      // leave that file as it was
+    }
+  }
+  return { shrunk, savedBytes };
+}
+
+export async function POST(request: Request) {
+  const body = (await request.json().catch(() => ({}))) as { action?: string };
+  if (body.action === "shrink") return NextResponse.json(await shrinkAll());
   const { dir, files } = await scan();
   const toDelete = files.filter((f) => f.deletable);
   let freedBytes = 0;
