@@ -1,39 +1,41 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { getMercadoPagoPayment } from "@/lib/mercadopago";
+import { getMerchantOrderReference, getMercadoPagoPayment } from "@/lib/mercadopago";
+import { reconcileOrderPayment } from "@/lib/order-payment";
 
-// Mercado Pago calls this server-to-server whenever a payment's status
-// changes. It sends the payment id either in the JSON body (current
-// "Webhooks" format) or as query params (older IPN format) — we check both.
+// Mercado Pago calls this server-to-server whenever a payment or an order changes. Depending on the account it sends a
+// "payment" notification (data.id = payment id) or a "merchant_order" one, in the JSON body (Webhooks) or the query string
+// (IPN). Whatever arrives, we end up asking Mercado Pago for the real state of OUR order and trust only that answer.
 export async function POST(request: Request) {
   const url = new URL(request.url);
-  let paymentId = url.searchParams.get("data.id") || url.searchParams.get("id");
-
-  if (!paymentId) {
-    try {
-      const body = await request.json();
-      paymentId = body?.data?.id ?? null;
-    } catch {
-      // no JSON body — fall through with whatever the query string had
-    }
-  }
-
-  if (!paymentId) {
-    return NextResponse.json({ ok: true }); // nothing to do, acknowledge anyway
-  }
+  let id = url.searchParams.get("data.id") || url.searchParams.get("id");
+  let topic = url.searchParams.get("type") || url.searchParams.get("topic") || "";
 
   try {
-    const { approved, orderId } = await getMercadoPagoPayment(paymentId);
-    if (orderId) {
-      await prisma.order.update({
-        where: { id: orderId },
-        data: { status: approved ? "PAID" : "CANCELLED" },
-      });
-    }
+    const body = await request.json();
+    id = id ?? (body?.data?.id != null ? String(body.data.id) : null);
+    topic = topic || String(body?.type ?? body?.topic ?? "");
   } catch {
-    // Swallow errors — Mercado Pago retries webhooks, and a 500 here would
-    // just trigger repeated retries for a payment we may not be able to look up.
+    // no JSON body — the query string had what there is
   }
 
+  if (!id) return NextResponse.json({ ok: true });
+
+  try {
+    let orderId: string | null = null;
+    if (topic === "merchant_order") orderId = await getMerchantOrderReference(id);
+    else orderId = (await getMercadoPagoPayment(id)).orderId;
+    if (orderId) await reconcileOrderPayment(orderId);
+    else console.error(`[mercadopago webhook] ${topic || "notification"} ${id} has no order reference`);
+  } catch (e) {
+    // Never answer with an error (Mercado Pago would keep retrying); the order is also re-checked when the owner opens
+    // Pedidos and when the customer comes back from the payment page.
+    console.error(`[mercadopago webhook] ${topic || "notification"} ${id}:`, e instanceof Error ? e.message : e);
+  }
+
+  return NextResponse.json({ ok: true });
+}
+
+// Some setups verify the URL with a GET.
+export async function GET() {
   return NextResponse.json({ ok: true });
 }

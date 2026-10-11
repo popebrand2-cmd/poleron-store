@@ -4,6 +4,8 @@ import { formatCLP } from "@/lib/money";
 import DeleteOrderButton from "@/components/admin/DeleteOrderButton";
 import AdminNav from "@/components/admin/AdminNav";
 import OrderStatusControl from "@/components/admin/OrderStatusControl";
+import PendingPaymentActions from "@/components/admin/PendingPaymentActions";
+import { reconcilePendingOrders } from "@/lib/order-payment";
 import { CHILE_COMUNAS } from "@/lib/chile-comunas";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +27,8 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default async function AdminOrdersPage() {
+  // Orders whose payment already arrived but whose notification did not: confirm them with Mercado Pago before listing.
+  await reconcilePendingOrders().catch(() => 0);
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
     include: { items: true },
@@ -49,8 +53,9 @@ export default async function AdminOrdersPage() {
                     {formatOrderNumber(o)} · {o.customerName}
                   </p>
                   <p className="text-sm text-neutral-500">
-                    {o.customerEmail} · {o.items.length} producto(s) · {formatCLP(o.totalAmount)}
+                    {o.customerEmail}{o.customerPhone ? ` · ${o.customerPhone}` : ""} · {o.items.length} producto(s) · {formatCLP(o.totalAmount)}
                   </p>
+                  <p className="text-xs text-neutral-400">{o.createdAt.toLocaleString("es-CL", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Santiago" })}</p>
                   <p className="text-sm text-neutral-500">
                     {o.shippingMethod === "PICKUP" ? (
                       "Retiro en tienda"
@@ -66,6 +71,7 @@ export default async function AdminOrdersPage() {
                     {STATUS_LABELS[o.status] ?? o.status}
                   </span>
                   <OrderStatusControl orderId={o.id} status={o.status} />
+                  {o.status === "PENDING_PAYMENT" && <PendingPaymentActions orderId={o.id} />}
                   <DeleteOrderButton orderId={o.id} />
                 </div>
               </div>

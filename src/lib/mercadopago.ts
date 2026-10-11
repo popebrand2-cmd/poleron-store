@@ -1,4 +1,4 @@
-import { MercadoPagoConfig, Payment, Preference } from "mercadopago";
+import { MercadoPagoConfig, MerchantOrder, Payment, Preference } from "mercadopago";
 
 export function isMercadoPagoConfigured(): boolean {
   return Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN);
@@ -57,4 +57,19 @@ export async function getMercadoPagoPayment(
     approved: result.status === "approved",
     orderId: result.external_reference ?? null,
   };
+}
+
+// Every payment Mercado Pago has for one of our orders (we put the order id in external_reference when creating the
+// preference), newest first. Used to confirm an order is really paid without depending on the webhook arriving.
+export async function listMercadoPagoPaymentsForOrder(orderId: string): Promise<{ id: string; status: string }[]> {
+  const payment = new Payment(client());
+  const result = await payment.search({ options: { external_reference: orderId, sort: "date_created", criteria: "desc" } });
+  return (result.results ?? []).map((p) => ({ id: String(p.id), status: String(p.status ?? "") }));
+}
+
+// A "merchant_order" notification carries the order, not the payment: returns our order id from it.
+export async function getMerchantOrderReference(merchantOrderId: string): Promise<string | null> {
+  const mo = new MerchantOrder(client());
+  const result = await mo.get({ merchantOrderId });
+  return result.external_reference ?? null;
 }

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { formatCLP } from "@/lib/money";
 import ClearCartOnMount from "@/components/ClearCartOnMount";
 import TrackPurchaseOnMount from "@/components/TrackPurchaseOnMount";
+import { reconcileOrderPayment } from "@/lib/order-payment";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,8 @@ export default async function CheckoutSuccessPage({
 }) {
   const { orderId, external_reference } = await searchParams;
   const id = orderId ?? external_reference;
+  // Back from Mercado Pago: confirm the payment right now, without waiting for the notification.
+  if (id) await reconcileOrderPayment(id).catch(() => null);
   const order = id ? await prisma.order.findUnique({ where: { id } }) : null;
 
   return (
