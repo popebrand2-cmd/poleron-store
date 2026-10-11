@@ -124,13 +124,7 @@ export default async function AdminOrdersPage() {
                 </div>
               </dl>
 
-              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
-                <OrderStatusControl orderId={o.id} status={o.status} />
-                {o.status === "PENDING_PAYMENT" && <PendingPaymentActions orderId={o.id} />}
-                <span className="ml-auto">
-                  <DeleteOrderButton orderId={o.id} />
-                </span>
-              </div>
+              <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-neutral-500">Lo que compró</p>
               <div className="mt-2 space-y-3">
                 {o.items.map((it) => {
                   let placement: Record<string, { designUrl?: string; originalDesignUrl?: string }> = {};
@@ -145,11 +139,25 @@ export default async function AdminOrdersPage() {
 
                   return (
                     <div key={it.id} className="rounded-lg border border-neutral-100 bg-neutral-50 p-3">
-                      <p className="text-sm font-medium">{it.product.name}</p>
-                      <p className="text-xs text-neutral-500">
-                        {it.quantity}x {it.colorName} · Talla {it.sizeLabel}
-                        {it.materialLabel && ` · ${it.materialLabel}`} · {formatCLP(it.unitPrice)} c/u
-                      </p>
+                      <div className="flex items-start gap-3">
+                        {it.previewImageUrl && !it.previewImageUrl.startsWith("data:") && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={it.previewImageUrl} alt="" className="h-16 w-16 shrink-0 rounded-md border border-neutral-200 bg-white object-contain" />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold">
+                            {it.quantity}× {it.product.name}
+                          </p>
+                          <p className="mt-0.5 text-sm text-neutral-500">
+                            {it.colorName} · Talla {it.sizeLabel}
+                            {it.materialLabel && ` · ${it.materialLabel}`}
+                          </p>
+                          <p className="mt-0.5 text-sm">
+                            {formatCLP(it.unitPrice)} c/u
+                            {it.quantity > 1 && <span className="font-semibold"> · {formatCLP(it.unitPrice * it.quantity)}</span>}
+                          </p>
+                        </div>
+                      </div>
                       {originals.length === 0 && (o.status === "SHIPPED" || o.status === "CANCELLED") && (
                         <p className="mt-1 text-xs text-neutral-500">Imagen original y mockup eliminados al cerrar el pedido.</p>
                       )}
@@ -185,6 +193,14 @@ export default async function AdminOrdersPage() {
                     </div>
                   );
                 })}
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <OrderStatusControl orderId={o.id} status={o.status} />
+                {o.status === "PENDING_PAYMENT" && <PendingPaymentActions orderId={o.id} />}
+                <span className="ml-auto">
+                  <DeleteOrderButton orderId={o.id} />
+                </span>
               </div>
             </div>
           ))}
