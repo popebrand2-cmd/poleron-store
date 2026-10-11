@@ -143,6 +143,28 @@ export function buildArtistItems(opts: {
   return [...mockupItems, ...overlayItems];
 }
 
+// The card of ONE garment with ONE design, exactly as the collections show it (the finished mockup when the collection has
+// one for that garment). Used by the ready-made product page. null when the design or the garment is not found.
+export async function loadReadyItem(productSlug: string, designId: string): Promise<GarmentItem | null> {
+  const design = await prisma.presetDesign.findUnique({
+    where: { id: designId },
+    include: { collection: { include: { designs: { where: { active: true }, orderBy: { sortOrder: "asc" }, select: { id: true } } } } },
+  });
+  if (!design || !design.active || !design.collection.active) return null;
+  const [catalog, editorHref, mockups] = await Promise.all([loadGarmentCatalog(), getEditorHref(), getCollectionMockups(design.collection.slug)]);
+  const items = buildArtistItems({
+    artistId: design.collection.id,
+    artistName: design.collection.name,
+    designs: [design],
+    coverDesignId: design.collection.designs[0]?.id ?? "",
+    garments: catalog.garments,
+    products: catalog.products,
+    mockups,
+    editorHref,
+  });
+  return items.find((i) => i.href.split("?")[0] === `/productos/${productSlug}` && i.href.includes(`diseno=${designId}`)) ?? null;
+}
+
 // One card from each design in turn instead of a whole design after another, and a different type of garment first for
 // each design (polera, polerón, boxifit, polera…), so the first cards of the home page and of /colecciones mix designs
 // AND garments instead of showing the same design three times in a row.

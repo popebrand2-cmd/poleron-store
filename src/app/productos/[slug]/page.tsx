@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import ProductPersonalizer from "@/components/ProductPersonalizer";
 import CollectionGarmentsGrid from "@/components/CollectionGarmentsGrid";
 import ProductInfo from "@/components/ProductInfo";
-import { loadShowcaseItems } from "@/lib/collection-items";
+import { loadReadyItem, loadShowcaseItems } from "@/lib/collection-items";
 import { limitedState, loadLimitedCards, soldUnits } from "@/lib/limited";
 import ExclusiveProduct, { type ExclusiveData } from "@/components/ExclusiveProduct";
 import LimitedEditionCard from "@/components/LimitedEditionCard";
@@ -25,8 +25,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return { title: `${p.name} con tu diseño — POPE`, description };
 }
 
-export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function ProductPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ diseno?: string; listo?: string }> }) {
   const { slug } = await params;
+  const query = await searchParams;
   const product = await prisma.product.findUnique({
     where: { slug },
     include: {
@@ -95,6 +96,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   });
 
   const showcase = await loadShowcaseItems(12);
+  // Arriving from a card: the same picture the card shows, to sell as it is.
+  const readyItem = query.diseno && query.listo === "1" ? await loadReadyItem(slug, query.diseno).catch(() => null) : null;
   const limited = product.limitedEdition ? limitedState(product, (await soldUnits([product.id])).get(product.id) ?? 0) : null;
 
   return (
@@ -105,6 +108,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <LimitedStrip remaining={limited.remaining} units={limited.units} until={product.limitedUntil ? product.limitedUntil.toISOString() : null} soldOut={limited.soldOut} closed={limited.closed} />
       )}
       <ProductPersonalizer
+        readyItem={readyItem}
         product={{
           id: product.id,
           slug: product.slug,

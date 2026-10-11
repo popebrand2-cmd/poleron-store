@@ -83,6 +83,47 @@ function Mock({ view, design, scale = 1, fallback = "" }: { view: GarmentView; d
   );
 }
 
+// The garment with its design, front and back like a store shelf: what the collection cards show. It fills its (relative,
+// square) parent. Also used, bigger, by the ready-made product page.
+export function GarmentVisual({
+  color,
+  title,
+  frontArt = "",
+  backArt = "",
+  frontScale = 0.6,
+  backScale = 1,
+}: {
+  color?: GarmentColor;
+  title: string;
+  frontArt?: string;
+  backArt?: string;
+  frontScale?: number;
+  backScale?: number;
+}) {
+  const front = color?.views.find((v) => v.label === "Frente") ?? color?.views[0];
+  // A real back view only: if the "Espalda" photo is just the front photo again, it is not shown as a back.
+  const backView = color?.views.find((v) => v.label === "Espalda");
+  const back = backView && backView.imageUrl !== front?.imageUrl ? backView : undefined;
+  return (
+    <>
+      {color?.imageUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={small(color.imageUrl)} alt={title} loading="lazy" decoding="async" draggable={false} className="absolute inset-0 h-full w-full object-contain transition duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.05]" style={{ filter: GARMENT_SHADOW }} />
+      )}
+      {!color?.imageUrl && front && (
+        <div style={{ filter: GARMENT_SHADOW }} className={`absolute flex items-start justify-start transition duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${back ? "group-hover:-translate-x-[3%] group-hover:-translate-y-[2%] group-hover:-rotate-2" : "group-hover:scale-[1.05]"} ${back ? "left-[2%] top-[3%] h-[78%] w-[78%]" : "inset-[6%]"}`}>
+          <Mock view={front} design={frontArt} scale={frontScale} />
+        </div>
+      )}
+      {!color?.imageUrl && back && (
+        <div style={{ filter: BACK_GARMENT_SHADOW }} className="absolute bottom-[2%] right-[1%] flex h-[78%] w-[78%] items-end justify-end transition duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-[2%] group-hover:translate-y-[1%] group-hover:rotate-2 group-hover:scale-[1.04]">
+          <Mock view={back} design={backArt} scale={backScale} fallback={frontArt} />
+        </div>
+      )}
+    </>
+  );
+}
+
 // One ready-made garment of a collection: the design already printed on it, front and back like a
 // store shelf. Price and the "Ahorra" badge come from the product itself (nothing invented).
 export default function CollectionGarmentCard({
@@ -139,13 +180,7 @@ export default function CollectionGarmentCard({
     setI(idx >= 0 ? idx : 0);
   }, [preferColor, colors]);
   const color = colors[peek ?? i] ?? colors[0];
-  const front = color?.views.find((v) => v.label === "Frente") ?? color?.views[0];
-  // A real back view only: if the "Espalda" photo is just the front photo again, it is not shown as a back.
-  const backView = color?.views.find((v) => v.label === "Espalda");
-  const back = backView && backView.imageUrl !== front?.imageUrl ? backView : undefined;
   const badgeLabel = badge?.trim() || "";
-  const glow = GARMENT_SHADOW;
-  const backGlow = BACK_GARMENT_SHADOW;
   // Where each link goes (the color on the card travels with it). The picture and the title open the garment as it is
   // (&listo=1: nothing to customize); "+ Personalizar" opens the same garment with the editor.
   const withParams = (u: string, extra: Record<string, string>) => {
@@ -165,20 +200,7 @@ export default function CollectionGarmentCard({
         {(badgeLabel || pct > 0) && (
           <span className="absolute left-3 top-3 z-10 rounded-full bg-[#e5484d] px-3 py-1 text-xs font-bold text-white">{badgeLabel || `Ahorra ${pct}%`}</span>
         )}
-        {color?.imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={small(color.imageUrl)} alt={title} loading="lazy" decoding="async" draggable={false} className="absolute inset-0 h-full w-full object-contain transition duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.05]" style={{ filter: glow }} />
-        )}
-        {!color?.imageUrl && front && (
-          <div style={{ filter: glow }} className={`absolute flex items-start justify-start transition duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${back ? "group-hover:-translate-x-[3%] group-hover:-translate-y-[2%] group-hover:-rotate-2" : "group-hover:scale-[1.05]"} ${back ? "left-[2%] top-[3%] h-[78%] w-[78%]" : "inset-[6%]"}`}>
-            <Mock view={front} design={frontArt} scale={frontScale} />
-          </div>
-        )}
-        {!color?.imageUrl && back && (
-          <div style={{ filter: backGlow }} className="absolute bottom-[2%] right-[1%] flex h-[78%] w-[78%] items-end justify-end transition duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-[2%] group-hover:translate-y-[1%] group-hover:rotate-2 group-hover:scale-[1.04]">
-            <Mock view={back} design={backArt} scale={backScale} fallback={frontArt} />
-          </div>
-        )}
+        <GarmentVisual color={color} title={title} frontArt={frontArt} backArt={backArt} frontScale={frontScale} backScale={backScale} />
         {colors.map((c) => c.imageUrl && c !== color && (
           // eslint-disable-next-line @next/next/no-img-element
           <img key={c.imageUrl} src={small(c.imageUrl)} alt="" aria-hidden="true" decoding="async" className="hidden" />

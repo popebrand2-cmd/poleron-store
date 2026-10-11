@@ -15,6 +15,8 @@ import { useCartStore } from "@/lib/cart-store";
 import { formatCLP } from "@/lib/money";
 import { trackEvent } from "@/lib/track";
 import type { DesignPlacementMap } from "@/types";
+import { GarmentVisual } from "./CollectionGarmentCard";
+import type { GarmentItem } from "./CollectionGarmentsGrid";
 
 // three.js is only downloaded when someone opens the 3D view.
 const HoodieViewer3D = dynamic(() => import("./HoodieViewer3D"), { ssr: false });
@@ -71,7 +73,7 @@ function StepTitle({ title, hint }: { title: string; hint?: string }) {
   );
 }
 
-export default function ProductPersonalizer({ product }: { product: PersonalizerProduct }) {
+export default function ProductPersonalizer({ product, readyItem = null }: { product: PersonalizerProduct; readyItem?: GarmentItem | null }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const addItem = useCartStore((s) => s.addItem);
@@ -627,7 +629,20 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
 
         {visibleColorIdx.length > 1 && <div className="mb-4 lg:hidden">{colorPicker}</div>}
 
-        <div className="mb-4 flex justify-center gap-2 rounded-lg bg-neutral-100 p-1">
+        {ready && readyItem && (
+          <div className="group relative mx-auto mb-4 aspect-square w-full max-w-xl overflow-hidden rounded-2xl bg-[#ececec] bg-[radial-gradient(ellipse_at_50%_38%,#ffffff_0%,#f3f3f3_55%,#e2e2e2_100%)]">
+            <GarmentVisual
+              color={readyItem.colors.find((c) => c.name.toLowerCase() === color.name.toLowerCase()) ?? readyItem.colors[0]}
+              title={readyItem.title}
+              frontArt={readyItem.frontArt}
+              backArt={readyItem.backArt}
+              frontScale={readyItem.frontScale}
+              backScale={readyItem.backScale}
+            />
+          </div>
+        )}
+
+        <div className={`mb-4 flex justify-center gap-2 rounded-lg bg-neutral-100 p-1 ${ready && readyItem ? "hidden" : ""}`}>
           {color.views.map((v) => (
             <button
               key={v.label}
@@ -656,7 +671,11 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
           )}
         </div>
 
-        <div key={`${color.name}-${editorNonce}`} className="relative">
+        <div
+          key={`${color.name}-${editorNonce}`}
+          className="relative"
+          style={ready && readyItem ? { height: 0, overflow: "hidden", visibility: "hidden", pointerEvents: "none" } : undefined}
+        >
           {color.views.map((v) => (
             <div
               key={v.label}
