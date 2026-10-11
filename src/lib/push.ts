@@ -2,6 +2,7 @@ import webpush from "web-push";
 import { prisma } from "@/lib/prisma";
 import { formatCLP } from "@/lib/money";
 import { formatOrderNumber } from "@/lib/order-number";
+import { sendTelegram, telegramEscape } from "@/lib/telegram";
 
 // Notifications of new sales on the owner's phone (Web Push: they arrive with the phone's notification sound even when the
 // panel is closed). The signing keys are generated once and kept in the database (AppSecret), never in the browser.
@@ -63,12 +64,20 @@ export async function notifyPaidOrder(orderId: string): Promise<void> {
     const first = order.items[0];
     const what = first ? `${first.quantity}× ${first.product.name}${first.colorName ? ` (${first.colorName}, ${first.sizeLabel})` : ""}` : "Pedido";
     const more = order.items.length > 1 ? ` y ${order.items.length - 1} más` : "";
-    await sendPushToAll({
-      title: `💸 Nueva venta ${formatOrderNumber(order)} · ${formatCLP(order.totalAmount)}`,
-      body: `${order.customerName} · ${what}${more}`,
-      url: "/admin/pedidos",
-      tag: `order-${order.id}`,
-    });
+    const publicUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+    const lines = order.items.map((it) => `${it.quantity}× ${telegramEscape(it.product.name)} — ${telegramEscape(it.colorName)} · Talla ${telegramEscape(it.sizeLabel)}`);
+    const delivery = order.shippingMethod === "PICKUP" ? "Retiro en tienda" : `Envío a ${telegramEscape(order.shippingComuna || "—")}`;
+    await Promise.all([
+      sendPushToAll({
+        title: `💸 Nueva venta ${formatOrderNumber(order)} · ${formatCLP(order.totalAmount)}`,
+        body: `${order.customerName} · ${what}${more}`,
+        url: "/admin/pedidos",
+        tag: `order-${order.id}`,
+      }).catch(() => undefined),
+      sendTelegram(
+        `💸 <b>Nueva venta ${formatOrderNumber(order)}</b> · ${formatCLP(order.totalAmount)}\n${delivery}\n${telegramEscape(order.customerName)}${order.customerPhone ? ` · ${telegramEscape(order.customerPhone)}` : ""}\n${lines.join("\n")}${publicUrl ? `\n${publicUrl}/admin/pedidos` : ""}`,
+      ),
+    ]);
   } catch (e) {
     console.error("[push] new-sale notification failed:", e instanceof Error ? e.message : e);
   }

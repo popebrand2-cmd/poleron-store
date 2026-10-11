@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import TelegramSetup from "@/components/admin/TelegramSetup";
 
 // "Avisos de ventas": asks the phone for permission and registers it, so each new paid order arrives as a notification with the
 // phone's own sound, even with the panel closed. On iPhone this only works once the panel is added to the Home Screen.
@@ -154,6 +155,7 @@ export default function PushToggle() {
           {state === "denied" && <p>Bloqueaste las notificaciones de este sitio. Actívalas en los ajustes del navegador (o de la app) y vuelve a esta página.</p>}
           {state === "unsupported" && <p>Este navegador no permite avisos. Prueba con Chrome (Android) o Safari agregado a la pantalla de inicio (iPhone).</p>}
           {message && <p className="text-neon">{message}</p>}
+          {open && <TelegramSetup />}
         </div>
       )}
     </div>
