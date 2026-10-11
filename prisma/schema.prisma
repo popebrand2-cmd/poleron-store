@@ -212,6 +212,22 @@ model ContentItem {
 // edit mode) — never auto-generated, since a fabricated testimonial attributed to a "customer"
 // would be dishonest. productSlug optionally tags a real Product so the card can link to it;
 // empty means no product tag, never a made-up one.
+// A phone or computer of the owner/team that asked to be notified of new sales (Web Push). Server-only.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String   @default("")
+  createdAt DateTime @default(now())
+}
+
+// Secrets the server generates for itself (the VAPID keys of the notifications). Never sent to the browser.
+model AppSecret {
+  key   String @id
+  value String
+}
+
 model Review {
   id           String   @id @default(cuid())
   customerName String   @default("")

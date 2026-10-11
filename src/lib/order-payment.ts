@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { isMercadoPagoConfigured, listMercadoPagoPaymentsForOrder } from "@/lib/mercadopago";
+import { notifyPaidOrder } from "@/lib/push";
 
 // Asks Mercado Pago whether an order has an approved payment and, if so, marks it PAID. Returns the order's status afterwards.
 // Safe to call as often as needed: an order that is already paid (or further along) is never touched, and an order is never
@@ -14,6 +15,8 @@ export async function reconcileOrderPayment(orderId: string): Promise<string | n
     if (payments.some((p) => p.status === "approved")) {
       await prisma.order.update({ where: { id: orderId }, data: { status: "PAID" } });
       console.log(`[payments] order ${orderId} marked PAID`);
+      // The owner's phone: "Nueva venta". Only on the change to paid (an order already paid returns above).
+      await notifyPaidOrder(orderId);
       return "PAID";
     }
   } catch (e) {
