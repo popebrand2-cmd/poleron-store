@@ -34,6 +34,8 @@ export async function GET() {
           showBack: d.showBack,
           frontScale: d.frontScale,
           backScale: d.backScale,
+          // "" = every garment color, "negro" = dark garments only, "blanco" = light garments only.
+          garmentColors: d.garmentColors,
         })),
       })),
   });

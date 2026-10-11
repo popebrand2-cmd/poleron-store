@@ -238,6 +238,8 @@ type MockupEditorProps = {
   // The chosen garment color — used only to warn/block a white-background design on a white
   // garment, where the print would be invisible.
   colorHex?: string;
+  // Only the garment with its design: no controls and the canvas can't be touched (the "ready-made" product page).
+  locked?: boolean;
 };
 
 // Round 44px button that repeats while it is held down (nudging a design with a finger).
@@ -285,7 +287,7 @@ function PadButton({ label, onStep, children }: { label: string; onStep: () => v
 }
 
 const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
-  function MockupEditor({ view, initialPlacement, onDesignAdded, sizes = [], selectedSizeLabel = "", colorHex = "" }, ref) {
+  function MockupEditor({ view, initialPlacement, onDesignAdded, sizes = [], selectedSizeLabel = "", colorHex = "", locked = false }, ref) {
     ensureEditorFonts();
     const isWhiteGarment = isNearWhiteHex(colorHex);
     const onDesignAddedRef = useRef(onDesignAdded);
@@ -337,6 +339,34 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
     useEffect(() => {
       if (hasDesign) setToolsOpen(true);
     }, [hasDesign]);
+    // Locked ("ready-made" page): the design on the garment can't be grabbed and shows no handles. Whatever this turns off is
+    // turned back on when the editor is unlocked ("Personalizar").
+    useEffect(() => {
+      if (!locked) return;
+      const touched = new Set<fabric.FabricObject>();
+      const id = setInterval(() => {
+        const c = fabricCanvasRef.current;
+        if (!c) return;
+        let changed = false;
+        for (const o of c.getObjects()) {
+          if (touched.has(o) || !(o.selectable || o.evented)) continue;
+          o.set({ selectable: false, evented: false, hasControls: false, hasBorders: false });
+          touched.add(o);
+          changed = true;
+        }
+        if (c.getActiveObject()) {
+          c.discardActiveObject();
+          changed = true;
+        }
+        if (changed) c.requestRenderAll();
+      }, 250);
+      return () => {
+        clearInterval(id);
+        const c = fabricCanvasRef.current;
+        for (const o of touched) o.set({ selectable: true, evented: true, hasControls: true, hasBorders: true });
+        c?.requestRenderAll();
+      };
+    }, [locked]);
     const [whiteRisk, setWhiteRisk] = useState(false);
     const whiteRiskRef = useRef(false);
     function refreshWhiteRisk(url: string) {
@@ -1184,7 +1214,10 @@ const MockupEditor = forwardRef<MockupEditorHandle, MockupEditorProps>(
     const designThumb = originalDesignUrlRef.current || "";
 
     return (
-      <div ref={wrapperRef} className="min-w-0 space-y-3">
+      <div
+        ref={wrapperRef}
+        className={`min-w-0 space-y-3 ${locked ? "[&>*:not(:first-child)]:hidden [&>div:first-child]:pointer-events-none [&>div:first-child_span]:hidden" : ""}`}
+      >
         <div className="relative mx-auto w-fit max-w-full overflow-hidden rounded-lg border border-neutral-200">
           <canvas ref={canvasElRef} />
           {hasDesign && !cropping && !pickingBgColor && (

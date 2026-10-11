@@ -121,6 +121,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     showBack?: boolean;
     frontScale?: number;
     backScale?: number;
+    garmentColors?: string;
   };
   type PresetCollection = { id: string; name: string; category?: string; designs: PresetDesign[] };
   const [collections, setCollections] = useState<PresetCollection[]>([]);
@@ -192,6 +193,42 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     const d = collections.flatMap((c) => c.designs).find((x) => x.id === presetId);
     if (d) setCardDesign(d);
   }, [presetId, editId, cardDesign, collections]);
+
+  // "Ready-made" mode (?diseno=<id>&listo=1, the collection card itself): the garment exactly as the card shows it, to buy as
+  // it is — no editor, no collection picker. "Personalizar" (the card's button or the one on this page) drops the &listo=1 and
+  // brings the editor with the same design on. Only the garment colors where the design reads are offered (a black-only
+  // design is not sold on a black garment).
+  const ready = Boolean(presetId) && searchParams.get("listo") === "1" && !editId;
+  const fitLimit = ready ? cardDesign?.garmentColors ?? "" : "";
+  const visibleColorIdx = product.colors
+    .map((c, i) => ({ c, i }))
+    .filter(({ c }) => {
+      if (fitLimit !== "negro" && fitLimit !== "blanco") return true;
+      const h = c.hex.replace("#", "");
+      const v = h.length === 3 ? h.split("").map((x) => x + x).join("") : h.padEnd(6, "0");
+      const lum = (0.299 * parseInt(v.slice(0, 2), 16) + 0.587 * parseInt(v.slice(2, 4), 16) + 0.114 * parseInt(v.slice(4, 6), 16)) / 255;
+      return fitLimit === "negro" ? lum < 0.45 : lum >= 0.45;
+    })
+    .map(({ i }) => i);
+  useEffect(() => {
+    if (ready && visibleColorIdx.length > 0 && !visibleColorIdx.includes(colorIndex)) handleColorChange(visibleColorIdx[0]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, fitLimit]);
+
+  // The card passes the color it was showing (?color=Blanco).
+  useEffect(() => {
+    const wanted = searchParams.get("color");
+    if (!wanted || searchParams.get("editar")) return;
+    const i = product.colors.findIndex((c) => c.name.toLowerCase() === wanted.toLowerCase());
+    if (i > 0) handleColorChange(i);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function customizeThis() {
+    const p = new URLSearchParams(searchParams.toString());
+    p.delete("listo");
+    router.push(`?${p.toString()}`, { scroll: false });
+  }
 
   const cardAppliedRef = useRef("");
   useEffect(() => {
@@ -370,7 +407,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
     <div>
       <p className="mb-2 text-sm font-medium">Color: {color.name}</p>
       <div className="flex flex-wrap gap-3">
-        {product.colors.map((c, i) => (
+        {product.colors.map((c, i) => ({ c, i })).filter(({ i }) => visibleColorIdx.includes(i)).map(({ c, i }) => (
           <button
             key={c.name}
             type="button"
@@ -511,7 +548,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
       </section>
 
       {/* Collections: under the size/material choices on phones, full width under both columns on desktop */}
-      {collectionsForView.length > 0 && (
+      {!ready && collectionsForView.length > 0 && (
           <div className="relative order-3 min-w-0 overflow-hidden rounded-2xl border border-neutral-200 bg-white p-4 text-black sm:p-5 lg:order-none lg:col-span-2 lg:row-start-4 lg:p-8">
             <div className="relative">
               <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#0b6b25]">POPE · Colecciones</p>
@@ -586,9 +623,9 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
       {/* 02 — PERSONALIZA. First thing under the price on phones: the garment is what sells, the size and
           material choices can wait below it. */}
       <section id="paso-2" className="order-1 min-w-0 scroll-mt-28 lg:order-none lg:col-start-1 lg:row-span-2 lg:row-start-2">
-        <StepTitle title="Personaliza" hint="Sube tu diseño, muévelo y mira cómo queda" />
+        {ready ? <StepTitle title="Tu prenda" hint="Con el diseño ya puesto: elige talla y llévatela" /> : <StepTitle title="Personaliza" hint="Sube tu diseño, muévelo y mira cómo queda" />}
 
-        {product.colors.length > 1 && <div className="mb-4 lg:hidden">{colorPicker}</div>}
+        {visibleColorIdx.length > 1 && <div className="mb-4 lg:hidden">{colorPicker}</div>}
 
         <div className="mb-4 flex justify-center gap-2 rounded-lg bg-neutral-100 p-1">
           {color.views.map((v) => (
@@ -633,6 +670,7 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
                   sizes={product.sizes}
                   selectedSizeLabel={size?.label ?? ""}
                   colorHex={color.hex}
+                  locked={ready}
                   initialPlacement={editing?.placement[v.label] ?? null}
                   onDesignAdded={handleDesignAdded}
                   ref={(handle) => {
@@ -671,6 +709,16 @@ export default function ProductPersonalizer({ product }: { product: Personalizer
             className="mt-3 min-h-12 w-full rounded-full bg-black px-6 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-neutral-800 disabled:opacity-50"
           >
             Comprar ahora
+          </button>
+        )}
+
+        {ready && (
+          <button
+            type="button"
+            onClick={customizeThis}
+            className="mt-3 min-h-12 w-full rounded-full border-2 border-black px-6 py-3 text-sm font-bold uppercase tracking-wide text-black transition hover:bg-neon"
+          >
+            + Personalizar este diseño
           </button>
         )}
 

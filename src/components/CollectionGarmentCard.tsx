@@ -99,7 +99,6 @@ export default function CollectionGarmentCard({
   colors,
   preferColor = "",
   className = "",
-  blankHref,
   light = false,
   style,
   reveal = false,
@@ -147,13 +146,22 @@ export default function CollectionGarmentCard({
   const badgeLabel = badge?.trim() || "";
   const glow = GARMENT_SHADOW;
   const backGlow = BACK_GARMENT_SHADOW;
+  // Where each link goes (the color on the card travels with it). The picture and the title open the garment as it is
+  // (&listo=1: nothing to customize); "+ Personalizar" opens the same garment with the editor.
+  const withParams = (u: string, extra: Record<string, string>) => {
+    const q = new URLSearchParams(extra).toString();
+    return `${u}${u.includes("?") ? "&" : "?"}${q}`;
+  };
+  const colorName = color?.name ?? "";
+  const readyHref = withParams(href, { listo: "1", ...(colorName ? { color: colorName } : {}) });
+  const customizeHref = colorName ? withParams(href, { color: colorName }) : href;
   const pct = basePrice != null && compareAtPrice && compareAtPrice > basePrice ? Math.round(100 - (basePrice / compareAtPrice) * 100) : 0;
 
   return (
     <li aria-hidden={duplicate || undefined} className={`group ${className}`} style={reveal ? { ...style, ["--reveal-delay" as string]: `${(revealIndex % 4) * 90}ms` } : style} data-reveal={reveal ? "" : undefined}>
       <div className="relative aspect-square overflow-hidden rounded-xl bg-[#ececec] bg-[radial-gradient(ellipse_at_50%_38%,#ffffff_0%,#f3f3f3_55%,#e2e2e2_100%)]">
         {/* The whole picture is a link to the garment with this design already on it */}
-        <Link href={href} aria-label={title} className="absolute inset-0 z-[1]" />
+        <Link href={readyHref} aria-label={title} className="absolute inset-0 z-[1]" />
         {(badgeLabel || pct > 0) && (
           <span className="absolute left-3 top-3 z-10 rounded-full bg-[#e5484d] px-3 py-1 text-xs font-bold text-white">{badgeLabel || `Ahorra ${pct}%`}</span>
         )}
@@ -176,13 +184,13 @@ export default function CollectionGarmentCard({
           <img key={c.imageUrl} src={small(c.imageUrl)} alt="" aria-hidden="true" decoding="async" className="hidden" />
         ))}
         <Link
-          href={blankHref ?? href}
+          href={customizeHref}
           className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 translate-y-2 whitespace-nowrap rounded-full bg-neon px-4 py-2 text-xs font-bold sm:bottom-4 sm:px-6 sm:py-3 sm:text-sm text-black opacity-0 shadow-[0_6px_18px_rgba(0,0,0,0.45)] ring-1 ring-black/20 transition duration-300 hover:brightness-90 focus-visible:translate-y-0 focus-visible:opacity-100 group-hover:translate-y-0 group-hover:opacity-100 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100"
         >
           + Personalizar
         </Link>
       </div>
-      <Link href={href} className={`mt-4 line-clamp-2 block text-base font-semibold leading-snug ${light ? "text-black hover:text-[#0b6b25]" : "text-white hover:text-neon"}`}>
+      <Link href={readyHref} className={`mt-4 line-clamp-2 block text-base font-semibold leading-snug ${light ? "text-black hover:text-[#0b6b25]" : "text-white hover:text-neon"}`}>
         {title}
       </Link>
       {description && <p className={`mt-1 line-clamp-2 text-sm leading-snug ${light ? "text-neutral-600" : "text-neutral-400"}`}>{description}</p>}
