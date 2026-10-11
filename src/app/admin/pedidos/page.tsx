@@ -26,17 +26,24 @@ const STATUS_COLORS: Record<string, string> = {
   CANCELLED: "bg-neutral-200 text-neutral-600",
 };
 
+// A Chilean mobile number typed as 9 digits (9XXXXXXXX) or with +56: the wa.me link needs the country code and nothing else.
+function whatsappLink(phone: string): string {
+  const d = phone.replace(/\D/g, "");
+  const full = d.length === 9 ? `56${d}` : d;
+  return `https://wa.me/${full}`;
+}
+
 export default async function AdminOrdersPage() {
   // Orders whose payment already arrived but whose notification did not: confirm them with Mercado Pago before listing.
   await reconcilePendingOrders().catch(() => 0);
   const orders = await prisma.order.findMany({
     orderBy: { createdAt: "desc" },
-    include: { items: true },
+    include: { items: { include: { product: { select: { name: true } } } } },
   });
 
   return (
-    <main className="mx-auto max-w-5xl p-6">
-      <div className="mb-6 flex items-center justify-between">
+    <main className="mx-auto max-w-5xl p-4 sm:p-6">
+      <div className="mb-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">Pedidos</h1>
         <AdminNav current="/admin/pedidos" />
       </div>
@@ -47,33 +54,82 @@ export default async function AdminOrdersPage() {
         <div className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 bg-white">
           {orders.map((o) => (
             <div key={o.id} className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-base font-semibold">
                     {formatOrderNumber(o)} · {o.customerName}
                   </p>
-                  <p className="text-sm text-neutral-500">
-                    {o.customerEmail}{o.customerPhone ? ` · ${o.customerPhone}` : ""} · {o.items.length} producto(s) · {formatCLP(o.totalAmount)}
+                  <p className="text-xs text-neutral-400">
+                    {o.createdAt.toLocaleString("es-CL", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Santiago" })}
                   </p>
-                  <p className="text-xs text-neutral-400">{o.createdAt.toLocaleString("es-CL", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Santiago" })}</p>
-                  <p className="text-sm text-neutral-500">
+                </div>
+                <span className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${STATUS_COLORS[o.status] ?? ""}`}>
+                  {STATUS_LABELS[o.status] ?? o.status}
+                </span>
+              </div>
+
+              {/* Who bought and where it goes: readable on a phone (one column) and on a computer (two). */}
+              <dl className="mt-3 grid gap-x-6 gap-y-2 rounded-lg border border-neutral-100 bg-neutral-50 p-3 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Cliente</dt>
+                  <dd className="break-words">{o.customerName}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Correo</dt>
+                  <dd className="break-all">
+                    <a href={`mailto:${o.customerEmail}`} className="text-fuchsia-600 hover:underline">
+                      {o.customerEmail}
+                    </a>
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Teléfono</dt>
+                  <dd>
+                    {o.customerPhone ? (
+                      <span className="flex flex-wrap items-center gap-x-3">
+                        <a href={`tel:${o.customerPhone.replace(/[^\d+]/g, "")}`} className="text-fuchsia-600 hover:underline">
+                          {o.customerPhone}
+                        </a>
+                        <a href={whatsappLink(o.customerPhone)} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">
+                          WhatsApp
+                        </a>
+                      </span>
+                    ) : (
+                      <span className="text-neutral-400">No lo dejó</span>
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Entrega</dt>
+                  <dd className="break-words">
                     {o.shippingMethod === "PICKUP" ? (
                       "Retiro en tienda"
                     ) : (
                       <>
-                        Envío a {o.shippingComuna || "—"}{CHILE_COMUNAS.find((c) => c.comuna === o.shippingComuna)?.region ? `, ${CHILE_COMUNAS.find((c) => c.comuna === o.shippingComuna)?.region}` : ""} ({formatCLP(o.shippingCost)}) · {o.shippingAddr}
+                        Envío a {o.shippingComuna || "—"}
+                        {CHILE_COMUNAS.find((c) => c.comuna === o.shippingComuna)?.region ? `, ${CHILE_COMUNAS.find((c) => c.comuna === o.shippingComuna)?.region}` : ""}
+                        {o.shippingAddr ? ` · ${o.shippingAddr}` : ""}
                       </>
                     )}
-                  </p>
+                  </dd>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={`rounded-full px-3 py-1 text-xs font-medium ${STATUS_COLORS[o.status] ?? ""}`}>
-                    {STATUS_LABELS[o.status] ?? o.status}
-                  </span>
-                  <OrderStatusControl orderId={o.id} status={o.status} />
-                  {o.status === "PENDING_PAYMENT" && <PendingPaymentActions orderId={o.id} />}
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Total</dt>
+                  <dd className="font-semibold">
+                    {formatCLP(o.totalAmount)}
+                    {o.shippingMethod !== "PICKUP" && o.shippingCost > 0 && (
+                      <span className="ml-1 text-xs font-normal text-neutral-500">(incluye envío {formatCLP(o.shippingCost)})</span>
+                    )}
+                  </dd>
+                </div>
+              </dl>
+
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+                <OrderStatusControl orderId={o.id} status={o.status} />
+                {o.status === "PENDING_PAYMENT" && <PendingPaymentActions orderId={o.id} />}
+                <span className="ml-auto">
                   <DeleteOrderButton orderId={o.id} />
-                </div>
+                </span>
               </div>
               <div className="mt-2 space-y-3">
                 {o.items.map((it) => {
@@ -89,9 +145,10 @@ export default async function AdminOrdersPage() {
 
                   return (
                     <div key={it.id} className="rounded-lg border border-neutral-100 bg-neutral-50 p-3">
+                      <p className="text-sm font-medium">{it.product.name}</p>
                       <p className="text-xs text-neutral-500">
                         {it.quantity}x {it.colorName} · Talla {it.sizeLabel}
-                        {it.materialLabel && ` · ${it.materialLabel}`}
+                        {it.materialLabel && ` · ${it.materialLabel}`} · {formatCLP(it.unitPrice)} c/u
                       </p>
                       {originals.length === 0 && (o.status === "SHIPPED" || o.status === "CANCELLED") && (
                         <p className="mt-1 text-xs text-neutral-500">Imagen original y mockup eliminados al cerrar el pedido.</p>

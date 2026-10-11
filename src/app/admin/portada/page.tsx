@@ -16,7 +16,7 @@ const EDITABLE = [
 export default function AdminPortadaPage() {
   return (
     <main className="mx-auto max-w-3xl p-6">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">Portada y textos</h1>
         <AdminNav current="/admin/portada" />
       </div>
