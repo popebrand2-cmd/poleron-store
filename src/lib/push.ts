@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { formatCLP } from "@/lib/money";
 import { formatOrderNumber } from "@/lib/order-number";
 import { sendTelegram, telegramEscape } from "@/lib/telegram";
+import { sendOrderEmail } from "@/lib/order-emails";
 
 // Notifications of new sales on the owner's phone (Web Push: they arrive with the phone's notification sound even when the
 // panel is closed). The signing keys are generated once and kept in the database (AppSecret), never in the browser.
@@ -67,6 +68,8 @@ export async function notifyPaidOrder(orderId: string): Promise<void> {
     const publicUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
     const lines = order.items.map((it) => `${it.quantity}× ${telegramEscape(it.product.name)} — ${telegramEscape(it.colorName)} · Talla ${telegramEscape(it.sizeLabel)}`);
     const delivery = order.shippingMethod === "PICKUP" ? "Retiro en tienda" : `Envío a ${telegramEscape(order.shippingComuna || "—")}`;
+    // The customer's e-mail goes out in the background (a slow mail server must not delay the rest).
+    void sendOrderEmail(orderId, "paid").catch(() => false);
     await Promise.all([
       sendPushToAll({
         title: `💸 Nueva venta ${formatOrderNumber(order)} · ${formatCLP(order.totalAmount)}`,

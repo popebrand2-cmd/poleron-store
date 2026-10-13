@@ -5,6 +5,7 @@ import { formatCLP } from "@/lib/money";
 import ClearCartOnMount from "@/components/ClearCartOnMount";
 import TrackPurchaseOnMount from "@/components/TrackPurchaseOnMount";
 import { reconcileOrderPayment } from "@/lib/order-payment";
+import { getEmailConfig } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,7 @@ export default async function CheckoutSuccessPage({
   // Back from Mercado Pago: confirm the payment right now, without waiting for the notification.
   if (id) await reconcileOrderPayment(id).catch(() => null);
   const order = id ? await prisma.order.findUnique({ where: { id } }) : null;
+  const emailOn = Boolean(await getEmailConfig().catch(() => null));
 
   return (
     <main className="bg-black px-6 py-16">
@@ -30,7 +32,10 @@ export default async function CheckoutSuccessPage({
           Gracias{order ? ` ${order.customerName}` : ""}, tu pedido está confirmado
           {order ? ` (${formatOrderNumber(order)})` : ""} por {order ? formatCLP(order.totalAmount) : ""}.
         </p>
-        <p className="mt-2 text-neutral-600">Te enviaremos la confirmación de envío por email.</p>
+        <p className="mt-2 text-neutral-600">
+          {emailOn && order ? `Te enviamos la confirmación a ${order.customerEmail}. Si no la ves en unos minutos, revisa la carpeta de spam. ` : ""}
+          Guarda tu número de pedido y escríbenos por WhatsApp si necesitas algo.
+        </p>
         <Link href="/" className="mt-8 inline-block text-green-700 hover:underline">
           Seguir comprando
         </Link>

@@ -120,6 +120,10 @@ model Order {
   // Chile comuna name, only set for DELIVERY — see ShippingComunaRate.
   shippingComuna String  @default("")
   shippingCost   Int     @default(0) // CLP, snapshot of the rate at purchase time
+  // Shipping tracking code the owner types when she marks the order finished (shown in the customer's e-mail).
+  trackingCode   String  @default("")
+  // Customer e-mails already sent for this order, comma-separated: paid, production, shipped.
+  emailsSent     String  @default("")
   totalAmount   Int // CLP, items + shippingCost
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

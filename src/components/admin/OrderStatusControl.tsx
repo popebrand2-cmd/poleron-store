@@ -3,20 +3,27 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function OrderStatusControl({ orderId, status }: { orderId: string; status: string }) {
+export default function OrderStatusControl({ orderId, status, isDelivery = false }: { orderId: string; status: string; isDelivery?: boolean }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   async function change(next: string, confirmText?: string) {
     if (confirmText && !confirm(confirmText)) return;
+    // A shipment can carry a tracking code, which goes in the customer's e-mail (optional).
+    let trackingCode: string | undefined;
+    if (next === "SHIPPED" && isDelivery) {
+      const code = prompt("Código de seguimiento del envío (opcional). Va en el correo al cliente. Déjalo vacío si no hay.");
+      if (code === null) return;
+      trackingCode = code.trim();
+    }
     setBusy(true);
     setError("");
     try {
       const res = await fetch(`/api/admin/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: next }),
+        body: JSON.stringify({ status: next, ...(trackingCode !== undefined ? { trackingCode } : {}) }),
       });
       if (!res.ok) throw new Error("No se pudo cambiar el estado.");
       router.refresh();

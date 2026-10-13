@@ -26,6 +26,22 @@ const STATUS_COLORS: Record<string, string> = {
   CANCELLED: "bg-neutral-200 text-neutral-600",
 };
 
+// The WhatsApp message for this order, ready to send (the owner only taps "send"): the same text as the e-mail.
+function whatsappMessage(o: { customerName: string; status: string; shippingMethod: string; trackingCode: string; totalAmount: number; number: number | null; id: string; items: { quantity: number; product: { name: string }; colorName: string; sizeLabel: string }[] }): string {
+  const first = o.customerName.trim().split(/\s+/)[0] || "";
+  const num = formatOrderNumber(o);
+  const items = o.items.map((it) => `${it.quantity}× ${it.product.name} (${it.colorName}, talla ${it.sizeLabel})`).join(", ");
+  const pickup = o.shippingMethod === "PICKUP";
+  if (o.status === "SHIPPED") {
+    return pickup
+      ? `Hola ${first}! Tu pedido ${num} de POPE ya está listo para retirar. ¡Gracias por tu compra!`
+      : `Hola ${first}! Tu pedido ${num} de POPE ya salió de nuestro taller.${o.trackingCode ? ` Código de seguimiento: ${o.trackingCode}.` : ""} ¡Gracias por tu compra!`;
+  }
+  if (o.status === "IN_PRODUCTION") return `Hola ${first}! Tu pedido ${num} de POPE ya está en producción. Te avisamos apenas esté listo.`;
+  if (o.status === "PAID") return `Hola ${first}! Recibimos tu pedido ${num} de POPE por ${formatCLP(o.totalAmount)}: ${items}. Ya estamos preparándolo, te avisamos cuando esté listo. ¡Gracias por tu compra!`;
+  return `Hola ${first}! Te escribimos de POPE por tu pedido ${num}.`;
+}
+
 // A Chilean mobile number typed as 9 digits (9XXXXXXXX) or with +56: the wa.me link needs the country code and nothing else.
 function whatsappLink(phone: string): string {
   const d = phone.replace(/\D/g, "");
@@ -90,8 +106,8 @@ export default async function AdminOrdersPage() {
                         <a href={`tel:${o.customerPhone.replace(/[^\d+]/g, "")}`} className="text-fuchsia-600 hover:underline">
                           {o.customerPhone}
                         </a>
-                        <a href={whatsappLink(o.customerPhone)} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">
-                          WhatsApp
+                        <a href={`${whatsappLink(o.customerPhone)}?text=${encodeURIComponent(whatsappMessage(o))}`} target="_blank" rel="noopener noreferrer" className="text-emerald-600 hover:underline">
+                          Avisar por WhatsApp
                         </a>
                       </span>
                     ) : (
@@ -113,6 +129,12 @@ export default async function AdminOrdersPage() {
                     )}
                   </dd>
                 </div>
+                {o.trackingCode && (
+                  <div>
+                    <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Seguimiento</dt>
+                    <dd className="break-all">{o.trackingCode}</dd>
+                  </div>
+                )}
                 <div>
                   <dt className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Total</dt>
                   <dd className="font-semibold">
@@ -196,7 +218,7 @@ export default async function AdminOrdersPage() {
               </div>
 
               <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-                <OrderStatusControl orderId={o.id} status={o.status} />
+                <OrderStatusControl orderId={o.id} status={o.status} isDelivery={o.shippingMethod !== "PICKUP"} />
                 {o.status === "PENDING_PAYMENT" && <PendingPaymentActions orderId={o.id} />}
                 <span className="ml-auto">
                   <DeleteOrderButton orderId={o.id} />

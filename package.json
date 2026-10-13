@@ -21,6 +21,7 @@
     "fabric": "^6.5.4",
     "mercadopago": "^3.6.1",
     "next": "15.5.25",
+    "nodemailer": "^10.1.0",
     "onnxruntime-web": "^1.20.1",
     "react": "19.2.1",
     "react-dom": "19.2.1",
@@ -33,6 +34,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "3.2.0",
     "@types/node": "22.10.2",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "19.0.2",
     "@types/react-dom": "19.0.2",
     "@types/three": "^0.170.0",
