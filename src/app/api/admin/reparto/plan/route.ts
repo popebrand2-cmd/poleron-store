@@ -96,15 +96,18 @@ export async function POST(request: Request) {
     });
   }
 
-  // Google Maps links (it takes up to 9 intermediate stops per link): the driver opens them on the phone, in order.
+  // Google Maps links with the stops already in the best order, for the driver's phone. Google only accepts 3 intermediate
+  // stops per link when it opens in a phone's browser, so the route goes in legs of up to 4 stops; each leg starts where the
+  // previous one ended. The first leg has no origin: Maps starts from wherever the driver is (the route was calculated from
+  // the workshop, which is where they leave from).
   const links: { label: string; url: string }[] = [];
   const plain = stops.filter((s) => !s.note.startsWith("No se pudo"));
-  const CHUNK = 9;
+  const CHUNK = 4;
   for (let i = 0; i < plain.length; i += CHUNK) {
     const part = plain.slice(i, i + CHUNK);
     const dest = part[part.length - 1];
     const waypoints = part.slice(0, -1).map((p) => p.mapsText);
-    const origin = i === 0 ? startLabel : plain[i - 1].mapsText;
+    const origin = i === 0 ? "" : plain[i - 1].mapsText;
     const params = new URLSearchParams({ api: "1", travelmode: "driving", destination: dest.mapsText });
     if (origin) params.set("origin", origin);
     if (waypoints.length) params.set("waypoints", waypoints.join("|"));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type DeliveryOrder = {
   id: string;
@@ -42,7 +42,8 @@ export default function RouteBuilder({ orders, defaultStart }: { orders: Deliver
   async function build() {
     const ids = orders.filter((o) => o.delivery && chosen.has(o.id)).map((o) => o.id);
     if (ids.length === 0) {
-      setError("Elige al menos un pedido con envío a domicilio.");
+      setPlan(null);
+      setError(orders.some((o) => o.delivery) ? "Elige al menos un pedido con envío a domicilio." : "");
       return;
     }
     setBusy(true);
@@ -59,6 +60,32 @@ export default function RouteBuilder({ orders, defaultStart }: { orders: Deliver
       setBusy(false);
     }
   }
+
+  // The route builds itself: when the page opens, and again a moment after the selection or the starting point changes.
+  const buildRef = useRef(build);
+  buildRef.current = build;
+  const firstRun = useRef(true);
+  useEffect(() => {
+    const t = setTimeout(() => buildRef.current(), firstRun.current ? 0 : 900);
+    firstRun.current = false;
+    return () => clearTimeout(t);
+  }, [chosen, start]);
+
+  // The whole route as a WhatsApp message for the driver: the stops in order and the Google Maps links.
+  const driverText = plan
+    ? [
+        `🚚 Ruta de reparto POPE · ${new Date().toLocaleDateString("es-CL", { weekday: "long", day: "numeric", month: "long" })}`,
+        `${plan.stops.length} parada(s), unos ${plan.totalKm} km`,
+        "",
+        ...plan.stops.map((s, i) =>
+          [`${i + 1}. ${s.number} · ${s.name}`, `   ${s.address || "—"}, ${s.comuna}`, s.phone ? `   Tel. ${s.phone}` : "", `   ${s.items.join(" · ")}`].filter(Boolean).join("\n"),
+        ),
+        "",
+        "Abrir en Google Maps (en orden):",
+        ...plan.links.map((l) => `${l.label}: ${l.url}`),
+      ].join("\n")
+    : "";
+  const [copied, setCopied] = useState(false);
 
   const chosenIds = orders.filter((o) => chosen.has(o.id)).map((o) => o.id);
   const labelIds = plan ? plan.stops.map((s) => s.orderId) : chosenIds;
@@ -101,7 +128,7 @@ export default function RouteBuilder({ orders, defaultStart }: { orders: Deliver
           className="mt-2 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
         />
         <button type="button" onClick={build} disabled={busy || chosenIds.length === 0} className={`mt-4 ${btn}`}>
-          {busy ? "Armando la ruta… (puede tardar unos segundos)" : "Generar ruta óptima"}
+          {busy ? "Calculando la ruta… (puede tardar unos segundos)" : plan ? "Volver a calcular" : "Calcular ruta"}
         </button>
         {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
       </section>
@@ -113,6 +140,36 @@ export default function RouteBuilder({ orders, defaultStart }: { orders: Deliver
             {plan.stops.length} parada(s) · unos <strong>{plan.totalKm} km</strong> en total{plan.start ? ` desde ${plan.start}` : ""}. Distancias aproximadas.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(driverText)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full bg-[#25D366] px-4 py-2 text-sm font-bold text-black"
+            >
+              Enviar la ruta al repartidor por WhatsApp
+            </a>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(driverText);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                } catch {
+                  // the browser refused the clipboard: the WhatsApp button still works
+                }
+              }}
+              className="rounded-full border-2 border-neutral-900 px-4 py-2 text-sm font-semibold"
+            >
+              {copied ? "Copiada" : "Copiar la ruta"}
+            </button>
+          </div>
+          {plan.links.length > 1 && (
+            <p className="mt-3 text-xs text-neutral-500">
+              Google Maps en el teléfono acepta pocas paradas por enlace, así que la ruta va en tramos: al terminar uno se abre el siguiente.
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap gap-2">
             {plan.links.map((l) => (
               <a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer" className="rounded-full bg-neon px-4 py-2 text-sm font-bold text-black">
                 {l.label}
