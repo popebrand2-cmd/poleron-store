@@ -20,12 +20,13 @@ type Plan = {
   stops: { orderId: string; number: string; name: string; phone: string; address: string; comuna: string; note: string; approx: boolean; legKm: number; items: string[] }[];
 };
 
-const STATUS: Record<string, string> = { PAID: "Pagado", IN_PRODUCTION: "En producción" };
+const STATUS: Record<string, string> = { PAID: "Pagado", IN_PRODUCTION: "En producción", PENDING_PAYMENT: "Pendiente de pago" };
 
 // The delivery day: pick the orders, get the shortest route (stops in order, with a Google Maps link for the phone) and print the
 // labels in that same order.
 export default function RouteBuilder({ orders, defaultStart }: { orders: DeliveryOrder[]; defaultStart: string }) {
-  const [chosen, setChosen] = useState<Set<string>>(() => new Set(orders.filter((o) => o.delivery).map((o) => o.id)));
+  // Paid orders with delivery start checked; an order still waiting for payment has to be checked by hand.
+  const [chosen, setChosen] = useState<Set<string>>(() => new Set(orders.filter((o) => o.delivery && o.status !== "PENDING_PAYMENT").map((o) => o.id)));
   const [start, setStart] = useState(defaultStart);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [busy, setBusy] = useState(false);
@@ -106,7 +107,7 @@ export default function RouteBuilder({ orders, defaultStart }: { orders: Deliver
                   <input type="checkbox" checked={chosen.has(o.id)} onChange={() => toggle(o.id)} className="mt-1 h-4 w-4 accent-[var(--neon)]" />
                   <span className="min-w-0 flex-1 text-sm">
                     <span className="font-semibold">{o.number}</span> · {o.name}
-                    <span className="ml-2 rounded-full bg-neutral-200 px-2 py-0.5 text-[11px] text-neutral-700">{STATUS[o.status] ?? o.status}</span>
+                    <span className={`ml-2 rounded-full px-2 py-0.5 text-[11px] ${o.status === "PENDING_PAYMENT" ? "bg-amber-100 text-amber-800" : "bg-neutral-200 text-neutral-700"}`}>{STATUS[o.status] ?? o.status}</span>
                     <span className="block text-neutral-500">
                       {o.delivery ? `${o.address || "—"}, ${o.comuna}` : "Retiro en tienda (no entra en la ruta)"} · {o.items} producto(s)
                     </span>
@@ -115,6 +116,16 @@ export default function RouteBuilder({ orders, defaultStart }: { orders: Deliver
               </li>
             ))}
           </ul>
+        )}
+        {orders.length > 0 && (
+          <p className="mt-3 text-sm text-neutral-600">
+            Con envío: <strong>{orders.filter((o) => o.delivery).length}</strong> · elegidos para la ruta: <strong>{orders.filter((o) => o.delivery && chosen.has(o.id)).length}</strong>
+            {orders.some((o) => o.delivery && o.status === "PENDING_PAYMENT") && (
+              <span className="block text-xs text-amber-700">
+                Los pedidos «Pendiente de pago» no se marcan solos: confirma el pago (en Pedidos, «Verificar pago») antes de despacharlos, o márcalos aquí si ya lo viste.
+              </span>
+            )}
+          </p>
         )}
       </section>
 
