@@ -8,13 +8,30 @@ function client(): MercadoPagoConfig {
   return new MercadoPagoConfig({ accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN ?? "" });
 }
 
+// The public address of the store for the links Mercado Pago uses (where the customer returns after paying, and where it
+// sends the payment notification). It is the address the customer is actually using right now (the request's host); the
+// NEXT_PUBLIC_BASE_URL variable is only the fallback. Using the request avoids a stale variable (an old railway.app address)
+// sending customers to a page that no longer exists and the notifications into the void.
+export function publicBaseUrl(request?: Request): string {
+  const env = (process.env.NEXT_PUBLIC_BASE_URL ?? "").replace(/\/+$/, "");
+  const host = request?.headers.get("x-forwarded-host") ?? request?.headers.get("host") ?? "";
+  const hostName = host.split(":")[0];
+  const local = !hostName || hostName === "localhost" || hostName.startsWith("127.") || hostName.endsWith(".localhost");
+  if (!local && !hostName.endsWith(".up.railway.app")) {
+    const proto = request?.headers.get("x-forwarded-proto")?.split(",")[0] ?? "https";
+    return `${proto}://${host.split(",")[0].trim()}`;
+  }
+  return env || "http://localhost:3000";
+}
+
 export async function createMercadoPagoPreference(opts: {
   orderId: string;
   title: string;
   amountCLP: number;
   email: string;
+  baseUrl?: string;
 }): Promise<{ initPoint: string }> {
-  const publicUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
+  const publicUrl = opts.baseUrl || process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
   const preference = new Preference(client());
 
   const result = await preference.create({

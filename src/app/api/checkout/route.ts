@@ -5,7 +5,7 @@ import { existsSync } from "fs";
 import path from "path";
 import { prisma } from "@/lib/prisma";
 import { uploadsDir } from "@/lib/storage";
-import { createMercadoPagoPreference, isMercadoPagoConfigured } from "@/lib/mercadopago";
+import { createMercadoPagoPreference, isMercadoPagoConfigured, publicBaseUrl } from "@/lib/mercadopago";
 import { deliveryCost } from "@/lib/shipping-rules";
 import { limitedState, soldUnits } from "@/lib/limited";
 
@@ -186,6 +186,7 @@ export async function POST(request: Request) {
       title: `Pedido ${formatOrderNumber(order)}`,
       amountCLP: totalAmount,
       email: data.customerEmail,
+      baseUrl: publicBaseUrl(request),
     });
 
     return NextResponse.json({ redirectUrl: initPoint });
