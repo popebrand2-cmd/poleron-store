@@ -52,7 +52,7 @@ export function sectionForPath(pathname: string): SectionKey | "owner" | null {
   // Ventas (net income after Mercado Pago fees, CSV export): only the owner, never the team.
   if (p.startsWith("/admin/ventas") || p.startsWith("/api/admin/ventas")) return "owner";
   if (p.startsWith("/admin/almacenamiento") || p.startsWith("/api/admin/storage") || p.startsWith("/api/admin/telegram") || p.startsWith("/api/admin/email") || p.startsWith("/api/admin/backup")) return "owner";
-  if (p.startsWith("/admin/pedidos") || p.startsWith("/api/admin/orders")) return "pedidos";
+  if (p.startsWith("/admin/pedidos") || p.startsWith("/api/admin/orders") || p.startsWith("/admin/reparto") || p.startsWith("/api/admin/reparto")) return "pedidos";
   if (p.startsWith("/admin/envios") || p.startsWith("/api/admin/shipping")) return "envios";
   if (p.startsWith("/admin/portada") || p.startsWith("/api/admin/hero") || p.startsWith("/api/admin/site-text") || p.startsWith("/api/admin/upload-video") || p.startsWith("/api/admin/content-items") || p.startsWith("/api/admin/reviews")) return "portada";
   if (p.startsWith("/admin/colecciones") || p.startsWith("/api/admin/collections") || p.startsWith("/api/admin/designs")) return "colecciones";

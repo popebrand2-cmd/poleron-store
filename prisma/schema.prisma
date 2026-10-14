@@ -124,6 +124,10 @@ model Order {
   trackingCode   String  @default("")
   // Customer e-mails already sent for this order, comma-separated: paid, production, shipped.
   emailsSent     String  @default("")
+  // Where the delivery address is on the map (found once, for the delivery route): "ok", "approx" (only the comuna was found) or "none".
+  shipLat        Float?
+  shipLng        Float?
+  shipGeo        String  @default("")
   totalAmount   Int // CLP, items + shippingCost
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt

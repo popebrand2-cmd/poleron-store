@@ -64,6 +64,13 @@ export default async function AdminOrdersPage() {
         <AdminNav current="/admin/pedidos" />
       </div>
 
+      <a
+        href="/admin/reparto"
+        className="mb-6 inline-flex items-center gap-2 rounded-full bg-neutral-900 px-5 py-2.5 text-sm font-semibold text-white"
+      >
+        🚚 Reparto: ruta óptima y etiquetas →
+      </a>
+
       {orders.length === 0 ? (
         <p className="text-neutral-500">Aún no hay pedidos.</p>
       ) : (
