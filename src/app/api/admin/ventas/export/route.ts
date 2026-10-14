@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { formatOrderNumber } from "@/lib/order-number";
 import { getAdminAccess } from "@/lib/admin-session";
-import { REAL_SALE_STATUSES, chileDay, chileHourAndWeekday, resolveRange } from "@/lib/sales-report";
+import { REAL_SALE_STATUSES, calcOrder, chileDay, chileHourAndWeekday, resolveRange } from "@/lib/sales-report";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +18,7 @@ const STATUS_LABELS: Record<string, string> = {
 // ";" as separator and a BOM so accents and the Chilean number format open right.
 export async function GET(req: NextRequest) {
   const access = await getAdminAccess();
-  if (!access || !access.perms.includes("ventas")) return new Response("No autorizado.", { status: 401 });
+  if (!access || access.kind !== "owner") return new Response("No autorizado.", { status: 401 });
 
   const sp = req.nextUrl.searchParams;
   const first = await prisma.order.findFirst({ orderBy: { createdAt: "asc" }, select: { createdAt: true } });
@@ -53,10 +53,14 @@ export async function GET(req: NextRequest) {
     "Subtotal",
     "Envío del pedido",
     "Total del pedido",
+    "Comisión Mercado Pago",
+    "Neto recibido",
   ];
   const rows: (string | number)[][] = [header];
   for (const o of orders) {
     const { hour } = chileHourAndWeekday(o.createdAt);
+    const calc = calcOrder(o);
+    const isSale = REAL_SALE_STATUSES.includes(o.status);
     o.items.forEach((it, idx) => {
       rows.push([
         formatOrderNumber(o),
@@ -78,6 +82,8 @@ export async function GET(req: NextRequest) {
         // Order-level amounts only on the first line, so summing the column in Excel doesn't double count.
         idx === 0 ? o.shippingCost : "",
         idx === 0 ? o.totalAmount : "",
+        idx === 0 && isSale ? calc.fee : "",
+        idx === 0 && isSale ? calc.net : "",
       ]);
     });
   }

@@ -37,7 +37,6 @@ export const SECTIONS = [
   { key: "envios", label: "Envíos", href: "/admin/envios" },
   { key: "portada", label: "Portada y edición de la página", href: "/admin/portada" },
   { key: "colecciones", label: "Colecciones", href: "/admin/colecciones" },
-  { key: "ventas", label: "Ventas (dashboard)", href: "/admin/ventas" },
   { key: "estadisticas", label: "Estadísticas y visitas", href: "/admin/estadisticas" },
 ] as const;
 
@@ -50,12 +49,13 @@ export type UserSession = { id: string; name: string; role: "PARTNER" | "EMPLOYE
 export function sectionForPath(pathname: string): SectionKey | "owner" | null {
   const p = pathname;
   if (p.startsWith("/admin/usuarios") || p.startsWith("/api/admin/users")) return "owner";
+  // Ventas (net income after Mercado Pago fees, CSV export): only the owner, never the team.
+  if (p.startsWith("/admin/ventas") || p.startsWith("/api/admin/ventas")) return "owner";
   if (p.startsWith("/admin/almacenamiento") || p.startsWith("/api/admin/storage") || p.startsWith("/api/admin/telegram") || p.startsWith("/api/admin/email") || p.startsWith("/api/admin/backup")) return "owner";
   if (p.startsWith("/admin/pedidos") || p.startsWith("/api/admin/orders")) return "pedidos";
   if (p.startsWith("/admin/envios") || p.startsWith("/api/admin/shipping")) return "envios";
   if (p.startsWith("/admin/portada") || p.startsWith("/api/admin/hero") || p.startsWith("/api/admin/site-text") || p.startsWith("/api/admin/upload-video") || p.startsWith("/api/admin/content-items") || p.startsWith("/api/admin/reviews")) return "portada";
   if (p.startsWith("/admin/colecciones") || p.startsWith("/api/admin/collections") || p.startsWith("/api/admin/designs")) return "colecciones";
-  if (p.startsWith("/admin/ventas") || p.startsWith("/api/admin/ventas")) return "ventas";
   if (p.startsWith("/admin/estadisticas")) return "estadisticas";
   if (p === "/admin" || p.startsWith("/admin/productos") || p.startsWith("/api/admin/products")) return "productos";
   return null;

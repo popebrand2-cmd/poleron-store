@@ -7,6 +7,24 @@ export const TZ = "America/Santiago";
 // Orders that count as a real sale. Pending payment and cancelled ones are shown apart.
 export const REAL_SALE_STATUSES = ["PAID", "IN_PRODUCTION", "SHIPPED"];
 
+// Mercado Pago "dinero al instante": 3,19% + IVA (19%) = 3,7961%, charged on the full amount the customer paid
+// (shipping included). Rounded to the peso per order.
+export const MP_FEE_RATE = 0.0319 * 1.19;
+export const MP_FEE_LABEL = "3,19% + IVA = 3,7961%";
+
+export function mpFee(total: number): number {
+  return Math.round(total * MP_FEE_RATE);
+}
+
+export type OrderCalc = { gross: number; shipping: number; products: number; fee: number; net: number; netProducts: number };
+
+/** Total cobrado → comisión MP → neto recibido (and the same net without the shipping that was charged). */
+export function calcOrder(o: { totalAmount: number; shippingCost: number }): OrderCalc {
+  const fee = mpFee(o.totalAmount);
+  const net = o.totalAmount - fee;
+  return { gross: o.totalAmount, shipping: o.shippingCost, products: o.totalAmount - o.shippingCost, fee, net, netProducts: net - o.shippingCost };
+}
+
 const dayFmt = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" });
 const partsFmt = new Intl.DateTimeFormat("en-US", {
   timeZone: TZ,

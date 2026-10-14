@@ -4,13 +4,17 @@ import { formatCLP } from "@/lib/money";
 import { formatOrderNumber } from "@/lib/order-number";
 import AdminNav from "@/components/admin/AdminNav";
 import BarChart from "@/components/admin/BarChart";
+import AutoRefresh from "@/components/admin/AutoRefresh";
+import SalesStackedChart from "@/components/admin/SalesStackedChart";
+import SalesOrdersTable, { type SaleRow } from "@/components/admin/SalesOrdersTable";
 import {
+  MP_FEE_LABEL,
   PERIODS,
   REAL_SALE_STATUSES,
+  calcOrder,
   Tally,
   bucketKeyFor,
   buckets,
-  chileDay,
   chileHourAndWeekday,
   fileKey,
   fmtDay,
@@ -70,10 +74,14 @@ export default async function AdminSalesPage({ searchParams }: { searchParams: S
   const units = sum(sales.flatMap((o) => o.items.map((i) => i.quantity)));
   const avgTicket = sales.length ? Math.round(revenue / sales.length) : 0;
   const customers = new Set(sales.map((o) => o.customerEmail.trim().toLowerCase())).size;
+  // Mercado Pago fee per order (3,19% + IVA over the total, shipping included) and what actually reaches the account.
+  const fee = sum(sales.map((o) => calcOrder(o).fee));
+  const net = revenue - fee;
 
   const prev = prevOrders
     ? {
         revenue: sum(prevOrders.map((o) => o.totalAmount)),
+        net: sum(prevOrders.map((o) => calcOrder(o).net)),
         orders: prevOrders.length,
         units: sum(prevOrders.flatMap((o) => o.items.map((i) => i.quantity))),
         avgTicket: prevOrders.length ? Math.round(sum(prevOrders.map((o) => o.totalAmount)) / prevOrders.length) : 0,
@@ -84,18 +92,24 @@ export default async function AdminSalesPage({ searchParams }: { searchParams: S
   // ---- Chart ------------------------------------------------------------
   const bks = buckets(range);
   const monthly = bks[0]?.key.length === 7;
-  const byBucket = new Map(bks.map((b) => [b.key, { amount: 0, count: 0 }]));
+  const byBucket = new Map(bks.map((b) => [b.key, { amount: 0, count: 0, net: 0, shipping: 0 }]));
   for (const o of sales) {
     const b = byBucket.get(bucketKeyFor(o.createdAt, monthly));
     if (b) {
+      const c = calcOrder(o);
       b.amount += o.totalAmount;
       b.count += 1;
+      b.net += c.net;
+      b.shipping += c.shipping;
     }
   }
-  const salesChart = bks.map((b) => ({ label: b.label, value: byBucket.get(b.key)!.amount }));
+  const netChart = bks.map((b) => {
+    const v = byBucket.get(b.key)!;
+    return { label: b.label, netProducts: v.net - v.shipping, shipping: v.shipping, orders: v.count };
+  });
   const ordersChart = bks.map((b) => ({ label: b.label, value: byBucket.get(b.key)!.count }));
-  const bestBucket = [...bks].sort((a, b) => byBucket.get(b.key)!.amount - byBucket.get(a.key)!.amount)[0];
-  const bestBucketAmount = bestBucket ? byBucket.get(bestBucket.key)!.amount : 0;
+  const bestBucket = [...bks].sort((a, b) => byBucket.get(b.key)!.net - byBucket.get(a.key)!.net)[0];
+  const bestBucketAmount = bestBucket ? byBucket.get(bestBucket.key)!.net : 0;
 
   // ---- What sold --------------------------------------------------------
   const presetByFile = new Map<string, { name: string; collection: string }>();
@@ -170,10 +184,32 @@ export default async function AdminSalesPage({ searchParams }: { searchParams: S
     amount: sum(sales.filter((o) => o.status === s).map((o) => o.totalAmount)),
   }));
 
+  const tableRows: SaleRow[] = sales.map((o) => ({
+    id: o.id,
+    number: formatOrderNumber(o),
+    createdAt: o.createdAt.toISOString(),
+    status: o.status,
+    customerName: o.customerName,
+    customerEmail: o.customerEmail,
+    shippingMethod: o.shippingMethod,
+    shippingComuna: o.shippingComuna,
+    shippingCost: o.shippingCost,
+    totalAmount: o.totalAmount,
+    items: o.items.map((i) => ({
+      productName: i.product.name,
+      colorName: i.colorName,
+      materialLabel: i.materialLabel,
+      sizeLabel: i.sizeLabel,
+      quantity: i.quantity,
+      unitPrice: i.unitPrice,
+    })),
+  }));
+
   const exportQs = range.key === "custom" ? `desde=${range.fromDay}&hasta=${range.toDay}` : `periodo=${range.key}`;
 
   return (
-    <main className="mx-auto max-w-5xl p-4 sm:p-6">
+    <main className="mx-auto max-w-6xl p-4 sm:p-6">
+      <AutoRefresh seconds={20} />
       <div className="mb-6 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">Ventas</h1>
         <AdminNav current="/admin/ventas" />
@@ -210,11 +246,27 @@ export default async function AdminSalesPage({ searchParams }: { searchParams: S
         </a>
       </div>
 
-      {/* KPIs */}
-      <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <Kpi label="Ventas" value={formatCLP(revenue)} delta={pctChange(revenue, prev?.revenue)} />
-        <Kpi label="Pedidos pagados" value={fmtN(sales.length)} delta={pctChange(sales.length, prev?.orders)} />
+      {/* Net received: the headline */}
+      <div className="mb-3 grid gap-3 lg:grid-cols-[1.3fr_2fr]">
+        <div className="rounded-2xl border bg-[#111] p-5" style={{ borderColor: "color-mix(in srgb, var(--neon) 45%, transparent)" }}>
+          <p className="text-xs font-bold uppercase tracking-widest text-neutral-400">Neto recibido</p>
+          <p className="mt-1 font-display text-6xl font-semibold leading-none text-neon">{formatCLP(net)}</p>
+          <Delta value={pctChange(net, prev?.net)} />
+          <p className="mt-3 text-sm text-neutral-400">
+            Ventas brutas {formatCLP(revenue)} − comisión MP {formatCLP(fee)}
+          </p>
+          <p className="mt-1 text-xs text-neutral-500">Comisión Mercado Pago: {MP_FEE_LABEL} sobre el total cobrado, envío incluido.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <Kpi label="Ventas brutas" value={formatCLP(revenue)} delta={pctChange(revenue, prev?.revenue)} />
+          <Kpi label="Comisión MP" value={`− ${formatCLP(fee)}`} delta={null} />
+          <Kpi label="Envíos cobrados" value={formatCLP(shipping)} delta={null} note={`Neto sin envíos ${formatCLP(net - shipping)}`} />
+        </div>
+      </div>
+
+      <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Kpi label="Ticket promedio" value={formatCLP(avgTicket)} delta={pctChange(avgTicket, prev?.avgTicket)} />
+        <Kpi label="Pedidos pagados" value={fmtN(sales.length)} delta={pctChange(sales.length, prev?.orders)} />
         <Kpi label="Prendas vendidas" value={fmtN(units)} delta={pctChange(units, prev?.units)} />
         <Kpi label="Clientes" value={fmtN(customers)} delta={pctChange(customers, prev?.customers)} />
       </div>
@@ -229,8 +281,8 @@ export default async function AdminSalesPage({ searchParams }: { searchParams: S
         <Mini label="Cancelados" value={`${fmtN(cancelled.length)} · ${formatCLP(sum(cancelled.map((o) => o.totalAmount)))}`} note="No suman en ventas" />
       </div>
 
-      <Section title={monthly ? "Ventas por mes (CLP)" : "Ventas por día (CLP)"}>
-        <BarChart data={salesChart} color="#16a34a" formatValue={(v) => shortCLP(v)} />
+      <Section title={monthly ? "Neto recibido por mes" : "Neto recibido por día"}>
+        <SalesStackedChart data={netChart} unit={monthly ? "mes" : "día"} />
         {bestBucketAmount > 0 && (
           <p className="mt-2 text-xs text-neutral-500">
             Mejor {monthly ? "mes" : "día"}: {bestBucket.label} con {formatCLP(bestBucketAmount)}
@@ -239,7 +291,7 @@ export default async function AdminSalesPage({ searchParams }: { searchParams: S
       </Section>
 
       <Section title={monthly ? "Pedidos pagados por mes" : "Pedidos pagados por día"}>
-        <BarChart data={ordersChart} color="#a855f7" />
+        <BarChart data={ordersChart} color="var(--neon)" />
       </Section>
 
       <div className="grid gap-x-6 md:grid-cols-2">
@@ -276,10 +328,10 @@ export default async function AdminSalesPage({ searchParams }: { searchParams: S
           <Ranking rows={comunas.sorted("units").slice(0, 10)} by="units" unitWord="pedido" empty="Sin envíos a domicilio en este período." />
         </Section>
         <Section title="Ventas por día de la semana">
-          <BarChart data={WEEKDAYS.map((d, i) => ({ label: d, value: weekday[i] }))} color="#0ea5e9" formatValue={(v) => shortCLP(v)} />
+          <BarChart data={WEEKDAYS.map((d, i) => ({ label: d, value: weekday[i] }))} color="var(--neon)" formatValue={(v) => shortCLP(v)} />
         </Section>
         <Section title="Hora de compra (pedidos)">
-          <BarChart data={hours.map((v, h) => ({ label: `${h}h`, value: v }))} color="#f59e0b" />
+          <BarChart data={hours.map((v, h) => ({ label: `${h}h`, value: v }))} color="var(--neon)" />
         </Section>
         <Section title="Estado de los pedidos pagados">
           <div className="divide-y divide-neutral-100 text-sm">
@@ -316,32 +368,12 @@ export default async function AdminSalesPage({ searchParams }: { searchParams: S
         </Section>
       </div>
 
-      <Section title="Últimas ventas del período">
-        {sales.length === 0 ? (
-          <p className="text-sm text-neutral-500">Sin ventas en este período.</p>
-        ) : (
-          <div className="divide-y divide-neutral-100 text-sm">
-            {sales.slice(0, 15).map((o) => (
-              <div key={o.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 py-2">
-                <span className="font-medium">{formatOrderNumber(o)}</span>
-                <span className="flex-1 truncate text-neutral-600">
-                  {o.customerName} · {o.items.reduce((n, i) => n + i.quantity, 0)} prenda(s)
-                </span>
-                <span className="text-xs text-neutral-400">{fmtDay(chileDay(o.createdAt))}</span>
-                <span className="tabular-nums font-medium">{formatCLP(o.totalAmount)}</span>
-              </div>
-            ))}
-          </div>
-        )}
-        {sales.length > 15 && (
-          <Link href="/admin/pedidos" className="mt-2 inline-block text-sm text-neutral-600 underline">
-            Ver todos en Pedidos
-          </Link>
-        )}
+      <Section title={`Pedidos del período (${fmtN(sales.length)})`}>
+        <SalesOrdersTable orders={tableRows} />
       </Section>
 
       <p className="mt-6 text-xs text-neutral-400">
-        Ventas = pedidos pagados, en producción o terminados (incluye el envío cobrado). Fechas y horas en hora de Chile.
+        Ventas = pedidos pagados, en producción o terminados (incluye el envío cobrado); no suman los pendientes de pago ni los cancelados. Neto = total cobrado − comisión Mercado Pago ({MP_FEE_LABEL}, envío incluido). Fechas y horas en hora de Chile. Esta página se actualiza sola cada 20 segundos.
       </p>
     </main>
   );
@@ -361,17 +393,23 @@ function shortCLP(v: number): string {
   return `$${v}`;
 }
 
-function Kpi({ label, value, delta }: { label: string; value: string; delta: number | null }) {
+function Kpi({ label, value, delta, note }: { label: string; value: string; delta: number | null; note?: string }) {
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-4">
       <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">{label}</p>
-      <p className="mt-1 text-xl font-semibold tabular-nums sm:text-2xl">{value}</p>
-      {delta !== null && (
-        <p className={`mt-1 text-xs font-medium ${delta > 0 ? "text-emerald-600" : delta < 0 ? "text-red-600" : "text-neutral-400"}`}>
-          {delta > 0 ? "▲" : delta < 0 ? "▼" : "="} {Math.abs(delta)}% vs. antes
-        </p>
-      )}
+      <p className="mt-1 font-display text-2xl font-medium leading-none tabular-nums sm:text-3xl">{value}</p>
+      <Delta value={delta} />
+      {note && <p className="mt-1 text-xs text-neutral-500">{note}</p>}
     </div>
+  );
+}
+
+function Delta({ value }: { value: number | null }) {
+  if (value === null) return null;
+  return (
+    <p className={`mt-1 text-xs font-medium ${value > 0 ? "text-neon" : value < 0 ? "text-red-600" : "text-neutral-400"}`}>
+      {value > 0 ? "▲" : value < 0 ? "▼" : "="} {Math.abs(value)}% vs. antes
+    </p>
   );
 }
 
@@ -421,7 +459,7 @@ function Ranking({
             </span>
           </div>
           <div className="h-1.5 rounded-full bg-neutral-100">
-            <div className="h-1.5 rounded-full bg-neutral-800" style={{ width: `${(r[by] / max) * 100}%` }} />
+            <div className="h-1.5 rounded-full bg-neon" style={{ width: `${(r[by] / max) * 100}%` }} />
           </div>
         </div>
       ))}

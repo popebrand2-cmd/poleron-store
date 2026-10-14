@@ -24,6 +24,9 @@ export default async function AdminNav({ current, pendingOrders }: { current: st
 
   const links: { href: string; label: string }[] = SECTIONS.filter((s) => access.perms.includes(s.key)).map((s) => ({ href: s.href, label: s.label.split(" ")[0] }));
   if (access.kind === "owner") {
+    // "Ventas" (owner only) sits right before Estadísticas.
+    const statsIdx = links.findIndex((l) => l.href === "/admin/estadisticas");
+    links.splice(statsIdx >= 0 ? statsIdx : links.length, 0, { href: "/admin/ventas", label: "Ventas" });
     links.push({ href: "/admin/usuarios", label: "Usuarios" });
     links.push({ href: "/admin/almacenamiento", label: "Almacenamiento" });
   }
