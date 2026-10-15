@@ -145,6 +145,7 @@ export default function CollectionGarmentCard({
   reveal = false,
   revealIndex = 0,
   duplicate = false,
+  soldOut = false,
 }: {
   className?: string;
   style?: React.CSSProperties;
@@ -153,6 +154,8 @@ export default function CollectionGarmentCard({
   revealIndex?: number;
   // Second copy of a looping rail: hidden from screen readers.
   duplicate?: boolean;
+  // Marked "Agotado" in the admin: shown with the label, not bought.
+  soldOut?: boolean;
   // White page: dark text and a plain shadow instead of the white-on-black look.
   light?: boolean;
   // Where "+ Personalizar" goes: the same garment with nothing printed. `href` (the card itself) opens it with this design on.
@@ -197,7 +200,10 @@ export default function CollectionGarmentCard({
       <div className="relative aspect-square overflow-hidden rounded-xl bg-[#ececec] bg-[radial-gradient(ellipse_at_50%_38%,#ffffff_0%,#f3f3f3_55%,#e2e2e2_100%)]">
         {/* The whole picture is a link to the garment with this design already on it */}
         <Link href={readyHref} aria-label={title} className="absolute inset-0 z-[1]" />
-        {(badgeLabel || pct > 0) && (
+        {soldOut && (
+          <span className="absolute left-3 top-3 z-10 rounded-full bg-black px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">Agotado</span>
+        )}
+        {!soldOut && (badgeLabel || pct > 0) && (
           <span className="absolute left-3 top-3 z-10 rounded-full bg-[#e5484d] px-3 py-1 text-xs font-bold text-white">{badgeLabel || `Ahorra ${pct}%`}</span>
         )}
         <GarmentVisual color={color} title={title} frontArt={frontArt} backArt={backArt} frontScale={frontScale} backScale={backScale} />

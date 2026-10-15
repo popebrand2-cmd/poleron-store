@@ -29,6 +29,8 @@ model Product {
   limitedEdition Boolean   @default(false)
   limitedUnits   Int       @default(0)
   limitedUntil   DateTime?
+  // "Agotado", set by hand in Admin > Productos: the product stays visible but can't be bought.
+  soldOut        Boolean   @default(false)
 
   colors    ProductColor[]
   sizes     ProductSize[]

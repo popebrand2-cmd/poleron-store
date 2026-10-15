@@ -25,6 +25,8 @@ export type GarmentItem = {
   backScale?: number;
   basePrice: number | null;
   compareAtPrice: number | null;
+  // The product is marked "Agotado".
+  soldOut?: boolean;
   colors: GarmentColor[];
 };
 
@@ -357,6 +359,7 @@ export default function CollectionGarmentsGrid({
             backScale={i.backScale}
             basePrice={i.basePrice}
             compareAtPrice={i.compareAtPrice}
+            soldOut={i.soldOut}
             colors={i.colors}
             preferColor={colorName || defaultColor}
             light={light}

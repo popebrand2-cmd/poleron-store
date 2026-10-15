@@ -32,9 +32,10 @@ export async function soldUnits(productIds: string[]): Promise<Map<string, numbe
   return out;
 }
 
-export function limitedState(p: { limitedUnits: number; limitedUntil: Date | null }, sold: number, now = new Date()): LimitedState {
+export function limitedState(p: { limitedUnits: number; limitedUntil: Date | null; soldOut?: boolean }, sold: number, now = new Date()): LimitedState {
   const remaining = p.limitedUnits > 0 ? Math.max(0, p.limitedUnits - sold) : null;
-  const soldOut = remaining === 0;
+  // Sold out when the units ran out, or when the owner marked it "Agotado".
+  const soldOut = remaining === 0 || Boolean(p.soldOut);
   const closed = !!p.limitedUntil && p.limitedUntil.getTime() <= now.getTime();
   return { units: p.limitedUnits, sold, remaining, until: p.limitedUntil, soldOut, closed, open: !soldOut && !closed };
 }

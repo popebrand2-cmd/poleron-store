@@ -27,6 +27,8 @@ export type PersonalizerProduct = {
   name: string;
   basePrice: number;
   compareAtPrice?: number | null;
+  // Marked "Agotado" in the admin: shown, not sold.
+  soldOut?: boolean;
   sizes: {
     label: string;
     priceDelta: number;
@@ -446,6 +448,9 @@ export default function ProductPersonalizer({ product, readyItem = null }: { pro
             🔥 Oferta Cyber: termina en <CyberCountdown className="whitespace-nowrap font-display text-base leading-none" />
           </p>
         )}
+        {product.soldOut && (
+          <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-red-600 px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-white">Agotado</p>
+        )}
         <VatNote />
         {editing && (
           <p className="mt-3 rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
@@ -713,7 +718,7 @@ export default function ProductPersonalizer({ product, readyItem = null }: { pro
         <button
           type="button"
           onClick={() => handleAddToCart()}
-          disabled={adding}
+          disabled={adding || Boolean(product.soldOut)}
           className="mt-5 hidden min-h-12 w-full rounded-full bg-neon px-6 py-3 text-sm font-bold uppercase tracking-wide text-black transition hover:brightness-90 disabled:opacity-50 lg:block"
         >
           {adding ? "Agregando..." : editing ? "Guardar cambios" : "Agregar al carrito"}
@@ -724,7 +729,7 @@ export default function ProductPersonalizer({ product, readyItem = null }: { pro
           <button
             type="button"
             onClick={() => handleAddToCart("/checkout")}
-            disabled={adding}
+            disabled={adding || Boolean(product.soldOut)}
             className="mt-3 min-h-12 w-full rounded-full bg-black px-6 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-neutral-800 disabled:opacity-50"
           >
             Comprar ahora
@@ -781,7 +786,7 @@ export default function ProductPersonalizer({ product, readyItem = null }: { pro
             <button
               type="button"
               onClick={() => handleAddToCart()}
-              disabled={adding}
+              disabled={adding || Boolean(product.soldOut)}
               className="min-h-12 flex-1 rounded-full bg-neon px-4 py-2.5 text-sm font-bold uppercase tracking-wide text-black transition active:brightness-90 disabled:opacity-50"
             >
               {adding ? "Guardando..." : "Guardar cambios"}
@@ -791,7 +796,7 @@ export default function ProductPersonalizer({ product, readyItem = null }: { pro
               <button
                 type="button"
                 onClick={() => handleAddToCart()}
-                disabled={adding}
+                disabled={adding || Boolean(product.soldOut)}
                 aria-label="Agregar al carrito"
                 className="min-h-12 shrink-0 whitespace-nowrap rounded-full border-2 border-neon px-3 py-2 text-xs font-bold uppercase tracking-wide text-neon transition active:bg-neon active:text-black disabled:opacity-50"
               >
@@ -800,7 +805,7 @@ export default function ProductPersonalizer({ product, readyItem = null }: { pro
               <button
                 type="button"
                 onClick={() => handleAddToCart("/checkout")}
-                disabled={adding}
+                disabled={adding || Boolean(product.soldOut)}
                 className="min-h-12 flex-1 whitespace-nowrap rounded-full bg-neon px-2 py-2.5 text-xs font-bold uppercase tracking-wide text-black transition active:brightness-90 disabled:opacity-50"
               >
                 {adding ? "Agregando..." : "Comprar ahora"}

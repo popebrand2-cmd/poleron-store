@@ -107,6 +107,7 @@ export function buildArtistItems(opts: {
         badge: product?.badgeText || undefined,
         basePrice: product?.basePrice ?? null,
         compareAtPrice: product?.compareAtPrice ?? null,
+        soldOut: product?.soldOut ?? false,
         colors: list.map((m) => ({ name: m.name, hex: m.hex, views: [], imageUrl: m.imageUrl })),
       },
     ];
@@ -136,6 +137,7 @@ export function buildArtistItems(opts: {
         backScale: d.backScale,
         basePrice: p.basePrice,
         compareAtPrice: p.compareAtPrice,
+        soldOut: p.soldOut,
         colors: colorsFor(p.colors, d.garmentColors),
       }))
       .filter((item) => item.colors.length > 0),

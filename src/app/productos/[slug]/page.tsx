@@ -115,6 +115,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
           name: product.name,
           basePrice: product.basePrice,
           compareAtPrice: product.compareAtPrice,
+          soldOut: product.soldOut,
           sizes: product.sizes.map((s) => ({
             label: s.label,
             priceDelta: s.priceDelta,

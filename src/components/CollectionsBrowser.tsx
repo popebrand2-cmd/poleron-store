@@ -272,6 +272,7 @@ export default function CollectionsBrowser({ items }: { items: GarmentItem[] }) 
                 backScale={i.backScale}
                 basePrice={i.basePrice}
                 compareAtPrice={i.compareAtPrice}
+                soldOut={i.soldOut}
                 colors={i.colors}
                 className="pope-card-in"
                 style={{ animationDelay: `${Math.min(n, 8) * 45}ms` }}

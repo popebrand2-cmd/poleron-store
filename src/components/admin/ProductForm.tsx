@@ -43,6 +43,7 @@ export type ProductFormInitial = {
   compareAtPrice: number | null;
   badgeText: string;
   limitedEdition: boolean;
+  soldOut?: boolean;
   limitedUnits: number;
   limitedUntil: string | null; // ISO
   active: boolean;
@@ -80,6 +81,7 @@ export default function ProductForm({ initial }: { initial?: ProductFormInitial 
   const [compareAtPrice, setCompareAtPrice] = useState(initial?.compareAtPrice != null ? String(initial.compareAtPrice) : "");
   const [badgeText, setBadgeText] = useState(initial?.badgeText ?? "");
   const [limitedEdition, setLimitedEdition] = useState(initial?.limitedEdition ?? false);
+  const [soldOut, setSoldOut] = useState(initial?.soldOut ?? false);
   const [limitedUnits, setLimitedUnits] = useState(initial?.limitedUnits ? String(initial.limitedUnits) : "");
   // <input type="datetime-local"> wants the browser's local time as YYYY-MM-DDTHH:mm
   const [limitedUntil, setLimitedUntil] = useState(() => {
@@ -168,6 +170,7 @@ export default function ProductForm({ initial }: { initial?: ProductFormInitial 
       compareAtPrice: compareAtPrice.trim() ? Number(compareAtPrice) : null,
       badgeText: badgeText.trim(),
       limitedEdition,
+      soldOut,
       limitedUnits: limitedEdition && limitedUnits.trim() ? Math.max(0, Math.floor(Number(limitedUnits))) : 0,
       limitedUntil: limitedEdition && limitedUntil ? new Date(limitedUntil).toISOString() : null,
       active,
@@ -249,6 +252,22 @@ export default function ProductForm({ initial }: { initial?: ProductFormInitial 
             />
             <p className="mt-1 text-xs text-neutral-500">
               Si lo llenas, en la tienda se muestra tachado junto al precio base (ej. Cyber). Bórralo para terminar la oferta.
+            </p>
+          </div>
+          <div className="col-span-2">
+            <button
+              type="button"
+              onClick={() => setSoldOut((v) => !v)}
+              aria-pressed={soldOut}
+              className={`inline-flex min-h-11 items-center gap-2 rounded-full border-2 px-5 text-sm font-bold uppercase tracking-wide transition ${
+                soldOut ? "border-red-600 bg-red-600 text-white" : "border-neutral-300 hover:border-red-600"
+              }`}
+            >
+              <span aria-hidden="true" className={`h-3 w-3 rounded-full ${soldOut ? "bg-white" : "bg-red-600"}`} />
+              {soldOut ? "Agotado (toca para volver a vender)" : "Marcar como agotado"}
+            </button>
+            <p className="mt-1 text-xs text-neutral-500">
+              Agotado: el producto se sigue viendo en la tienda con la etiqueta «Agotado», pero nadie puede comprarlo. Recuerda guardar los cambios.
             </p>
           </div>
           <div className="col-span-2">
