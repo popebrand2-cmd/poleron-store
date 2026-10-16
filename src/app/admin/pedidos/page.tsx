@@ -228,7 +228,7 @@ export default async function AdminOrdersPage() {
                 <OrderStatusControl orderId={o.id} status={o.status} isDelivery={o.shippingMethod !== "PICKUP"} />
                 {o.status === "PENDING_PAYMENT" && <PendingPaymentActions orderId={o.id} />}
                 <span className="ml-auto">
-                  <DeleteOrderButton orderId={o.id} />
+                  <DeleteOrderButton orderId={o.id} orderNumber={formatOrderNumber(o)} />
                 </span>
               </div>
             </div>

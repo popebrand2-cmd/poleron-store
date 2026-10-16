@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function DeleteOrderButton({ orderId }: { orderId: string }) {
+export default function DeleteOrderButton({ orderId, orderNumber = "" }: { orderId: string; orderNumber?: string }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -15,6 +15,13 @@ export default function DeleteOrderButton({ orderId }: { orderId: string }) {
         <button
           disabled={deleting}
           onClick={async () => {
+            if (orderNumber) {
+              const typed = prompt(`Esto borra el pedido para siempre. Para confirmar, escribe su número: ${orderNumber}`);
+              if ((typed ?? "").trim().toUpperCase() !== orderNumber.toUpperCase()) {
+                setConfirming(false);
+                return;
+              }
+            }
             setDeleting(true);
             await fetch(`/api/admin/orders/${orderId}`, { method: "DELETE" });
             router.refresh();

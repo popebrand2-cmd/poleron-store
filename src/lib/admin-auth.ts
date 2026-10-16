@@ -48,7 +48,7 @@ export type UserSession = { id: string; name: string; role: "PARTNER" | "EMPLOYE
 // Which section a request path belongs to. "owner" = only the owner, null = no restriction.
 export function sectionForPath(pathname: string): SectionKey | "owner" | null {
   const p = pathname;
-  if (p.startsWith("/admin/usuarios") || p.startsWith("/api/admin/users")) return "owner";
+  if (p.startsWith("/admin/usuarios") || p.startsWith("/api/admin/users") || p.startsWith("/admin/recuperar")) return "owner";
   // Ventas (net income after Mercado Pago fees, CSV export): only the owner, never the team.
   if (p.startsWith("/admin/ventas") || p.startsWith("/api/admin/ventas")) return "owner";
   if (p.startsWith("/admin/almacenamiento") || p.startsWith("/api/admin/storage") || p.startsWith("/api/admin/telegram") || p.startsWith("/api/admin/email") || p.startsWith("/api/admin/backup")) return "owner";
