@@ -16,6 +16,8 @@ export type GarmentItem = {
   // The artist/collection it belongs to (Karol G, Streetwear, BTS…), one level above the design.
   groupId?: string;
   groupName?: string;
+  // Its section in the admin (Artistas, Anime…): the home page filter chips.
+  category?: string;
   title: string;
   description?: string;
   badge?: string;

@@ -10,8 +10,11 @@ export const metadata: Metadata = {
   description: "Poleras y polerones de todas las colecciones POPE, con el diseño ya estampado por delante y por detrás. Filtra por colección y llévate el tuyo.",
 };
 
-export default async function CollectionsPage() {
+export default async function CollectionsPage({ searchParams }: { searchParams: Promise<{ categoria?: string }> }) {
+  const { categoria = "" } = await searchParams;
   const items = await loadShowcaseItems(1000);
+  // Opened from a section tile of the home page (?categoria=Anime): its collections come already ticked in the filter.
+  const initialGroups = categoria ? [...new Set(items.filter((i) => i.category === categoria && i.groupId).map((i) => i.groupId as string))] : [];
 
   return (
     <main className="bg-black text-white">
@@ -27,7 +30,7 @@ export default async function CollectionsPage() {
           {items.length === 0 ? (
             <p className="py-16 text-center text-neutral-400">Muy pronto: estamos preparando las colecciones.</p>
           ) : (
-            <CollectionsBrowser items={items} />
+            <CollectionsBrowser items={items} initialGroups={initialGroups} />
           )}
         </div>
       </div>

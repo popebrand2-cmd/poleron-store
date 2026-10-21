@@ -621,31 +621,3 @@ a.pope-social:active { transform: scale(0.96); }
 .pcol-auto { display: block; width: 120px; height: 2px; background: #ffffff1f; border-radius: 2px; overflow: hidden; }
 .pcol-auto i { display: block; height: 100%; width: 100%; background: var(--neon); transform-origin: left; animation: pcolAuto linear both; }
 @keyframes pcolAuto { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-
-/* Home hero "Personaliza aquí": the loudest button on the page — solid neon, a slow glow pulse and a light sweeping across it. */
-.pope-personaliza {
-  position: relative; overflow: hidden; isolation: isolate;
-  display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem;
-  min-height: 3.75rem; padding: 0 1.75rem; border-radius: 9999px;
-  background: var(--neon); color: #000;
-  font-family: var(--font-teko), Impact, sans-serif; font-weight: 700; font-size: 1.65rem; line-height: 1; text-transform: uppercase; letter-spacing: 0.01em;
-  animation: cyberCtaGlow 2.4s ease-in-out infinite;
-  transition: transform 0.2s ease, filter 0.2s ease;
-}
-.pope-personaliza:hover { transform: translateY(-2px) scale(1.03); filter: brightness(1.06); }
-.pope-personaliza:active { transform: scale(0.98); }
-.pope-personaliza:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
-.pope-personaliza-shine {
-  position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.75) 50%, transparent 65%);
-  transform: translateX(-120%);
-  animation: popePersonalizaShine 3.2s ease-in-out 0.6s infinite;
-}
-@keyframes popePersonalizaShine {
-  0% { transform: translateX(-120%); }
-  45%, 100% { transform: translateX(120%); }
-}
-@media (min-width: 640px) { .pope-personaliza { font-size: 1.85rem; min-height: 4rem; padding: 0 2.1rem; } }
-@media (prefers-reduced-motion: reduce) {
-  .pope-personaliza, .pope-personaliza-shine { animation: none; }
-}

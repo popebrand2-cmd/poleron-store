@@ -18,9 +18,10 @@ const norm = (s: string) =>
 // Every ready-made garment of every collection, mixed, with filters that stay short however many designs there are:
 // a search box, the collections as chips, the designs of the chosen collections (the first few, "ver todos" for the rest),
 // the garment type and the order. On phones the filters open as a sheet from the bottom.
-export default function CollectionsBrowser({ items }: { items: GarmentItem[] }) {
+// initialGroups: collections already ticked when the page opens (a section tile of the home page, e.g. Anime).
+export default function CollectionsBrowser({ items, initialGroups = [] }: { items: GarmentItem[]; initialGroups?: string[] }) {
   const [query, setQuery] = useState("");
-  const [groups, setGroups] = useState<Set<string>>(new Set());
+  const [groups, setGroups] = useState<Set<string>>(() => new Set(initialGroups));
   const [designs, setDesigns] = useState<Set<string>>(new Set());
   const [kinds, setKinds] = useState<Set<GarmentKind>>(new Set());
   const [sort, setSort] = useState<Sort>("mix");

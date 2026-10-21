@@ -221,7 +221,7 @@ export async function loadShowcaseItems(limit = 8): Promise<GarmentItem[]> {
           products: catalog.products,
           mockups,
           editorHref,
-        });
+        }).map((item) => ({ ...item, category: c.category.trim() || "Otros" }));
       }),
   );
   // Random on every visit (the page is rendered per request), so the first cards are never always the same.

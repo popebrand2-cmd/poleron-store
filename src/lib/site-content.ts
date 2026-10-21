@@ -46,6 +46,7 @@ export const SITE_TEXT_DEFAULTS: Record<string, string> = {
   "nav.home": "Inicio",
   "nav.shop": "Tienda",
   "nav.collections": "Colecciones",
+  "nav.customize": "Personaliza",
 
   "hero.line1": "TU IDEA.",
   "hero.line2": "TU PRENDA.",
@@ -97,7 +98,18 @@ export const SITE_TEXT_DEFAULTS: Record<string, string> = {
   "home.garmentsTitle": "Prendas de nuestras colecciones",
   "home.garmentsText": "Diseños de artistas ya estampados por delante y por detrás. Elige uno y personalízalo a tu medida.",
   "home.garmentsCta": "Ver todas las colecciones",
-  "home.customizeCta": "Personaliza aquí",
+  "home.heroTitle1": "Viste lo que",
+  "home.heroTitle2": "te mueve.",
+  "home.heroText": "Artistas, anime y diseños propios. Encuentra el tuyo.",
+  "home.heroCta": "Ver colecciones",
+  "home.designsAll": "Todo",
+  "home.designsTitle": "Elige tu diseño",
+  "home.designsMore": "Ver todos",
+  "home.designsCardCta": "Ver producto",
+  "home.ideaTitle1": "¿Tienes",
+  "home.ideaTitle2": "otra idea?",
+  "home.ideaText": "Elige tu prenda, sube tu diseño y crea algo único.",
+  "home.ideaCta": "Personaliza tu prenda",
   "artist.garmentsTitle": "Prendas de la colección",
   "artist.garmentsText": "Así queda este diseño en nuestros polerones y poleras, por delante y por detrás. Elige una y personalízala a tu medida.",
 
@@ -197,6 +209,8 @@ export const SITE_IMAGE_DEFAULTS: Record<string, string> = {
   "image.insta6": "",
   "image.insta7": "",
   "image.insta8": "",
+  "image.homeHero": "/home/hero.webp",
+  "image.homeIdea": "/home/otra-idea.webp",
 };
 
 export const SITE_IMAGE_LABELS: Record<string, { label: string; hint: string }> = {
@@ -221,6 +235,8 @@ export const SITE_IMAGE_LABELS: Record<string, { label: string; hint: string }> 
   "image.insta6": { label: "Publicación 6", hint: "Cuadrada (1:1), la foto de la publicación." },
   "image.insta7": { label: "Publicación 7", hint: "Cuadrada (1:1), la foto de la publicación." },
   "image.insta8": { label: "Publicación 8", hint: "Cuadrada (1:1), la foto de la publicación." },
+  "image.homeHero": { label: "Foto de la portada (inicio)", hint: "Horizontal, unos 1600×600. La persona a la izquierda: el texto va a la derecha." },
+  "image.homeIdea": { label: "Foto de «¿Tienes otra idea?»", hint: "Horizontal, unos 800×220. Se funde a negro por la derecha." },
 };
 
 export function siteText(map: Record<string, string>, key: string): string {

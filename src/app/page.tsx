@@ -21,7 +21,10 @@ import InstagramFeed from "@/components/InstagramFeed";
 import HowItWorks from "@/components/preview/HowItWorks";
 import TrustBadgesList from "@/components/edit/TrustBadgesList";
 import FaqList from "@/components/edit/FaqList";
-import CollectionGarmentsGrid from "@/components/CollectionGarmentsGrid";
+import HomeHero from "@/components/home/HomeHero";
+import HomeDesigns from "@/components/home/HomeDesigns";
+import HomeCategoryTiles, { type CategoryTile } from "@/components/home/HomeCategoryTiles";
+import HomeIdeaBanner from "@/components/home/HomeIdeaBanner";
 import { loadShowcaseItems } from "@/lib/collection-items";
 import { getEditorHref } from "@/lib/editor-product";
 import { siteText, CONTENT_DEFAULTS, type ContentSection } from "@/lib/site-content";
@@ -31,8 +34,8 @@ export const dynamic = "force-dynamic";
 // Polera first, then polerón oversize, then boxifit — the same order as the collection pages.
 const KIND_ORDER = { polera: 0, poleron: 1, boxy: 2 } as const;
 
-// The photo banner ("Tu idea. Tu prenda.") is off: the home page opens straight on the garments with a big "Personaliza aquí"
-// button. Set to true to bring the banner back.
+// The old photo banner ("Tu idea. Tu prenda.") is off: the home page opens on "Viste lo que te mueve" (HomeHero).
+// Set to true to bring the banner back.
 const SHOW_BANNER = false;
 
 
@@ -56,8 +59,17 @@ export default async function Home() {
   const collectionsWithDesigns = designCollections.filter((c) => c.designs.length > 0);
 
   // The garments of the collections, ready-made (design printed front and back), right under the hero: the same cards as
-  // the collection pages.
-  const [homeItems, instagramPosts] = await Promise.all([loadShowcaseItems(12), getInstagramPosts(8)]);
+  // the collection pages. Already mixed at random; the shelf gets the first 8 overall and the first 8 of each section, so
+  // every filter chip has its own row.
+  const [allItems, instagramPosts] = await Promise.all([loadShowcaseItems(1000), getInstagramPosts(8)]);
+  const categories = [...new Set(collectionsWithDesigns.map((c) => c.category.trim() || "Otros"))].filter((cat) => allItems.some((i) => i.category === cat));
+  const homeItems = [...new Map([...allItems.slice(0, 8), ...categories.flatMap((cat) => allItems.filter((i) => i.category === cat).slice(0, 8))].map((i) => [i.key, i])).values()];
+  // One tile per section, with the photo of its first collection that has one (else its first design).
+  const tiles: CategoryTile[] = categories.map((cat) => {
+    const inCat = collectionsWithDesigns.filter((c) => (c.category.trim() || "Otros") === cat);
+    const withPhoto = inCat.find((c) => c.photoUrl);
+    return { name: cat, image: withPhoto?.photoUrl || inCat[0]?.designs[0]?.imageUrl || "", photo: !!withPhoto };
+  });
   const cyberProducts = products.map((p) => ({ id: p.id, slug: p.slug, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice }));
   const cyberActive = isCyberActive(cyberProducts);
   // The offer written over the banner photo: only while the sale runs (the same rule as the Cyber strip).
@@ -195,39 +207,12 @@ export default async function Home() {
 
       <PopeHero editorHref={editorHref} cyberActive={cyberActive} hidden />
 
-      {/* The hero: the ready-made garments of the collections, first thing on the page (seeing the finished piece is what
-          makes people buy faster), with the big "Personaliza aquí" button to the editor. "Ver ofertas" lands here. */}
-      {homeItems.length > 0 && (
-        <section id="tienda" className="scroll-mt-24 border-b border-neutral-800 bg-black">
-          <div className="mx-auto max-w-6xl px-6 pb-10 pt-8 sm:pb-14 sm:pt-12">
-            <div className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-              <div className="max-w-2xl">
-                <h1 className="font-display text-4xl font-bold uppercase leading-none sm:text-5xl">
-                  <Txt k="home.garmentsTitle" />
-                </h1>
-                <Txt k="home.garmentsText" as="p" multiline className="mt-2 block text-sm text-neutral-400" />
-              </div>
-              <Link href={editorHref} className="pope-personaliza group shrink-0 self-stretch sm:self-auto">
-                <span aria-hidden="true" className="pope-personaliza-shine" />
-                <svg aria-hidden="true" viewBox="0 0 24 24" className="relative h-6 w-6 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 20h9" />
-                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                </svg>
-                <span className="relative">
-                  <Txt k="home.customizeCta" />
-                </span>
-                <span aria-hidden="true" className="relative transition-transform group-hover:translate-x-1">→</span>
-              </Link>
-            </div>
-            <CollectionGarmentsGrid items={homeItems} compact />
-            <div className="mt-6 text-center sm:text-right">
-              <Link href="/colecciones" className="text-xs font-bold uppercase tracking-[0.18em] text-neon transition hover:underline">
-                <Txt k="home.garmentsCta" /> →
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
+      {/* The home page as drawn by the owner ("colecciones primero"): cover, the designs on a light shelf with section chips,
+          one tile per section, then the way into the editor. */}
+      <HomeHero />
+      {homeItems.length > 0 && <HomeDesigns items={homeItems} categories={categories} />}
+      <HomeCategoryTiles tiles={tiles} />
+      <HomeIdeaBanner editorHref={editorHref} />
 
       {/* Featured: the base garments with their price come first — this is what is being sold */}
       <section id={homeItems.length > 0 ? "base" : "tienda"} className="scroll-mt-24 bg-black">

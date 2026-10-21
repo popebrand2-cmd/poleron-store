@@ -146,7 +146,11 @@ export default function CollectionGarmentCard({
   revealIndex = 0,
   duplicate = false,
   soldOut = false,
+  shelf,
 }: {
+  // Store-shelf look of the home page: name, then the color dots with this "Ver producto →" link beside them (no
+  // description or price on the card).
+  shelf?: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
   // Rises into view when it scrolls in (ScrollReveal), staggered by its position in the row.
@@ -197,7 +201,7 @@ export default function CollectionGarmentCard({
 
   return (
     <li aria-hidden={duplicate || undefined} className={`group ${className}`} style={reveal ? { ...style, ["--reveal-delay" as string]: `${(revealIndex % 4) * 90}ms` } : style} data-reveal={reveal ? "" : undefined}>
-      <div className="relative aspect-square overflow-hidden rounded-xl bg-[#ececec] bg-[radial-gradient(ellipse_at_50%_38%,#ffffff_0%,#f3f3f3_55%,#e2e2e2_100%)]">
+      <div className={`relative aspect-square overflow-hidden ${shelf ? "rounded-md" : "rounded-xl"} bg-[#ececec] bg-[radial-gradient(ellipse_at_50%_38%,#ffffff_0%,#f3f3f3_55%,#e2e2e2_100%)]`}>
         {/* The whole picture is a link to the garment with this design already on it */}
         <Link href={readyHref} aria-label={title} className="absolute inset-0 z-[1]" />
         {soldOut && (
@@ -218,6 +222,39 @@ export default function CollectionGarmentCard({
           + Personalizar
         </Link>
       </div>
+      {shelf ? (
+        <>
+          <Link href={readyHref} className="mt-3 line-clamp-1 block text-sm font-medium text-black hover:text-[#0b6b25] sm:text-base">
+            {title}
+          </Link>
+          <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+            {colors.length > 1 && (
+              <div className="flex items-center gap-2" role="radiogroup" aria-label="Color">
+                {colors.map((c, n) => (
+                  <button
+                    key={c.name + n}
+                    type="button"
+                    role="radio"
+                    aria-checked={n === i}
+                    aria-label={c.name}
+                    title={c.name}
+                    onClick={() => setI(n)}
+                    onMouseEnter={() => setPeek(n)}
+                    onMouseLeave={() => setPeek(null)}
+                    className={`h-5 w-5 rounded-full border border-black/30 transition sm:h-6 sm:w-6 ${n === i ? "ring-2 ring-black ring-offset-2 ring-offset-[#f5f5f3]" : "hover:scale-110"}`}
+                    style={{ background: c.hex }}
+                  />
+                ))}
+              </div>
+            )}
+            <Link href={readyHref} className="inline-flex items-center gap-1.5 text-xs font-semibold text-black underline underline-offset-4 hover:text-[#0b6b25] sm:text-sm">
+              {shelf}
+              <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        </>
+      ) : (
+      <>
       <Link href={readyHref} className={`mt-4 line-clamp-2 block text-base font-semibold leading-snug ${light ? "text-black hover:text-[#0b6b25]" : "text-white hover:text-neon"}`}>
         {title}
       </Link>
@@ -248,6 +285,8 @@ export default function CollectionGarmentCard({
             />
           ))}
         </div>
+      )}
+      </>
       )}
     </li>
   );

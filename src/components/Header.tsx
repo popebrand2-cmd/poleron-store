@@ -10,9 +10,9 @@ import Txt from "./edit/Txt";
 import { useSiteImage } from "./SiteContentProvider";
 
 const NAV_LINKS = [
-  { href: "/", key: "nav.home" },
   { href: "/#tienda", key: "nav.shop" },
-  { href: "/#colecciones", key: "nav.collections" },
+  { href: "/colecciones", key: "nav.collections" },
+  { href: "/personaliza", key: "nav.customize" },
 ];
 
 export default function Header() {
