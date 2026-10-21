@@ -31,6 +31,10 @@ export const dynamic = "force-dynamic";
 // Polera first, then polerón oversize, then boxifit — the same order as the collection pages.
 const KIND_ORDER = { polera: 0, poleron: 1, boxy: 2 } as const;
 
+// The photo banner ("Tu idea. Tu prenda.") is off: the home page opens straight on the garments with a big "Personaliza aquí"
+// button. Set to true to bring the banner back.
+const SHOW_BANNER = false;
+
 
 export default async function Home() {
   const [products, designCollections, contentItems, siteTextRows, reviews] = await Promise.all([
@@ -105,6 +109,7 @@ export default async function Home() {
       {/* The brand banner (its headline and button are part of the picture). It IS the hero on computer and tablet (the
           Cyber lookbook and the usual hero are phone-only now); on a phone the text inside would be tiny, so phones keep
           the hero below. The whole banner is the "Diseña la tuya" button. */}
+      {SHOW_BANNER && (
       <section aria-label="Tu idea. Tu prenda." className="relative mx-auto hidden max-w-[1600px] bg-black md:block">
         <Link href={editorHref} className="relative block overflow-hidden">
           <picture>
@@ -133,9 +138,11 @@ export default async function Home() {
           </div>
         )}
       </section>
+      )}
 
       {/* Phone version of the same banner: the photo (cropped, no text) with the headline, steps and button as real text
           underneath, so everything is readable on a small screen. */}
+      {SHOW_BANNER && (
       <section aria-label="Tu idea. Tu prenda." className="relative bg-black md:hidden">
         <Link href={editorHref} className="relative block overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -170,6 +177,7 @@ export default async function Home() {
           <p className="mt-4 text-center text-sm font-medium uppercase tracking-[0.35em] text-neutral-300">popebrand.cl</p>
         </div>
       </section>
+      )}
 
       {/* The Cyber lookbook and the usual hero are retired from the home page: the banner above is the hero on every
           screen. (Set active back to cyberActive to bring the lookbook back.) */}
@@ -187,23 +195,36 @@ export default async function Home() {
 
       <PopeHero editorHref={editorHref} cyberActive={cyberActive} hidden />
 
-      {/* The ready-made garments of the collections, right under the offer: seeing the finished piece is what makes
-          people buy faster. "Ver ofertas" lands here. */}
+      {/* The hero: the ready-made garments of the collections, first thing on the page (seeing the finished piece is what
+          makes people buy faster), with the big "Personaliza aquí" button to the editor. "Ver ofertas" lands here. */}
       {homeItems.length > 0 && (
         <section id="tienda" className="scroll-mt-24 border-b border-neutral-800 bg-black">
-          <div className="mx-auto max-w-6xl px-6 py-10 sm:py-14">
-            <div data-reveal="" className="mb-6 flex flex-wrap items-end justify-between gap-3">
+          <div className="mx-auto max-w-6xl px-6 pb-10 pt-8 sm:pb-14 sm:pt-12">
+            <div className="mb-6 flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
               <div className="max-w-2xl">
-                <h2 className="font-display text-4xl font-bold uppercase leading-none sm:text-5xl">
+                <h1 className="font-display text-4xl font-bold uppercase leading-none sm:text-5xl">
                   <Txt k="home.garmentsTitle" />
-                </h2>
+                </h1>
                 <Txt k="home.garmentsText" as="p" multiline className="mt-2 block text-sm text-neutral-400" />
               </div>
+              <Link href={editorHref} className="pope-personaliza group shrink-0 self-stretch sm:self-auto">
+                <span aria-hidden="true" className="pope-personaliza-shine" />
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="relative h-6 w-6 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+                <span className="relative">
+                  <Txt k="home.customizeCta" />
+                </span>
+                <span aria-hidden="true" className="relative transition-transform group-hover:translate-x-1">→</span>
+              </Link>
+            </div>
+            <CollectionGarmentsGrid items={homeItems} compact />
+            <div className="mt-6 text-center sm:text-right">
               <Link href="/colecciones" className="text-xs font-bold uppercase tracking-[0.18em] text-neon transition hover:underline">
                 <Txt k="home.garmentsCta" /> →
               </Link>
             </div>
-            <CollectionGarmentsGrid items={homeItems} compact />
           </div>
         </section>
       )}

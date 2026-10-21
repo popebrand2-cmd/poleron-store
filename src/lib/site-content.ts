@@ -97,6 +97,7 @@ export const SITE_TEXT_DEFAULTS: Record<string, string> = {
   "home.garmentsTitle": "Prendas de nuestras colecciones",
   "home.garmentsText": "Diseños de artistas ya estampados por delante y por detrás. Elige uno y personalízalo a tu medida.",
   "home.garmentsCta": "Ver todas las colecciones",
+  "home.customizeCta": "Personaliza aquí",
   "artist.garmentsTitle": "Prendas de la colección",
   "artist.garmentsText": "Así queda este diseño en nuestros polerones y poleras, por delante y por detrás. Elige una y personalízala a tu medida.",
 
