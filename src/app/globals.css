@@ -621,3 +621,20 @@ a.pope-social:active { transform: scale(0.96); }
 .pcol-auto { display: block; width: 120px; height: 2px; background: #ffffff1f; border-radius: 2px; overflow: hidden; }
 .pcol-auto i { display: block; height: 100%; width: 100%; background: var(--neon); transform-origin: left; animation: pcolAuto linear both; }
 @keyframes pcolAuto { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* Home page: the cover photo settles in, the cover text rises in after it, the neon buttons breathe. */
+@keyframes homeHeroZoom { from { transform: scale(1.07); } to { transform: none; } }
+.home-hero-photo { animation: homeHeroZoom 1.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes homeRise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.home-rise { animation: homeRise 0.7s cubic-bezier(0.16, 1, 0.3, 1) var(--d, 0s) both; }
+.home-cta-glow { animation-name: homeRise, cyberCtaGlow; animation-duration: 0.7s, 2.6s; animation-delay: var(--d, 0s), 1.2s; animation-iteration-count: 1, infinite; animation-fill-mode: both, none; animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1), ease-in-out; }
+/* A filter chip swaps the shelf: the new cards fade up one after another. */
+@keyframes homeFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.home-shelf > li { animation: homeFade 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.home-shelf > li:nth-child(2) { animation-delay: 50ms; }
+.home-shelf > li:nth-child(3) { animation-delay: 100ms; }
+.home-shelf > li:nth-child(4) { animation-delay: 150ms; }
+.home-shelf > li:nth-child(n + 5) { animation-delay: 200ms; }
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-photo, .home-rise, .home-cta-glow, .home-shelf > li { animation: none; }
+}

@@ -148,8 +148,8 @@ export default function CollectionGarmentCard({
   soldOut = false,
   shelf,
 }: {
-  // Store-shelf look of the home page: name, then the color dots with this "Ver producto →" link beside them (no
-  // description or price on the card).
+  // Store-shelf look of the home page: name and price, then the color dots with this "Ver producto →" link beside them
+  // (no description).
   shelf?: React.ReactNode;
   className?: string;
   style?: React.CSSProperties;
@@ -227,6 +227,12 @@ export default function CollectionGarmentCard({
           <Link href={readyHref} className="mt-3 line-clamp-1 block text-sm font-medium text-black hover:text-[#0b6b25] sm:text-base">
             {title}
           </Link>
+          {basePrice != null && (
+            <p className="mt-0.5 flex items-baseline gap-2 tabular-nums">
+              <span className={`text-sm font-semibold sm:text-base ${pct > 0 ? "text-[#d6363b]" : "text-black"}`}>{formatCLP(basePrice)}</span>
+              {pct > 0 && <span className="text-xs text-neutral-400 line-through sm:text-sm">{formatCLP(compareAtPrice as number)}</span>}
+            </p>
+          )}
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
             {colors.length > 1 && (
               <div className="flex items-center gap-2" role="radiogroup" aria-label="Color">

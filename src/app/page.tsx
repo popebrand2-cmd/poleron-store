@@ -64,11 +64,16 @@ export default async function Home() {
   const [allItems, instagramPosts] = await Promise.all([loadShowcaseItems(1000), getInstagramPosts(8)]);
   const categories = [...new Set(collectionsWithDesigns.map((c) => c.category.trim() || "Otros"))].filter((cat) => allItems.some((i) => i.category === cat));
   const homeItems = [...new Map([...allItems.slice(0, 8), ...categories.flatMap((cat) => allItems.filter((i) => i.category === cat).slice(0, 8))].map((i) => [i.key, i])).values()];
-  // One tile per section, with the photo of its first collection that has one (else its first design).
+  const categoryCounts = Object.fromEntries(categories.map((cat) => [cat, allItems.filter((i) => i.category === cat).length]));
+  // One tile per section, with the photo of its first collection that has one (else the designs of its first collections).
   const tiles: CategoryTile[] = categories.map((cat) => {
     const inCat = collectionsWithDesigns.filter((c) => (c.category.trim() || "Otros") === cat);
-    const withPhoto = inCat.find((c) => c.photoUrl);
-    return { name: cat, image: withPhoto?.photoUrl || inCat[0]?.designs[0]?.imageUrl || "", photo: !!withPhoto };
+    return {
+      name: cat,
+      photo: inCat.find((c) => c.photoUrl)?.photoUrl ?? "",
+      designs: inCat.slice(0, 3).map((c) => c.designs[0].imageUrl),
+      collections: inCat.length,
+    };
   });
   const cyberProducts = products.map((p) => ({ id: p.id, slug: p.slug, name: p.name, basePrice: p.basePrice, compareAtPrice: p.compareAtPrice }));
   const cyberActive = isCyberActive(cyberProducts);
@@ -210,7 +215,7 @@ export default async function Home() {
       {/* The home page as drawn by the owner ("colecciones primero"): cover, the designs on a light shelf with section chips,
           one tile per section, then the way into the editor. */}
       <HomeHero />
-      {homeItems.length > 0 && <HomeDesigns items={homeItems} categories={categories} />}
+      {homeItems.length > 0 && <HomeDesigns items={homeItems} categories={categories} counts={categoryCounts} />}
       <HomeCategoryTiles tiles={tiles} />
       <HomeIdeaBanner editorHref={editorHref} />
 

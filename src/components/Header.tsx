@@ -32,7 +32,7 @@ export default function Header() {
   return (
     <div className="sticky top-0 z-20">
       {!isAdmin && <AnnouncementBar />}
-      <header className="glass-dark border-x-0 border-t-0">
+      <header className="border-b border-white/10 bg-black">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           {!isAdmin && (
             <button

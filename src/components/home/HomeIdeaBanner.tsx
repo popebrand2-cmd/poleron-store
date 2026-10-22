@@ -25,10 +25,10 @@ export default function HomeIdeaBanner({ editorHref }: { editorHref: string }) {
         </div>
         <Link
           href={editorHref}
-          className="flex min-h-12 w-full shrink-0 items-center justify-center gap-3 rounded-md bg-neon px-6 font-display text-xl font-bold uppercase leading-none text-black transition hover:brightness-95 active:scale-[0.98] sm:w-auto md:min-h-14 md:px-7 md:text-2xl"
+          className="home-cta-glow group flex min-h-12 w-full shrink-0 items-center justify-center gap-3 rounded-md bg-neon px-6 font-display text-xl font-bold uppercase leading-none text-black transition hover:brightness-95 active:scale-[0.98] sm:w-auto md:min-h-14 md:px-7 md:text-2xl"
         >
           <Txt k="home.ideaCta" />
-          <span aria-hidden="true">→</span>
+          <span aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1">→</span>
         </Link>
       </div>
     </section>

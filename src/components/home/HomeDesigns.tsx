@@ -10,7 +10,8 @@ const SHOWN = 8;
 
 // "Elige tu diseño": the ready-made garments of the collections on a light shelf, filtered by section (Artistas, Anime…).
 // Four per row on a computer (two rows), two per row on a phone (the first four only).
-export default function HomeDesigns({ items, categories }: { items: GarmentItem[]; categories: string[] }) {
+// counts: how many ready-made garments each section has in all (the chips show it; `items` is only a sample).
+export default function HomeDesigns({ items, categories, counts }: { items: GarmentItem[]; categories: string[]; counts: Record<string, number> }) {
   const [cat, setCat] = useState("");
   const shown = useMemo(() => (cat ? items.filter((i) => i.category === cat) : items).slice(0, SHOWN), [items, cat]);
 
@@ -30,6 +31,7 @@ export default function HomeDesigns({ items, categories }: { items: GarmentItem[
             {categories.map((c) => (
               <button key={c} type="button" aria-pressed={cat === c} onClick={() => setCat(c)} className={chip(cat === c)}>
                 {c}
+                <span className={`ml-1.5 tabular-nums ${cat === c ? "text-white/60" : "text-black/40"}`}>{counts[c] ?? 0}</span>
               </button>
             ))}
           </div>
@@ -48,7 +50,7 @@ export default function HomeDesigns({ items, categories }: { items: GarmentItem[
           </Link>
         </div>
 
-        <ul className="grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-x-4 lg:grid-cols-4">
+        <ul key={cat} className="home-shelf grid grid-cols-2 gap-x-3 gap-y-6 sm:gap-x-4 lg:grid-cols-4">
           {shown.map((item, n) => (
             <CollectionGarmentCard
               key={item.key}
