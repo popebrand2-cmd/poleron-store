@@ -134,11 +134,11 @@ export default function ExclusiveDrop() {
           {/* Spinning neon/red edge */}
           <span aria-hidden="true" className="pope-excl-edge absolute inset-0 overflow-hidden rounded-full" />
           <span className={`relative flex items-center rounded-full bg-black transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${compact ? "gap-0 p-1" : "gap-2.5 py-1.5 pl-1.5 pr-4 sm:gap-3 sm:pr-5"}`}>
-            <span className="relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-neon sm:h-12 sm:w-12">
+            <span className={`relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full sm:h-12 sm:w-12 ${logo ? "bg-black" : "bg-neon"}`}>
               <span aria-hidden="true" className="pope-excl-ring absolute inset-0 rounded-full" />
               {badgeImg ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={badgeImg} alt="" className={`h-full w-full ${logo ? "object-contain p-1.5" : "object-cover"} transition duration-500 group-hover:scale-110`} />
+                <img src={badgeImg} alt="" className={`h-full w-full object-cover transition duration-500 group-hover:scale-110`} />
               ) : (
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-black transition group-hover:rotate-12" aria-hidden="true">
                   <path d="M6 3h12l3 6-9 12L3 9z" />
