@@ -217,7 +217,11 @@ export default function CollectionGarmentCard({
         ))}
         <Link
           href={customizeHref}
-          className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 translate-y-2 whitespace-nowrap rounded-full bg-neon px-4 py-2 text-xs font-bold sm:bottom-4 sm:px-6 sm:py-3 sm:text-sm text-black opacity-0 shadow-[0_6px_18px_rgba(0,0,0,0.45)] ring-1 ring-black/20 transition duration-300 hover:brightness-90 focus-visible:translate-y-0 focus-visible:opacity-100 group-hover:translate-y-0 group-hover:opacity-100 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100"
+          className={`absolute bottom-3 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-neon px-4 py-2 text-xs font-bold sm:bottom-4 sm:px-6 sm:py-3 sm:text-sm text-black shadow-[0_6px_18px_rgba(0,0,0,0.45)] ring-1 ring-black/20 transition duration-300 hover:brightness-90 ${
+            shelf
+              ? "group-hover:scale-105"
+              : "translate-y-2 opacity-0 focus-visible:translate-y-0 focus-visible:opacity-100 group-hover:translate-y-0 group-hover:opacity-100 [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100"
+          }`}
         >
           + Personalizar
         </Link>

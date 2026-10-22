@@ -38,9 +38,12 @@ export default function HomeDesigns({ items, categories, counts }: { items: Garm
         )}
 
         <div className="mb-4 flex items-end justify-between gap-4">
-          <h2 className="font-display text-4xl font-bold uppercase leading-none sm:text-5xl">
-            <Txt k="home.designsTitle" />
-          </h2>
+          <div>
+            <h2 className="font-display text-4xl font-bold uppercase leading-none sm:text-5xl">
+              <Txt k="home.designsTitle" />
+            </h2>
+            <Txt k="home.designsText" as="p" multiline className="mt-1 block text-sm text-neutral-600" />
+          </div>
           <Link
             href={cat ? `/colecciones?categoria=${encodeURIComponent(cat)}` : "/colecciones"}
             className="mb-1 inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-black hover:text-[#0b6b25]"

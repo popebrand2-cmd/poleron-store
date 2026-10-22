@@ -25,6 +25,7 @@ import HomeHero from "@/components/home/HomeHero";
 import HomeDesigns from "@/components/home/HomeDesigns";
 import HomeCategoryTiles, { type CategoryTile } from "@/components/home/HomeCategoryTiles";
 import HomeIdeaBanner from "@/components/home/HomeIdeaBanner";
+import HomeSteps from "@/components/home/HomeSteps";
 import { loadShowcaseItems } from "@/lib/collection-items";
 import { getEditorHref } from "@/lib/editor-product";
 import { siteText, CONTENT_DEFAULTS, type ContentSection } from "@/lib/site-content";
@@ -214,7 +215,8 @@ export default async function Home() {
 
       {/* The home page as drawn by the owner ("colecciones primero"): cover, the designs on a light shelf with section chips,
           one tile per section, then the way into the editor. */}
-      <HomeHero />
+      <HomeHero editorHref={editorHref} />
+      <HomeSteps editorHref={editorHref} />
       {homeItems.length > 0 && <HomeDesigns items={homeItems} categories={categories} counts={categoryCounts} />}
       <HomeCategoryTiles tiles={tiles} />
       <HomeIdeaBanner editorHref={editorHref} />
