@@ -6,11 +6,14 @@ import { usePathname } from "next/navigation";
 import { formatCLP } from "@/lib/money";
 import type { LimitedCardData } from "@/lib/limited";
 import { Countdown } from "@/components/LimitedEditionCard";
+import { useSiteImage } from "@/components/SiteContentProvider";
 
 const TEASED_KEY = "pope-exclusive-teased";
 
-// The exclusive pieces are not on display: a small "Exclusive" button in the corner (with a badge, a slow pulse and, once
-// per visit, a hint) that unveils them when pressed. Nothing shows when there is no exclusive on sale.
+// The exclusive pieces are not on display: a floating "Exclusive" button at the top, right under the menu, with the logo of
+// the band or character of the drop, a spinning neon edge, a badge and, once per visit, a hint. It shrinks to the logo
+// alone once the visitor scrolls (so it never covers the page) and unveils the pieces when pressed. When every piece is
+// sold out it stays up saying so. Nothing shows when there is no exclusive at all.
 export default function ExclusiveDrop() {
   const pathname = usePathname() ?? "";
   const [items, setItems] = useState<LimitedCardData[]>([]);
@@ -18,6 +21,27 @@ export default function ExclusiveDrop() {
   const [i, setI] = useState(0);
   const [hint, setHint] = useState(false);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const logo = useSiteImage("image.exclusiveLogo");
+  // Where the menu ends (announcement bar + header), so the button floats right under it.
+  const [top, setTop] = useState(0);
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    const header = document.querySelector("header");
+    const bar = header?.parentElement;
+    const measure = () => setTop(Math.round((bar ?? header)?.getBoundingClientRect().bottom ?? 0));
+    const onScroll = () => setCompact(window.scrollY > 220);
+    measure();
+    onScroll();
+    const ro = bar ? new ResizeObserver(measure) : null;
+    if (bar && ro) ro.observe(bar);
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
 
   const hidden =
     pathname.startsWith("/admin") || pathname.startsWith("/checkout") || pathname.startsWith("/carrito") || items.some((c) => pathname === `/productos/${c.slug}`);
@@ -77,25 +101,26 @@ export default function ExclusiveDrop() {
     };
   }, [open, items.length]);
 
+  // Tells the page the button is up (the home cover makes room for it on a phone).
+  const showing = items.length > 0 && !hidden;
+  useEffect(() => {
+    if (!showing) return;
+    document.documentElement.dataset.excl = "1";
+    return () => {
+      delete document.documentElement.dataset.excl;
+    };
+  }, [showing]);
+
   if (items.length === 0 || hidden) return null;
   const it = items[i] ?? items[0];
-  const onProduct = pathname.startsWith("/productos/");
+  const onSale = items.filter((c) => !c.soldOut && !c.closed).length;
+  const first = items[0];
+  const badgeImg = logo || first.image;
+  const subtitle = onSale === 0 ? "Agotada · vuelve pronto" : items.length === 1 ? first.name : `${items.length} piezas · edición limitada`;
 
   return (
     <>
-      <div className={`fixed left-4 z-30 sm:left-5 ${onProduct ? "bottom-24 lg:bottom-5" : "bottom-5"}`}>
-        {hint && !open && (
-          <button
-            type="button"
-            onClick={() => {
-              setHint(false);
-              setOpen(true);
-            }}
-            className="pope-excl-hint absolute bottom-[calc(100%+12px)] left-0 w-max max-w-[15rem] rounded-2xl rounded-bl-sm border border-neon/40 bg-black/90 px-4 py-2.5 text-left text-xs font-semibold text-white shadow-2xl"
-          >
-            Hay algo que no está en la tienda… <span className="text-neon">¿lo ves?</span>
-          </button>
-        )}
+      <div className="fixed left-3 z-30 sm:left-5" style={{ top: top + 12 }}>
         <button
           type="button"
           onClick={() => {
@@ -103,19 +128,49 @@ export default function ExclusiveDrop() {
             setOpen(true);
           }}
           aria-haspopup="dialog"
-          aria-label={`Exclusive: ${items.length} ${items.length === 1 ? "pieza exclusiva" : "piezas exclusivas"}`}
-          className="pope-excl-btn group relative flex h-14 items-center gap-2 rounded-full border border-neon/60 bg-black pl-2 pr-4 text-white shadow-[0_8px_30px_rgba(0,0,0,0.6)] transition hover:border-neon"
+          aria-label={`Exclusive: ${subtitle}`}
+          className="pope-excl-float group relative block rounded-full p-[2px] shadow-[0_10px_40px_-6px_rgba(0,0,0,0.75),0_0_28px_-6px_var(--neon)] transition-transform duration-300 hover:scale-[1.04]"
         >
-          <span aria-hidden="true" className="pope-excl-ring absolute inset-0 rounded-full" />
-          <span className="relative grid h-10 w-10 place-items-center rounded-full bg-neon text-black">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 transition group-hover:rotate-12" aria-hidden="true">
-              <path d="M6 3h12l3 6-9 12L3 9z" />
-              <path d="M3 9h18M9 3l3 18M15 3l-3 18" />
-            </svg>
+          {/* Spinning neon/red edge */}
+          <span aria-hidden="true" className="pope-excl-edge absolute inset-0 overflow-hidden rounded-full" />
+          <span className={`relative flex items-center rounded-full bg-black transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${compact ? "gap-0 p-1" : "gap-2.5 py-1.5 pl-1.5 pr-4 sm:gap-3 sm:pr-5"}`}>
+            <span className="relative grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full bg-neon sm:h-12 sm:w-12">
+              <span aria-hidden="true" className="pope-excl-ring absolute inset-0 rounded-full" />
+              {badgeImg ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={badgeImg} alt="" className={`h-full w-full ${logo ? "object-contain p-1.5" : "object-cover"} transition duration-500 group-hover:scale-110`} />
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 text-black transition group-hover:rotate-12" aria-hidden="true">
+                  <path d="M6 3h12l3 6-9 12L3 9z" />
+                  <path d="M3 9h18M9 3l3 18M15 3l-3 18" />
+                </svg>
+              )}
+            </span>
+            <span className={`grid overflow-hidden text-left transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] ${compact ? "max-w-0 opacity-0" : "max-w-[13rem] opacity-100"}`}>
+              <span className="flex items-center gap-1.5 whitespace-nowrap text-[9px] font-bold uppercase tracking-[0.25em] text-red-500 sm:text-[10px]">
+                <span aria-hidden="true" className="pope-excl-live h-1.5 w-1.5 rounded-full bg-red-500" />
+                {onSale === 0 ? "Agotado" : "Solo en POPE"}
+              </span>
+              <span className="pope-excl-shine whitespace-nowrap font-display text-2xl font-bold uppercase leading-[0.9] tracking-wide sm:text-[1.7rem]">Exclusive</span>
+              <span className="max-w-[11rem] truncate text-[10px] font-medium text-white/60 sm:text-[11px]">{subtitle}</span>
+            </span>
           </span>
-          <span className="relative font-display text-xl font-bold uppercase leading-none tracking-wide">Exclusive</span>
-          <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white ring-2 ring-black">{items.length}</span>
+          {onSale > 0 && (
+            <span className="absolute -right-1 -top-1 z-10 grid h-6 min-w-6 place-items-center rounded-full bg-red-600 px-1.5 text-xs font-bold text-white ring-2 ring-black">{onSale}</span>
+          )}
         </button>
+        {hint && !open && onSale > 0 && (
+          <button
+            type="button"
+            onClick={() => {
+              setHint(false);
+              setOpen(true);
+            }}
+            className="pope-excl-hint absolute left-0 top-[calc(100%+12px)] w-max max-w-[15rem] rounded-2xl rounded-tl-sm border border-neon/40 bg-black/90 px-4 py-2.5 text-left text-xs font-semibold text-white shadow-2xl"
+          >
+            Hay algo que no está en la tienda… <span className="text-neon">¿lo ves?</span>
+          </button>
+        )}
       </div>
 
       {open && (
@@ -151,6 +206,11 @@ export default function ExclusiveDrop() {
               <h2 className="pope-excl-line font-display text-5xl font-bold uppercase leading-[0.9]" style={{ animationDelay: "0.65s" }}>
                 {it.name}
               </h2>
+              {(it.soldOut || it.closed) && (
+                <p className="pope-excl-line inline-flex w-max items-center gap-2 rounded-full bg-red-600 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-white" style={{ animationDelay: "0.7s" }}>
+                  {it.soldOut ? "Agotada" : "Cerrada"} · vuelve pronto
+                </p>
+              )}
               <p className="pope-excl-line flex items-baseline gap-3" style={{ animationDelay: "0.75s" }}>
                 <span className="font-display text-4xl font-bold text-neon">{formatCLP(it.price)}</span>
                 {it.compareAtPrice != null && it.compareAtPrice > it.price && <span className="text-lg text-neutral-500 line-through">{formatCLP(it.compareAtPrice)}</span>}

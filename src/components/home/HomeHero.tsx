@@ -21,7 +21,8 @@ export default function HomeHero({ editorHref }: { editorHref: string }) {
       {/* Phone: the right half darkens under the text. Computer: the photo's right edge fades into the black (mask). */}
       <span aria-hidden="true" className="absolute inset-0 bg-gradient-to-r from-transparent via-black/45 to-black/90 md:hidden" />
 
-      <div className="relative mx-auto flex min-h-[250px] max-w-6xl items-center justify-end px-4 py-8 sm:min-h-[320px] md:min-h-[360px] md:px-6 md:py-12 lg:min-h-[400px]">
+      {/* On a phone the floating "Exclusive" button (ExclusiveDrop, html[data-excl]) sits over the top of the cover: the text starts below it. */}
+      <div className="relative mx-auto flex min-h-[250px] max-w-6xl items-center justify-end px-4 py-8 max-md:[html[data-excl]_&]:pt-24 sm:min-h-[320px] md:min-h-[360px] md:px-6 md:py-12 lg:min-h-[400px]">
         <div className="w-[60%] md:w-[44%]">
           <h1 className="home-rise font-display text-[2.2rem] font-bold uppercase leading-[0.86] text-white sm:text-5xl lg:text-[5rem]">
             <Txt k="home.heroTitle1" className="block" />

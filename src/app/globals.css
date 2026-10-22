@@ -576,7 +576,7 @@ a.pope-social:active { transform: scale(0.96); }
 .pope-excl-ring { box-shadow: 0 0 0 0 color-mix(in srgb, var(--neon) 55%, transparent); animation: exclRing 2.6s ease-out infinite; }
 @keyframes exclRing { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--neon) 55%, transparent); } 70%, 100% { box-shadow: 0 0 0 14px transparent; } }
 .pope-excl-btn { animation: exclIn 0.7s cubic-bezier(0.32, 0.72, 0, 1) 1.2s both; }
-@keyframes exclIn { from { opacity: 0; transform: translateX(-24px) scale(0.9); } to { opacity: 1; transform: none; } }
+@keyframes exclIn { 0% { opacity: 0; transform: translateY(-28px) scale(0.85); } 60% { opacity: 1; transform: translateY(4px) scale(1.03); } 100% { opacity: 1; transform: none; } }
 .pope-excl-hint { animation: exclHint 0.5s cubic-bezier(0.32, 0.72, 0, 1) both; }
 @keyframes exclHint { from { opacity: 0; transform: translateY(8px) scale(0.96); } to { opacity: 1; transform: none; } }
 .pope-excl-backdrop { animation: popupFade 0.35s ease both; }
@@ -590,6 +590,7 @@ a.pope-social:active { transform: scale(0.96); }
 @media (prefers-reduced-motion: reduce) {
   .pope-excl-ring, .pope-excl-btn, .pope-excl-hint, .pope-excl-panel, .pope-excl-curtain, .pope-excl-reveal, .pope-excl-line, .pope-excl-backdrop { animation: none !important; }
   .pope-excl-curtain { display: none; }
+  .pope-excl-edge::before, .pope-excl-shine, .pope-excl-live, .pope-excl-float { animation: none !important; }
 }
 
 /* ---- Scroll reveal (ScrollReveal.tsx) and small entrance motions ---- */
@@ -638,3 +639,21 @@ a.pope-social:active { transform: scale(0.96); }
 @media (prefers-reduced-motion: reduce) {
   .home-hero-photo, .home-rise, .home-cta-glow, .home-shelf > li { animation: none; }
 }
+
+/* Floating "Exclusive" button: a neon/red edge that keeps turning, a live dot, a light running over the word, a gentle bob. */
+.pope-excl-edge::before {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 300%; aspect-ratio: 1; translate: -50% -50%;
+  background: conic-gradient(from 0deg, var(--neon), #dc2626, transparent 40%, var(--neon) 60%, #dc2626, transparent 90%, var(--neon));
+  animation: exclEdge 3s linear infinite;
+}
+@keyframes exclEdge { to { rotate: 360deg; } }
+.pope-excl-live { animation: exclLive 1.2s ease-in-out infinite; }
+@keyframes exclLive { 50% { opacity: 0.25; } }
+.pope-excl-shine {
+  background: linear-gradient(100deg, #fff 40%, var(--neon) 50%, #fff 60%) 0 0 / 250% 100%;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: exclShine 3.2s ease-in-out infinite;
+}
+@keyframes exclShine { 0% { background-position: 100% 0; } 60%, 100% { background-position: -50% 0; } }
+.pope-excl-float { animation: exclIn 0.8s cubic-bezier(0.32, 0.72, 0, 1) 1s both, exclBob 4s ease-in-out 2s infinite; }
+@keyframes exclBob { 50% { translate: 0 -3px; } }

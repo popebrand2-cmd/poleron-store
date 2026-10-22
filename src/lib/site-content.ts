@@ -216,6 +216,7 @@ export const SITE_IMAGE_DEFAULTS: Record<string, string> = {
   "image.insta7": "",
   "image.insta8": "",
   "image.homeHero": "/home/hero.webp",
+  "image.exclusiveLogo": "",
   "image.homeIdea": "/home/otra-idea.webp",
 };
 
@@ -241,6 +242,7 @@ export const SITE_IMAGE_LABELS: Record<string, { label: string; hint: string }> 
   "image.insta6": { label: "Publicación 6", hint: "Cuadrada (1:1), la foto de la publicación." },
   "image.insta7": { label: "Publicación 7", hint: "Cuadrada (1:1), la foto de la publicación." },
   "image.insta8": { label: "Publicación 8", hint: "Cuadrada (1:1), la foto de la publicación." },
+  "image.exclusiveLogo": { label: "Logo del botón Exclusive", hint: "Logo de la banda o del personaje del drop (PNG cuadrado, fondo transparente). Vacío = la foto de la pieza." },
   "image.homeHero": { label: "Foto de la portada (inicio)", hint: "Horizontal, unos 1600×600. La persona a la izquierda: el texto va a la derecha." },
   "image.homeIdea": { label: "Foto de «¿Tienes otra idea?»", hint: "Horizontal, unos 800×220. Se funde a negro por la derecha." },
 };
