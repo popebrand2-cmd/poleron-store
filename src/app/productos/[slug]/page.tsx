@@ -10,7 +10,7 @@ import ProductInfo from "@/components/ProductInfo";
 import { loadReadyItem, loadShowcaseItems } from "@/lib/collection-items";
 import { limitedState, loadLimitedCards, soldUnits } from "@/lib/limited";
 import ExclusiveProduct, { type ExclusiveData } from "@/components/ExclusiveProduct";
-import LimitedEditionCard from "@/components/LimitedEditionCard";
+import ExclusiveGrid from "@/components/ExclusiveGrid";
 import LimitedStrip from "@/components/LimitedStrip";
 
 export const dynamic = "force-dynamic";
@@ -46,6 +46,9 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
   if (product.limitedEdition) {
     const st = limitedState(product, (await soldUnits([product.id])).get(product.id) ?? 0);
     const material = product.materials[0];
+    // A free back the customer can fill with their own design (the Iron Maiden tees): the pricier option + the back photo.
+    const extra = [...product.materials].sort((x, y) => y.priceDelta - x.priceDelta)[0];
+    const backView = product.colors[0]?.views.find((w) => w.label === "Espalda");
     const data: ExclusiveData = {
       id: product.id,
       slug: product.slug,
@@ -55,6 +58,16 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
       compareAtPrice: product.compareAtPrice,
       materialLabel: material?.label ?? "",
       materialDelta: material?.priceDelta ?? 0,
+      backOption:
+        extra && material && extra.priceDelta > material.priceDelta && backView
+          ? {
+              label: extra.label,
+              delta: extra.priceDelta - material.priceDelta,
+              imageUrl: backView.imageUrl,
+              zone: { x: backView.zoneXPct, y: backView.zoneYPct, w: backView.zoneWidthPct, h: backView.zoneHeightPct },
+              cm: { w: backView.maxWidthCm, h: backView.maxHeightCm },
+            }
+          : null,
       sizes: product.sizes.map((z) => ({ label: z.label, priceDelta: z.priceDelta, lengthCm: z.lengthCm, widthCm: z.chestCm })),
       versions: product.colors
         .filter((c) => c.views[0]?.imageUrl)
@@ -65,18 +78,24 @@ export default async function ProductPage({ params, searchParams }: { params: Pr
       soldOut: st.soldOut,
       closed: st.closed,
     };
-    const others = (await loadLimitedCards()).filter((c) => c.slug !== product.slug);
+    // The other exclusives, the ones of the same drop first (an Iron Maiden tee shows the rest of Iron Maiden).
+    const iron = /iron maiden/i.test(product.name);
+    const others = (await loadLimitedCards()).filter((c) => c.slug !== product.slug && !c.closed).sort((a, b) => Number(/iron maiden/i.test(b.name) === iron) - Number(/iron maiden/i.test(a.name) === iron));
+    // An Iron Maiden piece is all red: the accent colour (--neon) of the whole page turns blood red.
     return (
-      <main className="bg-black text-white">
+      <main className="bg-black text-white" style={iron ? ({ ["--neon" as string]: "#e11d2a" } as React.CSSProperties) : undefined}>
         <ExclusiveProduct p={data} />
         {others.length > 0 && (
           <section aria-label="Más piezas exclusivas" className="mx-auto max-w-6xl px-6 pb-16">
-            <h2 className="mb-6 font-display text-4xl font-bold uppercase leading-none sm:text-5xl">Más piezas exclusivas</h2>
-            <div className="space-y-6">
-              {others.map((c) => (
-                <LimitedEditionCard key={c.slug} item={c} />
-              ))}
+            <div className="mb-6 flex items-end justify-between gap-4">
+              <h2 className="font-display text-4xl font-bold uppercase leading-none sm:text-5xl">{iron ? "Más de Iron Maiden" : "Más piezas exclusivas"}</h2>
+              {iron && (
+                <Link href="/iron-maiden" className="mb-1 shrink-0 text-xs font-bold uppercase tracking-[0.18em] text-[#ff4b57] hover:underline">
+                  Ver la colección →
+                </Link>
+              )}
             </div>
+            <ExclusiveGrid items={others.slice(0, 8)} stripPrefix={iron ? "Polera Iron Maiden – " : ""} />
           </section>
         )}
         <div className="mx-auto max-w-6xl px-6 pb-28 lg:pb-16">

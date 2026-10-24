@@ -17,6 +17,8 @@ export type ExclusiveData = {
   compareAtPrice: number | null;
   materialLabel: string;
   materialDelta: number;
+  // The free back of the piece, where the customer can add their own design for `delta` more (null = nothing to add).
+  backOption?: { label: string; delta: number; imageUrl: string; zone: { x: number; y: number; w: number; h: number }; cm: { w: number; h: number } } | null;
   sizes: { label: string; priceDelta: number; lengthCm: number | null; widthCm: number | null }[];
   versions: { name: string; hex: string; imageUrl: string; thumbUrl: string }[];
   units: number;
@@ -28,8 +30,9 @@ export type ExclusiveData = {
 
 const MAX_PER_ORDER = 3;
 
-// The page of a limited-edition piece: nothing to customize. Pick the version and the size, buy it. A dark stage with the
-// piece under a spotlight, the units left as the main number and the closing countdown.
+// The page of a limited-edition piece: pick the version and the size, buy it. A dark stage with the piece under a spotlight,
+// the units left as the main number and the closing countdown. A piece with a free back (backOption) also lets the customer
+// upload their own design for the back, at its higher price.
 export default function ExclusiveProduct({ p }: { p: ExclusiveData }) {
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
@@ -37,12 +40,32 @@ export default function ExclusiveProduct({ p }: { p: ExclusiveData }) {
   const [size, setSize] = useState<string>("");
   const [qty, setQty] = useState(1);
   const [error, setError] = useState("");
+  const back = p.backOption ?? null;
+  const [withBack, setWithBack] = useState(false);
+  const [backUrl, setBackUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [backError, setBackError] = useState("");
+
+  async function uploadBack(file: File) {
+    setUploading(true);
+    setBackError("");
+    try {
+      const res = await fetch("/api/upload", { method: "POST", headers: { "Content-Type": file.type || "application/octet-stream" }, body: file });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok || !d.url) throw new Error(d.error || "No se pudo subir la imagen. Intenta de nuevo.");
+      setBackUrl(d.url);
+    } catch (e) {
+      setBackError(e instanceof Error ? e.message : "No se pudo subir la imagen. Intenta de nuevo.");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   const v = p.versions[vi] ?? p.versions[0];
   const over = p.soldOut || p.closed;
   const maxQty = Math.max(1, Math.min(MAX_PER_ORDER, p.remaining ?? MAX_PER_ORDER));
   const sizeObj = p.sizes.find((s) => s.label === size);
-  const unit = p.basePrice + (sizeObj?.priceDelta ?? 0) + p.materialDelta;
+  const unit = p.basePrice + (sizeObj?.priceDelta ?? 0) + p.materialDelta + (back && withBack ? back.delta : 0);
   const sold = p.units > 0 && p.remaining != null ? p.units - p.remaining : 0;
   const pct = p.units > 0 ? Math.min(100, Math.round((sold / p.units) * 100)) : 0;
   const low = p.remaining != null && p.remaining > 0 && p.remaining <= Math.max(3, Math.ceil(p.units * 0.2));
@@ -55,6 +78,11 @@ export default function ExclusiveProduct({ p }: { p: ExclusiveData }) {
       document.getElementById("talla")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
+    if (back && withBack && !backUrl) {
+      setBackError("Sube tu diseño para la espalda, o elige «Solo adelante».");
+      document.getElementById("espalda")?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
     setError("");
     addItem({
       id: uuidv4(),
@@ -64,11 +92,15 @@ export default function ExclusiveProduct({ p }: { p: ExclusiveData }) {
       colorName: v.name,
       colorHex: v.hex,
       sizeLabel: sizeObj?.label ?? "",
-      materialLabel: p.materialLabel,
+      materialLabel: back && withBack ? back.label : p.materialLabel,
       unitPrice: unit,
       quantity: qty,
       previewImageUrl: v.thumbUrl,
-      designPlacement: {},
+      // The customer's back design, as the editor stores it: production downloads the original from the order.
+      designPlacement:
+        back && withBack && backUrl
+          ? { Espalda: { designUrl: backUrl, originalDesignUrl: backUrl, xPct: 50, yPct: 0, widthPct: 100, rotationDeg: 0, zoneWidthCm: back.cm.w, zoneHeightCm: back.cm.h } }
+          : {},
     });
     trackEvent("AddToCart", { content_type: "product", content_ids: [p.id], content_name: p.name, value: unit * qty, currency: "CLP" });
     router.push(destination);
@@ -88,7 +120,7 @@ export default function ExclusiveProduct({ p }: { p: ExclusiveData }) {
             ))}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={v.imageUrl} alt={`${p.name} — ${v.name}`} className={`absolute inset-0 h-full w-full object-contain p-3 sm:p-6 ${over ? "grayscale" : ""}`} />
-            <span className="absolute left-6 top-6 inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white shadow-lg">
+            <span className="absolute right-6 top-6 inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white shadow-lg">
               <span aria-hidden="true">●</span> Edición limitada
             </span>
             <span className="absolute bottom-6 right-7 text-[10px] font-semibold uppercase tracking-[0.25em] text-black/35">Imagen referencial</span>
@@ -215,6 +247,75 @@ export default function ExclusiveProduct({ p }: { p: ExclusiveData }) {
             </details>
           )}
 
+          {/* The free back: plain, or the customer's own design for a bit more */}
+          {back && !over && (
+            <div id="espalda" className="mt-7 scroll-mt-28">
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.25em] text-white/50">
+                La espalda {backError && <span className="ml-2 normal-case tracking-normal text-red-400">{backError}</span>}
+              </p>
+              <div role="radiogroup" aria-label="La espalda" className="grid gap-2 sm:grid-cols-2">
+                {[
+                  { on: false, title: "Solo adelante", text: "El estampado grande adelante, la espalda lisa.", price: p.basePrice + (sizeObj?.priceDelta ?? 0) + p.materialDelta },
+                  { on: true, title: "Agregar mi diseño atrás", text: "Sube tu imagen y la estampamos en la espalda.", price: p.basePrice + (sizeObj?.priceDelta ?? 0) + p.materialDelta + back.delta },
+                ].map((o) => (
+                  <button
+                    key={o.title}
+                    type="button"
+                    role="radio"
+                    aria-checked={withBack === o.on}
+                    onClick={() => {
+                      setWithBack(o.on);
+                      setBackError("");
+                    }}
+                    className={`rounded-xl border-2 p-4 text-left transition ${withBack === o.on ? "border-neon bg-neon/10" : "border-white/20 hover:border-white/60"}`}
+                  >
+                    <span className="flex items-baseline justify-between gap-3">
+                      <span className="text-sm font-bold uppercase tracking-wide text-white">{o.title}</span>
+                      <span className="font-display text-2xl font-bold leading-none text-neon">{formatCLP(o.price)}</span>
+                    </span>
+                    <span className="mt-1 block text-xs text-white/60">{o.text}</span>
+                  </button>
+                ))}
+              </div>
+
+              {withBack && (
+                <div className="mt-3 flex items-center gap-4 rounded-xl border border-white/15 bg-white/[0.04] p-3">
+                  {/* The back of the tee with the customer's design laid over its print zone */}
+                  <div className="relative w-28 shrink-0 overflow-hidden rounded-lg bg-white sm:w-32">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={back.imageUrl} alt="Espalda de la polera" className="block h-auto w-full" />
+                    {backUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={backUrl}
+                        alt="Tu diseño en la espalda"
+                        className="absolute object-contain object-top"
+                        style={{ left: `${back.zone.x}%`, top: `${back.zone.y}%`, width: `${back.zone.w}%`, height: `${back.zone.h}%` }}
+                      />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-white">{backUrl ? "Así va tu diseño atrás" : "Sube tu diseño para la espalda"}</p>
+                    <p className="mt-0.5 text-xs text-white/50">PNG, JPG o WEBP. Mejor con fondo transparente. Lo revisamos antes de estampar.</p>
+                    <label className={`mt-2 inline-flex min-h-10 cursor-pointer items-center rounded-full bg-neon px-4 text-xs font-bold uppercase tracking-wide text-black transition hover:brightness-95 ${uploading ? "pointer-events-none opacity-60" : ""}`}>
+                      {uploading ? "Subiendo…" : backUrl ? "Cambiar imagen" : "Subir imagen"}
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        className="sr-only"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          e.target.value = "";
+                          if (file) uploadBack(file);
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Quantity */}
           {!over && (
             <div className="mt-6 flex items-center gap-4">
@@ -252,7 +353,7 @@ export default function ExclusiveProduct({ p }: { p: ExclusiveData }) {
           <ul className="mt-8 space-y-3 border-t border-white/15 pt-6 text-sm text-neutral-300">
             <li className="flex gap-3">
               <span aria-hidden="true" className="text-neon">◆</span>
-              Sin personalización: llega tal como la ves, no se le cambia nada.
+              {back ? `El estampado de adelante no se cambia. La espalda va lisa, o con tu diseño por ${formatCLP(back.delta)} más.` : "Sin personalización: llega tal como la ves, no se le cambia nada."}
             </li>
             <li className="flex gap-3">
               <span aria-hidden="true" className="text-neon">◆</span>

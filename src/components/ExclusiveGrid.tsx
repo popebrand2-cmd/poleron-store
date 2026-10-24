@@ -1,0 +1,49 @@
+import Link from "next/link";
+import { formatCLP } from "@/lib/money";
+import type { LimitedCardData } from "@/lib/limited";
+
+// The exclusive pieces as a compact grid (picture, name, price): the Iron Maiden section and "Más piezas exclusivas" under
+// an exclusive piece. A sold-out or closed piece stays, greyed out, with its label.
+export default function ExclusiveGrid({ items, stripPrefix = "" }: { items: LimitedCardData[]; stripPrefix?: string }) {
+  return (
+    <ul className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+      {items.map((c) => {
+        const over = c.soldOut || c.closed;
+        const name = stripPrefix && c.name.startsWith(stripPrefix) ? c.name.slice(stripPrefix.length) : c.name;
+        return (
+          <li key={c.slug}>
+            <Link
+              href={`/productos/${c.slug}`}
+              className="group block overflow-hidden rounded-xl border border-white/10 bg-[#0d0d0d] transition duration-300 hover:-translate-y-1 hover:border-[#e11d2a]/70 hover:shadow-[0_18px_40px_-18px_rgba(225,29,42,0.65)]"
+            >
+              <div className="relative aspect-square overflow-hidden bg-[radial-gradient(circle_at_50%_45%,#5a0f14_0%,#1c0608_55%,#0a0a0a_100%)]">
+                {c.image && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={c.image}
+                    alt={c.name}
+                    loading="lazy"
+                    decoding="async"
+                    className={`absolute inset-0 h-full w-full object-contain p-2 drop-shadow-[0_10px_18px_rgba(0,0,0,0.7)] transition duration-500 group-hover:scale-105 ${over ? "grayscale" : ""}`}
+                  />
+                )}
+                {over && (
+                  <span className="absolute left-2 top-2 rounded-full bg-white px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-black">
+                    {c.soldOut ? "Agotada" : "Cerrada"}
+                  </span>
+                )}
+              </div>
+              <div className="p-3 sm:p-4">
+                <p className="line-clamp-2 font-display text-xl font-bold uppercase leading-[0.95] text-white sm:text-2xl">{name}</p>
+                <p className="mt-1.5 flex items-center justify-between gap-2">
+                  <span className="font-display text-2xl font-bold leading-none text-white">{formatCLP(c.price)}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wide text-[#ff4b57] transition group-hover:translate-x-0.5">Ver →</span>
+                </p>
+              </div>
+            </Link>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}

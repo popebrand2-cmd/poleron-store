@@ -681,3 +681,8 @@ a.pope-social:active { transform: scale(0.96); }
   [data-tone="dark"] + [data-tone="light"]::before,
   [data-tone="light"] + [data-tone="dark"]::before { height: 88px; }
 }
+
+/* Iron Maiden section: the strip of song titles keeps running. */
+@keyframes ironMarquee { to { transform: translateX(-50%); } }
+.iron-marquee { animation: ironMarquee 38s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .iron-marquee { animation: none; } }

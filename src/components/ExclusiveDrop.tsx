@@ -8,7 +8,10 @@ import type { LimitedCardData } from "@/lib/limited";
 import { Countdown } from "@/components/LimitedEditionCard";
 import { useSiteImage } from "@/components/SiteContentProvider";
 
-const TEASED_KEY = "pope-exclusive-teased";
+// The little speech bubble under the button comes back every so often, on every page, with a different line each time.
+const HINT_FIRST_MS = 6000;
+const HINT_EVERY_MS = 35000;
+const HINT_SHOW_MS = 7000;
 
 // The exclusive pieces are not on display: a floating "Exclusive" button at the top, right under the menu, with the logo of
 // the band or character of the drop, a spinning neon edge, a badge and, once per visit, a hint. It shrinks to the logo
@@ -43,8 +46,14 @@ export default function ExclusiveDrop() {
     };
   }, []);
 
-  const hidden =
-    pathname.startsWith("/admin") || pathname.startsWith("/checkout") || pathname.startsWith("/carrito") || items.some((c) => pathname === `/productos/${c.slug}`);
+  // Everywhere in the store — home, collections, every garment, the exclusive pieces themselves — except the admin, the
+  // cart and the checkout (the customer is paying) and the Iron Maiden section (it already is the exclusive page).
+  const hidden = pathname.startsWith("/admin") || pathname.startsWith("/checkout") || pathname.startsWith("/carrito") || pathname.startsWith("/iron-maiden");
+  const iron = items.some((c) => /iron maiden/i.test(c.name));
+  const hints = iron
+    ? ["Hay algo que no está en la tienda… ¿lo ves?", "🤘 Colección exclusiva Iron Maiden", "Iron Maiden desde $11.999 · tallas S a 3XL", "Up the Irons! Mira las poleras de Eddie"]
+    : ["Hay algo que no está en la tienda… ¿lo ves?", "Pieza exclusiva: solo en POPE"];
+  const [hintN, setHintN] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -63,26 +72,25 @@ export default function ExclusiveDrop() {
     };
   }, []);
 
-  // Once per visit, a few seconds in: "something exclusive is waiting".
+  // A few seconds into every page, then again every ~35 s: a short line recommending the exclusives.
   useEffect(() => {
-    if (items.length === 0 || hidden) return;
-    let seen = false;
-    try {
-      seen = sessionStorage.getItem(TEASED_KEY) === "1";
-    } catch {}
-    if (seen) return;
-    const t = setTimeout(() => {
+    if (items.length === 0 || hidden || open) return;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const show = () => {
+      setHintN((n) => n + 1);
       setHint(true);
-      try {
-        sessionStorage.setItem(TEASED_KEY, "1");
-      } catch {}
-    }, 7000);
-    const t2 = setTimeout(() => setHint(false), 16000);
-    return () => {
-      clearTimeout(t);
-      clearTimeout(t2);
+      timers.push(setTimeout(() => setHint(false), HINT_SHOW_MS));
     };
-  }, [items.length, hidden]);
+    timers.push(setTimeout(show, HINT_FIRST_MS));
+    const every = setInterval(() => {
+      if (!document.hidden) show();
+    }, HINT_EVERY_MS);
+    return () => {
+      timers.forEach(clearTimeout);
+      clearInterval(every);
+      setHint(false);
+    };
+  }, [items.length, hidden, open, pathname]);
 
   useEffect(() => {
     if (!open) return;
@@ -114,13 +122,16 @@ export default function ExclusiveDrop() {
   if (items.length === 0 || hidden) return null;
   const it = items[i] ?? items[0];
   const onSale = items.filter((c) => !c.soldOut && !c.closed).length;
+  // On an Iron Maiden piece the whole page is red, the button too.
+  const onIronPiece = items.some((c) => /iron maiden/i.test(c.name) && pathname === `/productos/${c.slug}`);
   const first = items[0];
   const badgeImg = logo || first.image;
-  const subtitle = onSale === 0 ? "Agotada · vuelve pronto" : items.length === 1 ? first.name : `${items.length} piezas · edición limitada`;
+  const subtitle =
+    onSale === 0 ? "Agotada · vuelve pronto" : items.length === 1 ? first.name : iron ? `Iron Maiden · ${onSale} poleras` : `${items.length} piezas · edición limitada`;
 
   return (
     <>
-      <div className="fixed left-3 z-30 sm:left-5" style={{ top: top + 12 }}>
+      <div className="fixed left-3 z-30 sm:left-5" style={{ top: top + 12, ...(onIronPiece ? { ["--neon" as string]: "#e11d2a" } : {}) }}>
         <button
           type="button"
           onClick={() => {
@@ -168,7 +179,7 @@ export default function ExclusiveDrop() {
             }}
             className="pope-excl-hint absolute left-0 top-[calc(100%+12px)] w-max max-w-[15rem] rounded-2xl rounded-tl-sm border border-neon/40 bg-black/90 px-4 py-2.5 text-left text-xs font-semibold text-white shadow-2xl"
           >
-            Hay algo que no está en la tienda… <span className="text-neon">¿lo ves?</span>
+            {hints[(hintN - 1 + hints.length) % hints.length]} <span className="text-neon">→</span>
           </button>
         )}
       </div>
@@ -226,7 +237,9 @@ export default function ExclusiveDrop() {
                 </p>
               )}
               <p className="pope-excl-line text-sm text-neutral-400" style={{ animationDelay: "0.9s" }}>
-                No está en el catálogo. No se personaliza: llega tal como la ves.
+                {/iron maiden/i.test(it.name)
+                  ? "No está en el catálogo. Estampado grande adelante; atrás puedes agregar tu diseño por $17.999."
+                  : "No está en el catálogo. No se personaliza: llega tal como la ves."}
               </p>
               <Link
                 href={`/productos/${it.slug}`}
@@ -236,6 +249,16 @@ export default function ExclusiveDrop() {
               >
                 Ver la pieza →
               </Link>
+              {iron && (
+                <Link
+                  href="/iron-maiden"
+                  onClick={() => setOpen(false)}
+                  className="pope-excl-line inline-flex min-h-12 items-center justify-center rounded-full border-2 border-[#e11d2a] px-8 text-sm font-bold uppercase tracking-[0.18em] text-white transition hover:bg-[#e11d2a]"
+                  style={{ animationDelay: "1.05s" }}
+                >
+                  Ver toda la colección Iron Maiden
+                </Link>
+              )}
 
               {items.length > 1 && (
                 <div className="flex items-center justify-between pt-2">

@@ -124,7 +124,12 @@ export async function POST(request: Request) {
     if (!size) {
       return NextResponse.json({ error: "Talla inválida." }, { status: 409 });
     }
-    const material = product.materials.find((m) => m.label === item.materialLabel) ?? product.materials[0];
+    let material = product.materials.find((m) => m.label === item.materialLabel) ?? product.materials[0];
+    // An exclusive piece that comes with the customer's own design (the free back of an Iron Maiden tee) is charged at its
+    // pricier option whatever option the cart says.
+    if (product.limitedEdition && Object.values(item.designPlacement).some((p) => p.designUrl)) {
+      material = [...product.materials].sort((x, y) => y.priceDelta - x.priceDelta)[0] ?? material;
+    }
     if (!material) {
       return NextResponse.json({ error: "Este producto no tiene materiales configurados." }, { status: 409 });
     }
