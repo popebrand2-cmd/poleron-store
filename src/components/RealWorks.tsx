@@ -16,7 +16,7 @@ export default function RealWorks() {
   if (images.length === 0) {
     if (!editMode) return null;
     return (
-      <section className="border-t border-neutral-800 bg-black">
+      <section data-tone="dark" className="border-t border-neutral-800 bg-black">
         <div className="mx-auto max-w-6xl px-6 py-10 text-center">
           <p className="text-sm text-neutral-400">
             Aquí aparecerán tus trabajos reales. Sube fotos de prendas ya hechas en «Imágenes y contacto» (hasta 6). Mientras no
@@ -28,7 +28,7 @@ export default function RealWorks() {
   }
 
   return (
-    <section className="border-t border-neutral-800 bg-black">
+    <section data-tone="dark" className="border-t border-neutral-800 bg-black">
       <div className="mx-auto max-w-6xl px-6 py-16">
         <div className="mb-10 text-center">
           <Txt k="works.eyebrow" as="p" className="mb-1 block font-script text-3xl text-neon" />

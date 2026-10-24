@@ -14,7 +14,7 @@ export default function HomeCategoryTiles({ tiles }: { tiles: CategoryTile[] }) 
   if (tiles.length === 0) return null;
   return (
     // -mt-px: sits flush on the shelf above (same background) without a hairline seam between the two.
-    <section aria-label="Secciones" className="-mt-px bg-[#f5f5f3]">
+    <section aria-label="Secciones" data-tone="light" className="-mt-px bg-[#f5f5f3]">
       <ul
         className="mx-auto grid max-w-6xl gap-2 px-4 pb-8 sm:grid-cols-[repeat(var(--tiles),minmax(0,1fr))] sm:gap-3 sm:px-6 sm:pb-12"
         style={{ ["--tiles" as string]: String(Math.min(tiles.length, 3)) }}

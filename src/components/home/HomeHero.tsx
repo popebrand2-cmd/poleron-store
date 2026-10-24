@@ -10,7 +10,7 @@ import { useSiteImage } from "@/components/SiteContentProvider";
 export default function HomeHero({ editorHref }: { editorHref: string }) {
   const photo = useSiteImage("image.homeHero");
   return (
-    <section aria-label="Viste lo que te mueve" className="relative overflow-hidden bg-black">
+    <section aria-label="Viste lo que te mueve" data-tone="dark" className="relative overflow-hidden bg-black">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={photo}

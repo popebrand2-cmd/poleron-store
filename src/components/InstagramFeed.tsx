@@ -16,7 +16,7 @@ export default function InstagramFeed() {
   if (!url) {
     if (!editMode) return null;
     return (
-      <section className="border-t border-neutral-800 bg-black">
+      <section data-tone="dark" className="border-t border-neutral-800 bg-black">
         <div className="mx-auto max-w-6xl px-6 py-10 text-center">
           <p className="text-sm text-neutral-400">
             Aquí aparecerá tu carrusel de Instagram en vivo. Crea un widget gratis en snapwidget.com (o lightwidget.com),
@@ -29,7 +29,7 @@ export default function InstagramFeed() {
   }
 
   return (
-    <section className="pope-rise border-t border-neutral-800 bg-black">
+    <section data-tone="dark" className="pope-rise border-t border-neutral-800 bg-black">
       <div className="mx-auto max-w-6xl px-6 py-12">
         <p className="mb-6 text-center text-lg font-bold text-white">
           Mira nuestro{" "}

@@ -21,7 +21,7 @@ export default function HomeDesigns({ items, categories, counts }: { items: Garm
     }`;
 
   return (
-    <section id="tienda" className="scroll-mt-24 bg-[#f5f5f3] text-black">
+    <section id="tienda" data-tone="light" className="scroll-mt-24 bg-[#f5f5f3] text-black">
       <div className="mx-auto max-w-6xl px-4 pb-8 pt-6 sm:px-6 sm:pb-10 sm:pt-8">
         {categories.length > 1 && (
           <div className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0" role="group" aria-label="Filtrar por sección">

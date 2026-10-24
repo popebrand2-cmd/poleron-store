@@ -9,7 +9,7 @@ const STEPS = ["home.step1", "home.step2", "home.step3"];
 // editor. It is the first thing that says "you can customize anything here".
 export default function HomeSteps({ editorHref }: { editorHref: string }) {
   return (
-    <section aria-label="Cómo personalizar" className="bg-neon text-black">
+    <section aria-label="Cómo personalizar" data-tone="neon" className="bg-neon text-black">
       <Link href={editorHref} className="group mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3.5 sm:px-6 md:flex-row md:items-center md:justify-between md:gap-6 md:py-4">
         <ol className="grid grid-cols-3 gap-2 md:flex md:items-center md:gap-0">
           {STEPS.map((k, n) => (

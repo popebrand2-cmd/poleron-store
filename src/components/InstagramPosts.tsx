@@ -49,7 +49,7 @@ export default function InstagramPosts({ live = [] }: { live?: { id: string; ima
   if (posts.length === 0) {
     if (!editMode) return null;
     return (
-      <section className="border-t border-neutral-800 bg-black">
+      <section data-tone="dark" className="border-t border-neutral-800 bg-black">
         <div className="mx-auto max-w-6xl px-6 py-10 text-center">
           <p className="text-sm text-neutral-400">
             Aquí aparecerán tus publicaciones de Instagram. Sube la foto de cada una y pega su enlace en «Imágenes y contacto» → Publicaciones de
@@ -61,7 +61,7 @@ export default function InstagramPosts({ live = [] }: { live?: { id: string; ima
   }
 
   return (
-    <section id="instagram" className="border-t border-neutral-800 bg-black">
+    <section id="instagram" data-tone="dark" className="border-t border-neutral-800 bg-black">
       <div className="mx-auto max-w-6xl px-6 py-16">
         <div data-reveal="" className="mb-10 text-center">
           <Txt k="insta.eyebrow" as="p" className="mb-1 block font-script text-3xl text-neon" />

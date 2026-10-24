@@ -9,7 +9,7 @@ import { useSiteImage } from "@/components/SiteContentProvider";
 export default function HomeIdeaBanner({ editorHref }: { editorHref: string }) {
   const photo = useSiteImage("image.homeIdea");
   return (
-    <section aria-label="Personaliza tu prenda" className="relative overflow-hidden bg-black">
+    <section aria-label="Personaliza tu prenda" data-tone="dark" className="relative overflow-hidden bg-black">
       {photo && (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}

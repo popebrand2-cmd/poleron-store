@@ -99,7 +99,7 @@ export default function RealVideos() {
   if (all.length === 0) {
     if (!editMode) return null;
     return (
-      <section className="border-t border-neutral-800 bg-black">
+      <section data-tone="dark" className="border-t border-neutral-800 bg-black">
         <div className="mx-auto max-w-6xl px-6 py-10 text-center">
           <p className="text-sm text-neutral-400">
             Aquí aparecerán tus videos verticales. Súbelos en «Imágenes y contacto» → Videos (hasta {VIDEO_SLOTS}). Mientras no subas
@@ -111,7 +111,7 @@ export default function RealVideos() {
   }
 
   return (
-    <section ref={sectionRef} className="overflow-hidden border-t border-neutral-800 bg-black">
+    <section ref={sectionRef} data-tone="dark" className="overflow-hidden border-t border-neutral-800 bg-black">
       <div className="mx-auto max-w-6xl px-6 pb-4 pt-16">
         <div className="text-center">
           <Txt k="videos.eyebrow" as="p" className="mb-1 block font-script text-3xl text-neon" />

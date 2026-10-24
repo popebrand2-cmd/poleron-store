@@ -186,7 +186,7 @@ export default function ReviewsSection({ initialItems, products }: { initialItem
 
   if (items.length === 0 && editMode) {
     return (
-      <section className="border-t border-neutral-800 bg-neutral-950">
+      <section data-tone="dark" className="border-t border-neutral-800 bg-neutral-950">
         <div className="mx-auto max-w-6xl px-6 py-10 text-center">
           <p className="text-sm text-neutral-400">
             Aquí aparecerán tus reseñas reales. Agrega las que ya tengas (WhatsApp, Instagram, Mercado Libre) con «Agregar
@@ -203,7 +203,7 @@ export default function ReviewsSection({ initialItems, products }: { initialItem
   const avg = items.reduce((s, r) => s + r.rating, 0) / items.length;
 
   return (
-    <section className="border-t border-neutral-800 bg-neutral-950">
+    <section data-tone="dark" className="border-t border-neutral-800 bg-neutral-950">
       <div className="mx-auto max-w-6xl px-6 py-16">
         <div className="pope-rise mb-10 text-center">
           <Txt k="reviews.eyebrow" as="p" className="mb-1 block font-script text-3xl text-neon" />

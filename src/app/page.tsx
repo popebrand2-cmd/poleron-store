@@ -222,7 +222,7 @@ export default async function Home() {
       <HomeIdeaBanner editorHref={editorHref} />
 
       {/* Featured: the base garments with their price come first — this is what is being sold */}
-      <section id={homeItems.length > 0 ? "base" : "tienda"} className="scroll-mt-24 bg-[#f5f5f3] text-black">
+      <section id={homeItems.length > 0 ? "base" : "tienda"} data-tone="light" className="scroll-mt-24 bg-[#f5f5f3] text-black">
         <div className="mx-auto max-w-6xl px-6 py-16">
           <div data-reveal="" className="mb-10 text-center">
             <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-black">
@@ -294,7 +294,7 @@ export default async function Home() {
       <InstagramFeed />
 
       {/* FAQ */}
-      <section className="bg-[#f5f5f3] text-black">
+      <section data-tone="light" className="bg-[#f5f5f3] text-black">
         <div className="mx-auto max-w-3xl px-6 py-16">
           <div className="mb-10 text-center">
             <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-black">
@@ -311,7 +311,7 @@ export default async function Home() {
       </section>
 
       {/* Trust (shipping, secure payment, guarantee): the very last thing on the page, a green strip right above the footer. */}
-      <section className="bg-neon text-black">
+      <section data-tone="neon" className="bg-neon text-black">
         <div className="mx-auto max-w-6xl px-6 py-7">
           <TrustBadgesList initialItems={itemsFor("trustBadges")} />
         </div>

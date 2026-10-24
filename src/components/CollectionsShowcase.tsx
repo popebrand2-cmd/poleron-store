@@ -298,7 +298,7 @@ export default function CollectionsShowcase({
   const S = STATES[mode];
 
   return (
-    <section ref={sectionRef} id="colecciones" className="pcol" aria-label="Colecciones POPE" onKeyDown={onKeyDown}>
+    <section ref={sectionRef} id="colecciones" data-tone="dark" className="pcol" aria-label="Colecciones POPE" onKeyDown={onKeyDown}>
       <header className="pcol-head">
         <p className="pcol-eyebrow">{eyebrow}</p>
         <h2 className="pcol-title">

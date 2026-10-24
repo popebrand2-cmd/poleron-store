@@ -165,7 +165,7 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
   const delay = (i: number): CSSProperties => ({ transitionDelay: `${i * 0.12}s` });
 
   return (
-    <section ref={rootRef} className="relative isolate overflow-hidden bg-[#f5f5f3]">
+    <section ref={rootRef} data-tone="light" className="relative isolate overflow-hidden bg-[#f5f5f3]">
       <div aria-hidden="true" className="hiw-texture absolute inset-0 -z-10" />
       <div
         aria-hidden="true"
