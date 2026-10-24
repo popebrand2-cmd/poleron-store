@@ -211,10 +211,10 @@ export default function ExclusiveDrop() {
             className="pope-excl-panel relative max-h-[calc(100dvh-4.5rem)] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-[1.5rem] border border-neon/40 bg-neutral-950 text-white shadow-[0_0_80px_-20px_var(--neon)] sm:max-h-[calc(100dvh-2rem)] sm:rounded-[2rem] md:grid md:grid-cols-2 md:overflow-hidden"
           >
 
-            <div className="relative h-[30dvh] overflow-hidden bg-white sm:h-auto sm:aspect-square md:aspect-auto md:min-h-[26rem]">
+            <div className={`relative h-[36dvh] overflow-hidden sm:h-auto sm:aspect-square md:aspect-auto md:min-h-[26rem] ${/iron maiden/i.test(it.name) ? "bg-[radial-gradient(circle_at_50%_45%,#5a0f14_0%,#1c0608_55%,#0a0a0a_100%)]" : "bg-white"}`}>
               {it.image && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={it.image} alt={it.name} className="pope-excl-reveal absolute inset-0 h-full w-full object-contain p-4" />
+                <img src={it.image} alt={it.name} className={`pope-excl-reveal absolute inset-0 h-full w-full ${/iron maiden/i.test(it.name) ? "object-cover" : "object-contain p-4"}`} />
               )}
               <span aria-hidden="true" className="pope-excl-curtain absolute inset-0 bg-black" />
               <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white shadow-lg">

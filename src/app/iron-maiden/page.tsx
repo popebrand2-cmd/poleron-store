@@ -27,6 +27,11 @@ export default async function IronMaidenPage() {
     ? ((await prisma.product.findUnique({ where: { slug: featured.slug }, select: { sizes: { orderBy: { sortOrder: "asc" }, select: { label: true } } } }))?.sizes ?? []).map((z) => z.label)
     : [];
   const price = items.find((c) => !c.soldOut)?.price ?? items[0]?.price ?? 11999;
+  // "Personaliza tu polera aquí": the store's tee (not the hoodie the rest of the store opens with), already in black.
+  const tee =
+    (await prisma.product.findFirst({ where: { slug: "tee-oversize", active: true }, select: { slug: true } })) ??
+    (await prisma.product.findFirst({ where: { active: true, limitedEdition: false, name: { contains: "Polera" } }, orderBy: { createdAt: "asc" }, select: { slug: true } }));
+  const customizeHref = tee ? `/productos/${tee.slug}?color=Negro` : "/personaliza";
 
   return (
     <main className="bg-[#070707] text-white" style={{ ["--neon" as string]: "#e11d2a" } as React.CSSProperties}>
@@ -77,7 +82,7 @@ export default async function IronMaidenPage() {
               Ver las {all.length} poleras <span aria-hidden="true">↓</span>
             </a>
             <a
-              href="/personaliza"
+              href={customizeHref}
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border-2 border-[#e11d2a] bg-black/70 px-6 font-display text-2xl font-bold uppercase leading-none text-white transition hover:bg-[#e11d2a]"
             >
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">

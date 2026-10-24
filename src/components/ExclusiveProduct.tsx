@@ -62,6 +62,8 @@ export default function ExclusiveProduct({ p }: { p: ExclusiveData }) {
   }
 
   const v = p.versions[vi] ?? p.versions[0];
+  // An Iron Maiden piece: its picture fills the stage, on a dark red backdrop instead of white.
+  const iron = /iron maiden/i.test(p.name);
   const over = p.soldOut || p.closed;
   const maxQty = Math.max(1, Math.min(MAX_PER_ORDER, p.remaining ?? MAX_PER_ORDER));
   const sizeObj = p.sizes.find((s) => s.label === size);
@@ -113,17 +115,17 @@ export default function ExclusiveProduct({ p }: { p: ExclusiveData }) {
       <div className="mx-auto grid max-w-6xl gap-10 px-6 pb-28 pt-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14 lg:pb-16 lg:pt-12">
         {/* Stage */}
         <div>
-          <div className="relative aspect-square overflow-hidden rounded-[2rem] border border-white/15 bg-white shadow-[0_0_60px_-12px_color-mix(in_srgb,var(--neon)_45%,transparent)]">
+          <div className={`relative aspect-square overflow-hidden rounded-[2rem] border border-white/15 ${iron ? "bg-[radial-gradient(circle_at_50%_45%,#5a0f14_0%,#1c0608_55%,#0a0a0a_100%)]" : "bg-white"} shadow-[0_0_60px_-12px_color-mix(in_srgb,var(--neon)_45%,transparent)]`}>
             {/* Corner marks, like a plate on a display case */}
             {["left-4 top-4 border-l-2 border-t-2", "right-4 top-4 border-r-2 border-t-2", "left-4 bottom-4 border-l-2 border-b-2", "right-4 bottom-4 border-r-2 border-b-2"].map((c) => (
-              <span key={c} aria-hidden="true" className={`absolute h-6 w-6 border-black/35 ${c}`} />
+              <span key={c} aria-hidden="true" className={`absolute z-[1] h-6 w-6 ${iron ? "border-white/40" : "border-black/35"} ${c}`} />
             ))}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={v.imageUrl} alt={`${p.name} — ${v.name}`} className={`absolute inset-0 h-full w-full object-contain p-3 sm:p-6 ${over ? "grayscale" : ""}`} />
+            <img src={v.imageUrl} alt={`${p.name} — ${v.name}`} className={`absolute inset-0 h-full w-full ${iron ? "object-cover" : "object-contain p-3 sm:p-6"} ${over ? "grayscale" : ""}`} />
             <span className="absolute right-6 top-6 inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white shadow-lg">
               <span aria-hidden="true">●</span> Edición limitada
             </span>
-            <span className="absolute bottom-6 right-7 text-[10px] font-semibold uppercase tracking-[0.25em] text-black/35">Imagen referencial</span>
+            <span className={`absolute bottom-6 right-7 text-[10px] font-semibold uppercase tracking-[0.25em] ${iron ? "text-white/50" : "text-black/35"}`}>Imagen referencial</span>
             {over && (
               <span className="absolute inset-x-0 top-1/2 mx-auto w-fit -translate-y-1/2 -rotate-6 rounded-md border-4 border-white px-6 py-1 font-display text-6xl font-bold uppercase text-white shadow-2xl [text-shadow:0_2px_8px_rgba(0,0,0,0.6)]">
                 {p.soldOut ? "Agotada" : "Cerrada"}
