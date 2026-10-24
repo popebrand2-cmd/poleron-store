@@ -48,6 +48,16 @@ export default function HomeHero({ editorHref }: { editorHref: string }) {
               <span aria-hidden="true" className="transition-transform duration-300 group-hover:translate-x-1">→</span>
             </Link>
           </div>
+          <ul className="home-rise mt-5 hidden flex-wrap gap-x-5 gap-y-1.5 text-xs font-medium text-white/80 [--d:400ms] sm:flex md:text-sm">
+            {["Envío a todo Chile", "Pago seguro con Mercado Pago", "Ves tu diseño antes de pagar"].map((t) => (
+              <li key={t} className="flex items-center gap-1.5">
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 text-neon" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12l5 5L20 7" />
+                </svg>
+                {t}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>

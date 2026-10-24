@@ -26,6 +26,8 @@ import HomeDesigns from "@/components/home/HomeDesigns";
 import HomeCategoryTiles, { type CategoryTile } from "@/components/home/HomeCategoryTiles";
 import HomeIdeaBanner from "@/components/home/HomeIdeaBanner";
 import HomeSteps from "@/components/home/HomeSteps";
+import HomeIronBanner from "@/components/home/HomeIronBanner";
+import { loadLimitedCards } from "@/lib/limited";
 import { loadShowcaseItems } from "@/lib/collection-items";
 import { getEditorHref } from "@/lib/editor-product";
 import { siteText, CONTENT_DEFAULTS, type ContentSection } from "@/lib/site-content";
@@ -62,7 +64,10 @@ export default async function Home() {
   // The garments of the collections, ready-made (design printed front and back), right under the hero: the same cards as
   // the collection pages. Already mixed at random; the shelf gets the first 8 overall and the first 8 of each section, so
   // every filter chip has its own row.
-  const [allItems, instagramPosts] = await Promise.all([loadShowcaseItems(1000), getInstagramPosts(8)]);
+  const [allItems, instagramPosts, limitedCards] = await Promise.all([loadShowcaseItems(1000), getInstagramPosts(8), loadLimitedCards()]);
+  // The Iron Maiden exclusive drop, promoted under the section tiles while it has pieces on sale.
+  const ironOnSale = limitedCards.filter((c) => /iron maiden/i.test(c.name) && !c.soldOut && !c.closed);
+  const ironFrom = ironOnSale.length > 0 ? Math.min(...ironOnSale.map((c) => c.price)) : 0;
   const categories = [...new Set(collectionsWithDesigns.map((c) => c.category.trim() || "Otros"))].filter((cat) => allItems.some((i) => i.category === cat));
   const homeItems = [...new Map([...allItems.slice(0, 8), ...categories.flatMap((cat) => allItems.filter((i) => i.category === cat).slice(0, 8))].map((i) => [i.key, i])).values()];
   const categoryCounts = Object.fromEntries(categories.map((cat) => [cat, allItems.filter((i) => i.category === cat).length]));
@@ -219,6 +224,7 @@ export default async function Home() {
       <HomeSteps editorHref={editorHref} />
       {homeItems.length > 0 && <HomeDesigns items={homeItems} categories={categories} counts={categoryCounts} />}
       <HomeCategoryTiles tiles={tiles} />
+      <HomeIronBanner count={ironOnSale.length} price={ironFrom} />
       <HomeIdeaBanner editorHref={editorHref} />
 
       {/* Featured: the base garments with their price come first — this is what is being sold */}

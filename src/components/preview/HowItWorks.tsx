@@ -42,7 +42,7 @@ const ShirtIcon = ({ className }: { className?: string }) => (
 
 function Connector({ index }: { index: number }) {
   return (
-    <div data-hiw className="hiw-conn flex items-center justify-center" style={{ transitionDelay: `${index * 0.1}s` }}>
+    <div data-hiw className="hiw-conn hidden items-center justify-center lg:flex" style={{ transitionDelay: `${index * 0.1}s` }}>
       {/* desktop: horizontal arrow */}
       <svg viewBox="0 0 64 24" className="hidden h-6 w-12 text-black lg:block" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path className="hiw-arrow-path" pathLength={100} d="M3 12h50" />
@@ -179,9 +179,9 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
           <Txt k="how.subtitle" as="p" className="mt-1 inline-block -rotate-2 rounded-md bg-black px-3 pb-1 font-script text-2xl text-neon sm:text-3xl" />
         </div>
 
-        <div className="flex flex-col gap-0 lg:grid lg:grid-cols-[1fr_auto_1.3fr_auto_1fr] lg:items-center lg:gap-2">
+        <div className="-mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-3 [scrollbar-width:none] lg:mx-0 lg:grid lg:grid-cols-[1fr_auto_1.3fr_auto_1fr] lg:items-center lg:gap-2 lg:overflow-visible lg:px-0 lg:pb-0">
           {/* 01 — Sube tu diseño */}
-          <div data-hiw className="hiw-reveal mx-auto w-full max-w-[30rem] lg:max-w-none" style={delay(0)}>
+          <div data-hiw className="hiw-reveal w-[84%] max-w-[26rem] shrink-0 snap-center max-lg:![opacity:1] max-lg:![transform:none] sm:w-[55%] lg:mx-auto lg:w-full lg:max-w-none" style={delay(0)}>
             <article className="hiw-card rounded-3xl p-5 sm:p-6">
               <StepHead n="01" labelKey="how.tag1" icon={<UploadIcon className="h-6 w-6" />} />
 
@@ -232,7 +232,7 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
           <Connector index={1} />
 
           {/* 02 — Personaliza en vivo (main card) */}
-          <div data-hiw className="hiw-reveal mx-auto w-full max-w-[30rem] lg:max-w-none" style={delay(1)}>
+          <div data-hiw className="hiw-reveal w-[84%] max-w-[26rem] shrink-0 snap-center max-lg:![opacity:1] max-lg:![transform:none] sm:w-[55%] lg:mx-auto lg:w-full lg:max-w-none" style={delay(1)}>
             <article className="hiw-card hiw-card-main rounded-3xl p-5 sm:p-7 lg:py-8">
               <StepHead n="02" labelKey="how.tag2" icon={<SizeIcon className="h-7 w-7" />} main />
 
@@ -276,7 +276,7 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
           <Connector index={2} />
 
           {/* 03 — Lo hacemos realidad */}
-          <div data-hiw className="hiw-reveal mx-auto w-full max-w-[30rem] lg:max-w-none" style={delay(2)}>
+          <div data-hiw className="hiw-reveal w-[84%] max-w-[26rem] shrink-0 snap-center max-lg:![opacity:1] max-lg:![transform:none] sm:w-[55%] lg:mx-auto lg:w-full lg:max-w-none" style={delay(2)}>
             <article className="hiw-card rounded-3xl p-5 sm:p-6">
               <StepHead n="03" labelKey="how.tag3" icon={<ShirtIcon className="h-6 w-6" />} />
 
@@ -294,7 +294,9 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
           </div>
         </div>
 
-        <div data-hiw className="hiw-reveal mt-14 text-center" style={delay(1)}>
+        <p className="mt-1 text-center text-xs font-medium text-neutral-500 lg:hidden">Desliza para ver los 3 pasos →</p>
+
+        <div data-hiw className="hiw-reveal mt-10 text-center lg:mt-14" style={delay(1)}>
           <EditableLink href={editorHref} className="pope-cta text-black">
             <span className="pope-cta-goo" aria-hidden="true">
                   <span className="pope-cta-bg" />
