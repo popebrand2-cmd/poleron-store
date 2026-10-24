@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const cards = await loadLimitedCards();
   const open = cards.filter((c) => !c.soldOut && !c.closed);
-  const items = open.length > 0 ? open : cards;
+  // The featured Iron Maiden piece (Run For Your Lives) is the first one the button shows.
+  const items = (open.length > 0 ? open : cards).sort((x, y) => Number(y.slug === "polera-iron-maiden") - Number(x.slug === "polera-iron-maiden"));
   return NextResponse.json({ items }, { headers: { "Cache-Control": "public, max-age=60" } });
 }

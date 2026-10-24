@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { loadLimitedCards } from "@/lib/limited";
+import { prisma } from "@/lib/prisma";
+import { formatCLP } from "@/lib/money";
 import ExclusiveGrid from "@/components/ExclusiveGrid";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +18,14 @@ const SONGS = ["Up the Irons", "The Trooper", "Powerslave", "Fear of the Dark", 
 
 // The Iron Maiden exclusive section: every Iron Maiden piece on sale, black tees with the big print on the front.
 export default async function IronMaidenPage() {
-  const items = (await loadLimitedCards()).filter((c) => /iron maiden/i.test(c.name) && !c.closed);
+  const all = (await loadLimitedCards()).filter((c) => /iron maiden/i.test(c.name) && !c.closed);
+  // The featured piece on top: "Run For Your Lives", the full-colour sublimated one (the first Iron Maiden piece, not one
+  // of the poster tees). The grid below shows the rest.
+  const featured = all.find((c) => c.slug === "polera-iron-maiden") ?? all.find((c) => !c.slug.startsWith("iron-maiden-")) ?? null;
+  const items = all.filter((c) => c !== featured);
+  const featuredSizes = featured
+    ? ((await prisma.product.findUnique({ where: { slug: featured.slug }, select: { sizes: { orderBy: { sortOrder: "asc" }, select: { label: true } } } }))?.sizes ?? []).map((z) => z.label)
+    : [];
   const price = items.find((c) => !c.soldOut)?.price ?? items[0]?.price ?? 11999;
 
   return (
@@ -60,16 +69,24 @@ export default async function IronMaidenPage() {
               </li>
             ))}
           </ul>
-          <p className="mx-auto mt-4 max-w-lg text-sm text-neutral-300">
-            ¿Quieres algo atrás? Agrégale <span className="font-bold text-white">tu propio diseño en la espalda</span> por{" "}
-            <span className="font-bold text-neon">$17.999</span>: lo eliges en la página de cada polera.
-          </p>
-          <a
-            href="#piezas"
-            className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-md bg-[#e11d2a] px-7 font-display text-2xl font-bold uppercase leading-none text-white shadow-[0_10px_30px_-8px_rgba(225,29,42,0.8)] transition hover:bg-[#ff2a38]"
-          >
-            Ver las {items.length} poleras <span aria-hidden="true">↓</span>
-          </a>
+          <div className="mt-7 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
+            <a
+              href="#piezas"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-[#e11d2a] px-7 font-display text-2xl font-bold uppercase leading-none text-white shadow-[0_10px_30px_-8px_rgba(225,29,42,0.8)] transition hover:bg-[#ff2a38]"
+            >
+              Ver las {all.length} poleras <span aria-hidden="true">↓</span>
+            </a>
+            <a
+              href="/personaliza"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border-2 border-[#e11d2a] bg-black/70 px-6 font-display text-2xl font-bold uppercase leading-none text-white transition hover:bg-[#e11d2a]"
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9" />
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+              </svg>
+              Personaliza tu polera aquí
+            </a>
+          </div>
         </div>
       </section>
 
@@ -84,6 +101,40 @@ export default async function IronMaidenPage() {
           ))}
         </div>
       </div>
+
+      {featured && (
+        <section aria-label="Destacada" className="mx-auto max-w-6xl px-4 pt-12 sm:px-6 sm:pt-16">
+          <Link
+            href={`/productos/${featured.slug}`}
+            className="group grid overflow-hidden rounded-2xl border-2 border-[#e11d2a]/70 bg-[#0d0d0d] shadow-[0_0_60px_-18px_rgba(225,29,42,0.8)] transition hover:border-[#e11d2a] md:grid-cols-[1.15fr_1fr]"
+          >
+            <div className="relative aspect-square overflow-hidden bg-black md:aspect-auto md:min-h-[28rem]">
+              {featured.image && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={featured.image} alt={featured.name} className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+              )}
+              <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-[#e11d2a] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-white shadow-lg">
+                ★ Destacada
+              </span>
+            </div>
+            <div className="flex flex-col justify-center gap-4 p-6 sm:p-8">
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#ff4b57]">Edición especial · Sublimada full color</p>
+              <h2 className="font-display text-5xl font-bold uppercase leading-[0.88] sm:text-6xl">{featured.name.replace(/^Polera Iron Maiden\s*[–-]\s*/i, "")}</h2>
+              {featured.description && <p className="line-clamp-4 text-sm leading-relaxed text-neutral-300">{featured.description}</p>}
+              <ul className="flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-wide text-white">
+                <li className="rounded-md border border-white/15 px-2.5 py-1">Full color adelante y atrás</li>
+                {featuredSizes.length > 0 && <li className="rounded-md border border-white/15 px-2.5 py-1">Tallas {featuredSizes.join(", ")}</li>}
+              </ul>
+              <div className="mt-1 flex items-center justify-between gap-4">
+                <span className="font-display text-5xl font-bold leading-none">{formatCLP(featured.price)}</span>
+                <span className="inline-flex min-h-12 items-center rounded-md bg-[#e11d2a] px-7 font-display text-2xl font-bold uppercase leading-none text-white transition group-hover:bg-[#ff2a38]">
+                  {featured.soldOut ? "Agotada" : "Comprar"}
+                </span>
+              </div>
+            </div>
+          </Link>
+        </section>
+      )}
 
       <section id="piezas" className="mx-auto max-w-6xl scroll-mt-24 px-4 py-12 sm:px-6 sm:py-16">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">

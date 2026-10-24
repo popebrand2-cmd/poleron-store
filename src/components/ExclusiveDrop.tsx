@@ -185,21 +185,31 @@ export default function ExclusiveDrop() {
       </div>
 
       {open && (
-        <div role="dialog" aria-modal="true" aria-label="Piezas exclusivas" className="fixed inset-0 z-[90] flex items-center justify-center p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Piezas exclusivas"
+          className="fixed inset-0 z-[90] flex items-end justify-center p-2 sm:items-center sm:p-4"
+          style={/iron maiden/i.test(it.name) ? ({ ["--neon" as string]: "#e11d2a" } as React.CSSProperties) : undefined}
+        >
           <button type="button" aria-label="Cerrar" tabIndex={-1} onClick={() => setOpen(false)} className="pope-excl-backdrop absolute inset-0 bg-black/85 backdrop-blur-md" />
 
-          <div key={it.slug} className="pope-excl-panel relative w-full max-w-3xl overflow-hidden rounded-[2rem] border border-neon/40 bg-neutral-950 text-white shadow-[0_0_80px_-20px_var(--neon)] md:grid md:grid-cols-2">
-            <button
-              ref={closeRef}
-              type="button"
-              onClick={() => setOpen(false)}
-              aria-label="Cerrar"
-              className="absolute right-3 top-3 z-20 grid h-10 w-10 place-items-center rounded-full bg-black/60 text-2xl leading-none text-white transition hover:bg-black"
-            >
-              ×
-            </button>
+          <button
+            ref={closeRef}
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Cerrar"
+            className="fixed right-3 top-3 z-[95] grid h-11 w-11 place-items-center rounded-full border border-white/30 bg-black/80 text-3xl leading-none text-white shadow-lg transition hover:bg-black sm:right-5 sm:top-5"
+          >
+            ×
+          </button>
 
-            <div className="relative aspect-square overflow-hidden bg-white md:aspect-auto md:min-h-[26rem]">
+          <div
+            key={it.slug}
+            className="pope-excl-panel relative max-h-[calc(100dvh-4.5rem)] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-[1.5rem] border border-neon/40 bg-neutral-950 text-white shadow-[0_0_80px_-20px_var(--neon)] sm:max-h-[calc(100dvh-2rem)] sm:rounded-[2rem] md:grid md:grid-cols-2 md:overflow-hidden"
+          >
+
+            <div className="relative h-[30dvh] overflow-hidden bg-white sm:h-auto sm:aspect-square md:aspect-auto md:min-h-[26rem]">
               {it.image && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={it.image} alt={it.name} className="pope-excl-reveal absolute inset-0 h-full w-full object-contain p-4" />
@@ -210,11 +220,11 @@ export default function ExclusiveDrop() {
               </span>
             </div>
 
-            <div className="flex flex-col justify-center gap-4 p-6 sm:p-8">
+            <div className="flex flex-col justify-center gap-3 p-5 sm:gap-4 sm:p-8">
               <p className="pope-excl-line text-[11px] font-bold uppercase tracking-[0.35em] text-neon" style={{ animationDelay: "0.55s" }}>
                 Acceso exclusivo · Solo en POPE
               </p>
-              <h2 className="pope-excl-line font-display text-5xl font-bold uppercase leading-[0.9]" style={{ animationDelay: "0.65s" }}>
+              <h2 className="pope-excl-line font-display text-4xl font-bold uppercase leading-[0.9] sm:text-5xl" style={{ animationDelay: "0.65s" }}>
                 {it.name}
               </h2>
               {(it.soldOut || it.closed) && (
