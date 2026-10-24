@@ -136,6 +136,7 @@ export default function ExclusiveDrop() {
           type="button"
           onClick={() => {
             setHint(false);
+            setI(0);
             setOpen(true);
           }}
           aria-haspopup="dialog"
@@ -175,6 +176,7 @@ export default function ExclusiveDrop() {
             type="button"
             onClick={() => {
               setHint(false);
+              setI(0);
               setOpen(true);
             }}
             className="pope-excl-hint absolute left-0 top-[calc(100%+12px)] w-max max-w-[15rem] rounded-2xl rounded-tl-sm border border-neon/40 bg-black/90 px-4 py-2.5 text-left text-xs font-semibold text-white shadow-2xl"
