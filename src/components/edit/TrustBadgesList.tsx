@@ -23,14 +23,14 @@ export default function TrustBadgesList({ initialItems }: { initialItems: Conten
                 <DeleteItemButton onDelete={() => removeItem(v.id)} />
               </div>
             )}
-            <span className="mb-3 text-neon">
+            <span className="mb-3 grid h-12 w-12 place-items-center rounded-full bg-black text-neon">
               <Icon name={v.icon} className="h-7 w-7" />
             </span>
             {editMode && <IconPicker value={v.icon} onChange={(icon) => updateItem(v.id, { icon })} />}
-            <p className="mt-2 text-xs font-extrabold uppercase tracking-wide text-white">
+            <p className="mt-2 text-xs font-extrabold uppercase tracking-wide text-black">
               <EditableText value={v.title} onSave={(val) => updateItem(v.id, { title: val })} as="span" />
             </p>
-            <p className="mt-1 text-xs text-neutral-400">
+            <p className="mt-1 text-xs text-black/70">
               <EditableText value={v.text} onSave={(val) => updateItem(v.id, { text: val })} as="span" multiline />
             </p>
           </div>

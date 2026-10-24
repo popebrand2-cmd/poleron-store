@@ -222,18 +222,18 @@ export default async function Home() {
       <HomeIdeaBanner editorHref={editorHref} />
 
       {/* Featured: the base garments with their price come first — this is what is being sold */}
-      <section id={homeItems.length > 0 ? "base" : "tienda"} className="scroll-mt-24 bg-black">
+      <section id={homeItems.length > 0 ? "base" : "tienda"} className="scroll-mt-24 bg-[#f5f5f3] text-black">
         <div className="mx-auto max-w-6xl px-6 py-16">
           <div data-reveal="" className="mb-10 text-center">
-            <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-neon">
-              <span className="h-px w-8 bg-neon" />
-              <EditableText value={t("featured.eyebrow")} siteKey="featured.eyebrow" as="span" />
-              <span className="h-px w-8 bg-neon" />
+            <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-black">
+              <span className="h-px w-8 bg-black" />
+              <EditableText value={t("featured.eyebrow")} siteKey="featured.eyebrow" as="span" className="rounded-sm bg-neon px-2 py-0.5" />
+              <span className="h-px w-8 bg-black" />
             </p>
-            <h2 className="text-4xl font-bold uppercase text-white sm:text-5xl">
+            <h2 className="text-4xl font-bold uppercase text-black sm:text-5xl">
               <EditableText value={t("featured.heading")} siteKey="featured.heading" as="span" />
             </h2>
-            <p className="mt-2 text-neutral-400">
+            <p className="mt-2 text-neutral-600">
               <EditableText value={t("featured.subtext")} siteKey="featured.subtext" as="span" />
             </p>
           </div>
@@ -294,15 +294,15 @@ export default async function Home() {
       <InstagramFeed />
 
       {/* FAQ */}
-      <section className="border-t border-neutral-800 bg-neutral-950">
+      <section className="bg-[#f5f5f3] text-black">
         <div className="mx-auto max-w-3xl px-6 py-16">
           <div className="mb-10 text-center">
-            <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-neon">
-              <span className="h-px w-8 bg-neon" />
-              <EditableText value={t("faq.eyebrow")} siteKey="faq.eyebrow" as="span" />
-              <span className="h-px w-8 bg-neon" />
+            <p className="mb-3 flex items-center justify-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-black">
+              <span className="h-px w-8 bg-black" />
+              <EditableText value={t("faq.eyebrow")} siteKey="faq.eyebrow" as="span" className="rounded-sm bg-neon px-2 py-0.5" />
+              <span className="h-px w-8 bg-black" />
             </p>
-            <h2 className="text-4xl font-bold uppercase text-white sm:text-5xl">
+            <h2 className="text-4xl font-bold uppercase text-black sm:text-5xl">
               <EditableText value={t("faq.heading")} siteKey="faq.heading" as="span" />
             </h2>
           </div>
@@ -310,8 +310,8 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Trust (shipping, secure payment, guarantee): the very last thing on the page, right above the footer. */}
-      <section className="border-y border-neutral-800 bg-neutral-950">
+      {/* Trust (shipping, secure payment, guarantee): the very last thing on the page, a green strip right above the footer. */}
+      <section className="bg-neon text-black">
         <div className="mx-auto max-w-6xl px-6 py-7">
           <TrustBadgesList initialItems={itemsFor("trustBadges")} />
         </div>

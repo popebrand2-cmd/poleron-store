@@ -50,14 +50,14 @@ function ProductCard({ p }: { p: FeaturedProduct }) {
   // both options without leaving the carousel; moving the cursor away
   // switches it back.
   const shown = hovered && alt ? alt : base;
-  const backdropClass = shown && isLightColor(shown.hex) ? "bg-black" : "bg-white";
+  const backdropClass = shown && isLightColor(shown.hex) ? "bg-black" : "bg-[#ececec] bg-[radial-gradient(ellipse_at_50%_38%,#ffffff_0%,#f3f3f3_55%,#e2e2e2_100%)]";
 
   return (
     <Link
       href={`/productos/${p.slug}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="group relative w-[220px] shrink-0 snap-start glass glass-hover overflow-hidden rounded-2xl sm:w-[260px]"
+      className="group relative w-[220px] shrink-0 snap-start overflow-hidden rounded-xl bg-white shadow-[0_10px_30px_-18px_rgba(0,0,0,0.45)] ring-1 ring-black/10 transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_-18px_rgba(0,0,0,0.5)] sm:w-[260px]"
     >
       <span className="absolute left-3 top-3 z-10 glass-neon rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-black">
         Personalizable
@@ -77,19 +77,19 @@ function ProductCard({ p }: { p: FeaturedProduct }) {
         )}
       </div>
       <div className="p-4">
-        <p className="font-semibold uppercase tracking-tight text-white">{p.name}</p>
+        <p className="font-semibold uppercase tracking-tight text-black">{p.name}</p>
         <p className="mt-1 flex items-baseline gap-2 text-sm">
-          <span className="text-neutral-400">{formatCLP(p.basePrice)}</span>
+          <span className="font-semibold text-black">{formatCLP(p.basePrice)}</span>
           {p.compareAtPrice != null && p.compareAtPrice > p.basePrice && (
             <>
-              <span className="text-neutral-600 line-through">{formatCLP(p.compareAtPrice)}</span>
+              <span className="text-neutral-400 line-through">{formatCLP(p.compareAtPrice)}</span>
               <span className="rounded bg-red-600 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
                 -{Math.round(100 - (p.basePrice / p.compareAtPrice) * 100)}%
               </span>
             </>
           )}
         </p>
-        <p className="mt-2 text-xs font-bold uppercase tracking-wide text-neon">Ver producto →</p>
+        <p className="mt-2 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-wide text-black underline decoration-neon decoration-2 underline-offset-4 transition group-hover:text-[#0b6b25]">Ver producto →</p>
       </div>
     </Link>
   );
@@ -163,7 +163,7 @@ export default function FeaturedCarousel({ products }: { products: FeaturedProdu
             type="button"
             onClick={() => scrollBy(-1)}
             aria-label="Anterior"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 text-white transition hover:border-neon hover:text-neon"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-black/20 bg-white text-black transition hover:border-black hover:bg-black hover:text-neon"
           >
             ‹
           </button>
@@ -171,7 +171,7 @@ export default function FeaturedCarousel({ products }: { products: FeaturedProdu
             type="button"
             onClick={() => scrollBy(1)}
             aria-label="Siguiente"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-700 text-white transition hover:border-neon hover:text-neon"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-black/20 bg-white text-black transition hover:border-black hover:bg-black hover:text-neon"
           >
             ›
           </button>

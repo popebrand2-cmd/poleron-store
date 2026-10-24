@@ -44,14 +44,14 @@ function Connector({ index }: { index: number }) {
   return (
     <div data-hiw className="hiw-conn flex items-center justify-center" style={{ transitionDelay: `${index * 0.1}s` }}>
       {/* desktop: horizontal arrow */}
-      <svg viewBox="0 0 64 24" className="hidden h-6 w-12 text-neon lg:block" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg viewBox="0 0 64 24" className="hidden h-6 w-12 text-black lg:block" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path className="hiw-arrow-path" pathLength={100} d="M3 12h50" />
         <path className="hiw-arrow-head" d="M47 5l10 7-10 7" />
       </svg>
       {/* mobile: vertical progress line */}
       <div className="flex flex-col items-center lg:hidden" aria-hidden="true">
         <div className="hiw-vline h-12 w-0.5 [background:linear-gradient(to_bottom,transparent,var(--neon))]" />
-        <svg viewBox="0 0 24 24" className="-mt-1 h-5 w-5 text-neon" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+        <svg viewBox="0 0 24 24" className="-mt-1 h-5 w-5 text-black" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
           <path d="M6 9l6 7 6-7" />
         </svg>
       </div>
@@ -165,18 +165,18 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
   const delay = (i: number): CSSProperties => ({ transitionDelay: `${i * 0.12}s` });
 
   return (
-    <section ref={rootRef} className="relative isolate overflow-hidden border-t border-neutral-800 bg-black">
+    <section ref={rootRef} className="relative isolate overflow-hidden bg-[#f5f5f3]">
       <div aria-hidden="true" className="hiw-texture absolute inset-0 -z-10" />
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-10"
-        style={{ background: "radial-gradient(55% 50% at 50% 55%, color-mix(in srgb, var(--neon) 28%, transparent), transparent 78%)" }}
+        style={{ background: "radial-gradient(55% 50% at 50% 55%, color-mix(in srgb, var(--neon) 22%, transparent), transparent 78%)" }}
       />
 
       <div className="mx-auto max-w-7xl px-5 py-16 sm:py-24">
         <div data-hiw className="hiw-reveal mb-12 text-center sm:mb-16">
-          <Txt k="how.title" as="h2" className="block font-display text-[3rem] font-bold uppercase leading-[0.85] text-white sm:text-[4.75rem]" />
-          <Txt k="how.subtitle" as="p" className="-mt-1 block font-script text-2xl text-neon sm:text-3xl" />
+          <Txt k="how.title" as="h2" className="block font-display text-[3rem] font-bold uppercase leading-[0.85] text-black sm:text-[4.75rem]" />
+          <Txt k="how.subtitle" as="p" className="mt-1 inline-block -rotate-2 rounded-md bg-black px-3 pb-1 font-script text-2xl text-neon sm:text-3xl" />
         </div>
 
         <div className="flex flex-col gap-0 lg:grid lg:grid-cols-[1fr_auto_1.3fr_auto_1fr] lg:items-center lg:gap-2">
@@ -310,7 +310,7 @@ export default function HowItWorks({ editorHref }: { editorHref: string }) {
               </svg>
             </span>
           </EditableLink>
-          <Txt k="how.disclaimer" as="p" className="mt-3 block text-sm text-neutral-400" />
+          <Txt k="how.disclaimer" as="p" className="mt-3 block text-sm text-neutral-600" />
         </div>
       </div>
     </section>
