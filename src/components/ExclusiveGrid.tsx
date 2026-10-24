@@ -37,7 +37,9 @@ export default function ExclusiveGrid({ items, stripPrefix = "" }: { items: Limi
                 <p className="line-clamp-2 font-display text-xl font-bold uppercase leading-[0.95] text-white sm:text-2xl">{name}</p>
                 <p className="mt-1.5 flex items-center justify-between gap-2">
                   <span className="font-display text-2xl font-bold leading-none text-white">{formatCLP(c.price)}</span>
-                  <span className="text-[11px] font-bold uppercase tracking-wide text-[#ff4b57] transition group-hover:translate-x-0.5">Ver →</span>
+                  <span className="rounded-md bg-[#e11d2a] px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-white transition group-hover:bg-[#ff2a38] sm:px-4 sm:text-sm">
+                    {over ? "Ver" : "Comprar"}
+                  </span>
                 </p>
               </div>
             </Link>

@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Metal_Mania } from "next/font/google";
 import { loadLimitedCards } from "@/lib/limited";
 import ExclusiveGrid from "@/components/ExclusiveGrid";
 
 export const dynamic = "force-dynamic";
-
-// Heavy-metal lettering for the section title only (the rest of the page keeps the store's type).
-const metal = Metal_Mania({ subsets: ["latin"], weight: "400", display: "swap" });
 
 export const metadata: Metadata = {
   title: "Iron Maiden — Colección exclusiva POPE",
@@ -40,11 +36,18 @@ export default async function IronMaidenPage() {
             <span aria-hidden="true" className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#e11d2a]" />
             Colección exclusiva · Solo en POPE
           </p>
-          <h1
-            className={`${metal.className} mt-5 text-[3.6rem] leading-[0.95] text-[#e11d2a] sm:text-[6.5rem] lg:text-[8.5rem]`}
-            style={{ textShadow: "0 0 2px #fff, 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 0 10px 40px rgba(225,29,42,0.55)" }}
-          >
-            Iron Maiden
+          {/* The band's own logo (the owner's file), with a thin white edge and a red glow */}
+          <h1 className="mx-auto mt-6 w-full max-w-2xl px-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/iron-maiden/logo.webp"
+              alt="Iron Maiden"
+              width={1400}
+              height={789}
+              fetchPriority="high"
+              className="h-auto w-full"
+              style={{ filter: "drop-shadow(0 0 1px #fff) drop-shadow(0 0 1px #fff) drop-shadow(0 12px 36px rgba(225,29,42,0.55))" }}
+            />
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-base text-neutral-200 sm:text-lg">
             Eddie en todas sus épocas, en poleras negras con el estampado grande adelante. Para los que llevan el metal en la sangre.
@@ -96,7 +99,7 @@ export default async function IronMaidenPage() {
 
       <section className="border-t border-white/10 bg-black">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-5 py-12 text-center">
-          <p className={`${metal.className} text-5xl text-[#e11d2a] sm:text-6xl`}>Up the Irons!</p>
+          <p className="font-display text-5xl font-bold uppercase leading-none text-[#e11d2a] sm:text-6xl">Up the Irons!</p>
           <p className="max-w-md text-sm text-neutral-400">Edición exclusiva: cuando se acaben, se acaban. Envíos a todo Chile.</p>
           <Link href="/" className="text-xs font-bold uppercase tracking-[0.2em] text-neutral-300 transition hover:text-neon">
             ← Volver a la tienda
