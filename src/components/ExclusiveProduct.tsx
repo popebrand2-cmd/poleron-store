@@ -115,7 +115,7 @@ export default function ExclusiveProduct({ p }: { p: ExclusiveData }) {
       <div className="mx-auto grid max-w-6xl gap-10 px-6 pb-28 pt-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-14 lg:pb-16 lg:pt-12">
         {/* Stage */}
         <div>
-          <div className={`relative aspect-square overflow-hidden rounded-[2rem] border border-white/15 ${iron ? "bg-[radial-gradient(circle_at_50%_45%,#5a0f14_0%,#1c0608_55%,#0a0a0a_100%)]" : "bg-white"} shadow-[0_0_60px_-12px_color-mix(in_srgb,var(--neon)_45%,transparent)]`}>
+          <div className={`relative aspect-square overflow-hidden rounded-[2rem] border border-white/15 ${iron ? "bg-[radial-gradient(circle_at_50%_45%,#d0343d_0%,#8e1820_45%,#3a0a0e_100%)]" : "bg-white"} shadow-[0_0_60px_-12px_color-mix(in_srgb,var(--neon)_45%,transparent)]`}>
             {/* Corner marks, like a plate on a display case */}
             {["left-4 top-4 border-l-2 border-t-2", "right-4 top-4 border-r-2 border-t-2", "left-4 bottom-4 border-l-2 border-b-2", "right-4 bottom-4 border-r-2 border-b-2"].map((c) => (
               <span key={c} aria-hidden="true" className={`absolute z-[1] h-6 w-6 ${iron ? "border-white/40" : "border-black/35"} ${c}`} />

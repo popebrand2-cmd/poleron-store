@@ -211,7 +211,7 @@ export default function ExclusiveDrop() {
             className="pope-excl-panel relative max-h-[calc(100dvh-4.5rem)] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-[1.5rem] border border-neon/40 bg-neutral-950 text-white shadow-[0_0_80px_-20px_var(--neon)] sm:max-h-[calc(100dvh-2rem)] sm:rounded-[2rem] md:grid md:grid-cols-2 md:overflow-hidden"
           >
 
-            <div className={`relative h-[44dvh] overflow-hidden sm:h-auto sm:aspect-square md:aspect-auto md:min-h-[26rem] ${/iron maiden/i.test(it.name) ? "bg-[radial-gradient(circle_at_50%_45%,#5a0f14_0%,#1c0608_55%,#0a0a0a_100%)]" : "bg-white"}`}>
+            <div className={`relative h-[44dvh] overflow-hidden sm:h-auto sm:aspect-square md:aspect-auto md:min-h-[26rem] ${/iron maiden/i.test(it.name) ? "bg-[radial-gradient(circle_at_50%_45%,#d0343d_0%,#8e1820_45%,#3a0a0e_100%)]" : "bg-white"}`}>
               {it.image && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={it.image} alt={it.name} className={`pope-excl-reveal absolute inset-0 h-full w-full ${/iron maiden/i.test(it.name) ? "object-cover" : "object-contain p-4"}`} />
