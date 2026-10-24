@@ -24,7 +24,7 @@ export default function ExclusiveGrid({ items, stripPrefix = "" }: { items: Limi
                     alt={c.name}
                     loading="lazy"
                     decoding="async"
-                    className={`absolute inset-0 h-full w-full object-contain p-2 drop-shadow-[0_10px_18px_rgba(0,0,0,0.7)] transition duration-500 group-hover:scale-105 ${over ? "grayscale" : ""}`}
+                    className={`absolute inset-0 h-full w-full object-cover drop-shadow-[0_10px_18px_rgba(0,0,0,0.7)] transition duration-500 group-hover:scale-105 ${over ? "grayscale" : ""}`}
                   />
                 )}
                 {over && (
